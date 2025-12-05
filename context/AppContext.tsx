@@ -45,6 +45,11 @@ const translations: Record<string, Record<string, string>> = {
         importConfirmation: 'Are you sure you want to import data? This will overwrite all your current data and cannot be undone.',
         importError: 'The selected file is not a valid backup file or is corrupted.',
 
+        // Chat
+        chat: 'AI Chat',
+        askTheAI: 'Ask Eclipse AI...',
+        aiWelcomeMessage: 'Hello! I am Eclipse AI. How can I help you with your trading psychology today?',
+
         // New Account fields
         currency: 'Currency',
         usd: 'USD', eur: 'EUR', gbp: 'GBP', jpy: 'JPY',
@@ -95,11 +100,6 @@ const translations: Record<string, Record<string, string>> = {
         dailyDistribution_desc: 'Shows your net profit and loss for each day of the week, helping to identify your most and least profitable trading days.',
         hourlyDistribution_desc: 'Shows your net profit and loss for each hour of the day, helping to identify your most and least profitable trading times.',
         notableTrades_desc: 'Highlights your single largest winning trade and your single largest losing trade.',
-
-        // Chat
-        chat: 'Eclipse AI',
-        aiWelcomeMessage: 'Hello! I am Eclipse, your trading assistant. How can I help you today?',
-        askTheAI: 'Ask Eclipse...',
     },
     es: {
         accounts: 'Cuentas', trades: 'Operaciones', strategies: 'Estrategias', analytics: 'Analíticas',
@@ -141,6 +141,11 @@ const translations: Record<string, Record<string, string>> = {
         importDescription: 'Importa datos desde un archivo de respaldo JSON. Esto sobrescribirá todos los datos actuales.',
         importConfirmation: '¿Estás seguro de que quieres importar los datos? Esto sobrescribirá todos tus datos actuales y no se puede deshacer.',
         importError: 'El archivo seleccionado no es un archivo de respaldo válido o está dañado.',
+
+        // Chat
+        chat: 'Chat IA',
+        askTheAI: 'Pregunta a Eclipse IA...',
+        aiWelcomeMessage: '¡Hola! Soy Eclipse IA. ¿Cómo puedo ayudarte con tu psicología de trading hoy?',
 
         // New Account fields
         currency: 'Moneda',
@@ -192,11 +197,6 @@ const translations: Record<string, Record<string, string>> = {
         dailyDistribution_desc: 'Muestra tu ganancia y pérdida neta para cada día de la semana, ayudando a identificar tus días de trading más y menos rentables.',
         hourlyDistribution_desc: 'Muestra tu ganancia y pérdida neta para cada hora del día, ayudando a identificar tus horas de trading más y menos rentables.',
         notableTrades_desc: 'Destaca tu mayor operación ganadora individual y tu mayor operación perdedora individual.',
-
-        // Chat
-        chat: 'Eclipse AI',
-        aiWelcomeMessage: '¡Hola! Soy Eclipse, tu asistente de trading. ¿Cómo puedo ayudarte hoy?',
-        askTheAI: 'Pregunta a Eclipse...',
     },
 };
 

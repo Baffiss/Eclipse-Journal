@@ -6,7 +6,7 @@ import TradesPage from './pages/TradesPage';
 import StrategiesPage from './pages/StrategiesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import ChatPage from './pages/ChatPage';
-import { EclipseIcon, WalletIcon, TradesIcon, StrategiesIcon, BarChart3Icon, SunIcon, MoonIcon, SettingsIcon, TrashIcon, GlobeIcon, PanelLeftCloseIcon, DownloadIcon, UploadCloudIcon, MessageCircleIcon } from './components/Icons';
+import { EclipseIcon, WalletIcon, TradesIcon, StrategiesIcon, BarChart3Icon, SunIcon, MoonIcon, SettingsIcon, TrashIcon, PanelLeftCloseIcon, DownloadIcon, UploadCloudIcon, MessageSquareIcon } from './components/Icons';
 import Modal from './components/Modal';
 import { exportData, importData } from './services/export';
 
@@ -195,7 +195,7 @@ const AppContent: React.FC = () => {
         { id: 'trades', label: t('trades'), icon: <TradesIcon /> },
         { id: 'strategies', label: t('strategies'), icon: <StrategiesIcon /> },
         { id: 'analytics', label: t('analytics'), icon: <BarChart3Icon /> },
-        { id: 'chat', label: t('chat'), icon: <MessageCircleIcon /> },
+        { id: 'chat', label: t('chat'), icon: <MessageSquareIcon /> },
     ], [t]);
 
     return (
