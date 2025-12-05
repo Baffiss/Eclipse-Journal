@@ -1,0 +1,101 @@
+
+
+export enum DrawdownType {
+    MAXIMUM = 'Maximum',
+    TRAILING = 'Trailing',
+}
+
+export enum ValueType {
+    PERCENTAGE = 'Percentage',
+    FIXED = 'Fixed',
+}
+
+export enum AccountStatus {
+    ACTIVE = 'Active',
+    INACTIVE = 'Inactive',
+}
+
+export enum AccountType {
+    EVAL = 'Evaluation',
+    DEMO = 'Demo',
+    REAL = 'Real',
+    PA = 'Proprietary',
+}
+
+export enum Currency {
+    USD = 'USD',
+    EUR = 'EUR',
+    GBP = 'GBP',
+    JPY = 'JPY',
+}
+
+export interface Account {
+    id: string;
+    name: string;
+    initialCapital: number;
+    currency: Currency;
+    currentCapital: number;
+    profitTarget: number;
+    profitTargetType: ValueType;
+    drawdownType: DrawdownType;
+    drawdownValue: number;
+    drawdownValueType: ValueType;
+    strategyId?: string;
+    status: AccountStatus;
+    accountType: AccountType;
+}
+
+export enum TradeDirection {
+    BUY = 'Buy',
+    SELL = 'Sell',
+}
+
+export interface Trade {
+    id: string;
+    accountId: string;
+    strategyId?: string;
+    date: string; // ISO string
+    asset: string;
+    direction: TradeDirection;
+    lotSize: number;
+    takeProfitPips: number;
+    stopLossPips: number;
+    result: number; // in $
+    notes?: string;
+    imageUrl?: string; // base64 data URL
+    hour?: number; // 0-23
+}
+
+export interface Strategy {
+    id: string;
+    name: string;
+    description: string;
+    images?: string[]; // base64 data URLs
+}
+
+export interface AnalyticsStats {
+    totalTrades: number;
+    winRate: number;
+    profitFactor: number | null;
+    expectedValue: number;
+    averageWin: number;
+    averageLoss: number;
+    payoffRatio: number | null;
+    maxDrawdown: number;
+    sharpeRatio: number | null;
+    totalProfit: number;
+    maxWin: Trade | null;
+    maxLoss: Trade | null;
+    dailyDistribution: { day: string; profit: number }[];
+    hourlyDistribution: { hour: string; profit: number }[];
+    assetPerformance: { asset: string; profit: number; trades: number }[];
+    winLossDistribution: number[];
+    totalWins: number;
+    totalLosses: number;
+}
+
+export interface EquityDataPoint {
+    date: string;
+    equity: number;
+    trailingDrawdown?: number;
+}

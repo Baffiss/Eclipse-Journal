@@ -1,0 +1,5 @@
+{
+  "name": "Eclipse Journal",
+  "description": "An advanced trading journal for tracking accounts, trades, and strategies with in-depth analytics. It provides a clean, modern interface inspired by Notion and TradingView to help traders analyze their performance.",
+  "requestFramePermissions": []
+}

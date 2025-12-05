@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eclipse Journal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              'bkg': 'hsl(var(--bkg))',
+              'content': 'hsl(var(--content))',
+              'primary': 'hsl(var(--primary))',
+              'primary-focus': 'hsl(var(--primary-focus))',
+              'border': 'hsl(var(--border))',
+              'muted': 'hsl(var(--muted))',
+              'success': 'hsl(var(--success))',
+              'danger': 'hsl(var(--danger))',
+            },
+            keyframes: {
+              'fade-in': {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              'slide-in-up': {
+                '0%': { transform: 'translateY(20px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              }
+            },
+            animation: {
+              'fade-in': 'fade-in 0.3s ease-out forwards',
+              'slide-in-up': 'slide-in-up 0.4s ease-out forwards',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Base light variables */
+      :root {
+        --bkg: 0 0% 98%;
+        --content: 240 10% 3.9%;
+        --border: 240 5.9% 90%;
+        --muted: 240 5.9% 94%;
+      }
+      /* Base dark variables */
+      .dark {
+        --bkg: 240 10% 3.9%;
+        --content: 0 0% 98%;
+        --border: 240 3.7% 15.9%;
+        --muted: 240 3.7% 11.9%;
+      }
+      
+      /* THEME: Zinc (Default) */
+      .theme-zinc { --primary: 240 5.9% 10%; --primary-focus: 240 5.9% 15%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-zinc { --primary: 0 0% 98%; --primary-focus: 0 0% 93%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+      
+      /* THEME: Blue */
+      .theme-blue { --primary: 221.2 83.2% 53.3%; --primary-focus: 221.2 83.2% 48.3%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-blue { --primary: 221.2 83.2% 53.3%; --primary-focus: 221.2 83.2% 58.3%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* THEME: Rose */
+      .theme-rose { --primary: 346.8 77.2% 49.8%; --primary-focus: 346.8 77.2% 44.8%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-rose { --primary: 346.8 77.2% 49.8%; --primary-focus: 346.8 77.2% 54.8%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* THEME: Green */
+      .theme-green { --primary: 142.1 76.2% 36.3%; --primary-focus: 142.1 76.2% 31.3%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-green { --primary: 142.1 70.2% 46.3%; --primary-focus: 142.1 70.2% 51.3%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* THEME: Violet */
+      .theme-violet { --primary: 262.1 83.3% 57.8%; --primary-focus: 262.1 83.3% 52.8%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-violet { --primary: 262.1 83.3% 57.8%; --primary-focus: 262.1 83.3% 62.8%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* THEME: Orange */
+      .theme-orange { --primary: 24.6 95% 53.1%; --primary-focus: 24.6 95% 48.1%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-orange { --primary: 24.6 95% 53.1%; --primary-focus: 24.6 95% 58.1%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .no-print {
+          display: none !important;
+        }
+        .print-bkg-white {
+          background-color: white !important;
+        }
+        .print-text-black {
+          color: black !important;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.4.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.mjs",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-bkg text-content font-sans antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
