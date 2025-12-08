@@ -287,6 +287,9 @@ const DashboardPage: React.FC = () => {
     const widgetTheme = theme === 'dark' ? 'dark' : 'light';
     const widgetLocale = language === 'es' ? 'es' : 'en';
 
+    // Chart Axis Color
+    const axisColor = theme === 'dark' ? '#A1A1AA' : '#71717A'; // Zinc-400 : Zinc-500
+
     // Toggle logic for currencies
     const toggleCurrency = useCallback((code: string) => {
         setCalendarFilters(prev => {
@@ -360,7 +363,6 @@ const DashboardPage: React.FC = () => {
         });
 
         // Add a starting point at 0 if desired, but for daily view, just the trades is usually fine.
-        // Or prepend a { time: 'Start', pnl: 0 } to show growth from zero.
         return [{ time: 'Start', pnl: 0 }, ...data];
     }, [todayTrades]);
 
@@ -484,8 +486,8 @@ const DashboardPage: React.FC = () => {
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                                        <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}`} />
+                                        <XAxis dataKey="time" stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}`} />
                                         <Tooltip 
                                             contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
                                             formatter={(value: number) => [`${defaultCurrency}${value.toFixed(2)}`, 'Cumulative P&L']}

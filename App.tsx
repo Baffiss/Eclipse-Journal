@@ -14,25 +14,34 @@ import { exportData, importData } from './services/export';
 type Page = 'dashboard' | 'accounts' | 'trades' | 'strategies' | 'analytics' | 'markets';
 
 const THEMES = [
-    { name: 'zinc', color: 'bg-slate-500' },
-    { name: 'rose', color: 'bg-rose-500' },
-    { name: 'blue', color: 'bg-blue-500' },
-    { name: 'green', color: 'bg-green-500' },
-    { name: 'violet', color: 'bg-violet-500' },
+    { name: 'zinc', color: 'bg-zinc-500' },
+    { name: 'slate', color: 'bg-slate-500' },
+    { name: 'stone', color: 'bg-stone-500' },
+    { name: 'red', color: 'bg-red-500' },
     { name: 'orange', color: 'bg-orange-500' },
+    { name: 'amber', color: 'bg-amber-500' },
+    { name: 'yellow', color: 'bg-yellow-500' },
+    { name: 'lime', color: 'bg-lime-500' },
+    { name: 'green', color: 'bg-green-500' },
+    { name: 'emerald', color: 'bg-emerald-500' },
+    { name: 'teal', color: 'bg-teal-500' },
+    { name: 'cyan', color: 'bg-cyan-500' },
+    { name: 'sky', color: 'bg-sky-500' },
+    { name: 'blue', color: 'bg-blue-500' },
+    { name: 'indigo', color: 'bg-indigo-500' },
+    { name: 'violet', color: 'bg-violet-500' },
+    { name: 'purple', color: 'bg-purple-500' },
+    { name: 'fuchsia', color: 'bg-fuchsia-500' },
+    { name: 'pink', color: 'bg-pink-500' },
+    { name: 'rose', color: 'bg-rose-500' },
 ];
 
 const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ isOpen, onClose }) => {
-    const { state, dispatch, t, colorTheme, setColorTheme, customColor, setCustomColor, resetData, language, setLanguage } = useApp();
-    const [hexColor, setHexColor] = useState(customColor || '#000000');
+    const { state, dispatch, t, colorTheme, setColorTheme, resetData, language, setLanguage } = useApp();
     const importInputRef = useRef<HTMLInputElement>(null);
     
     // Confirmation States
     const [confirmAction, setConfirmAction] = useState<{ type: 'reset' | 'import', file?: File } | null>(null);
-
-    useEffect(() => {
-        setHexColor(customColor || '#000000');
-    }, [customColor]);
 
     // Reset confirmation state when modal closes
     useEffect(() => {
@@ -41,15 +50,6 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
         }
     }, [isOpen]);
 
-    const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newColor = e.target.value;
-        setHexColor(newColor);
-        if (/^#[0-9A-F]{6}$/i.test(newColor)) {
-            setColorTheme('custom');
-            setCustomColor(newColor);
-        }
-    };
-    
     const handleResetClick = () => {
         setConfirmAction({ type: 'reset' });
     };
@@ -143,30 +143,16 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
                 </div>
                 <div>
                     <h3 className="text-md font-semibold mb-3">{t('colorTheme')}</h3>
-                    <div className="grid grid-cols-6 gap-3 mb-4">
+                    <div className="grid grid-cols-5 sm:grid-cols-6 gap-3 mb-4">
                         {THEMES.map(theme => (
                             <button
                                 key={theme.name}
                                 onClick={() => setColorTheme(theme.name)}
                                 className={`w-8 h-8 rounded-full ${theme.color} transition-transform hover:scale-110 ${colorTheme === theme.name ? 'ring-2 ring-offset-2 ring-offset-bkg ring-primary' : ''}`}
                                 aria-label={`Set ${theme.name} theme`}
+                                title={theme.name.charAt(0).toUpperCase() + theme.name.slice(1)}
                             />
                         ))}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <input 
-                            type="color" 
-                            value={hexColor}
-                            onChange={handleCustomColorChange}
-                            className="w-10 h-10 p-1 bg-bkg border border-border rounded-md cursor-pointer"
-                        />
-                        <input
-                            type="text"
-                            value={hexColor}
-                            onChange={handleCustomColorChange}
-                            placeholder="#RRGGBB"
-                            className="w-full p-2 bg-muted border border-border rounded-md font-mono"
-                        />
                     </div>
                 </div>
 

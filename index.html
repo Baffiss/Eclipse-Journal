@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -24,6 +25,7 @@
               'primary-focus': 'hsl(var(--primary-focus))',
               'border': 'hsl(var(--border))',
               'muted': 'hsl(var(--muted))',
+              'muted-foreground': 'hsl(var(--muted-foreground))',
               'success': 'hsl(var(--success))',
               'danger': 'hsl(var(--danger))',
             },
@@ -50,6 +52,7 @@
       :root {
         --bkg: 0 0% 98%;
         --content: 240 10% 3.9%;
+        --muted-foreground: 240 3.8% 46.1%;
         --border: 240 5.9% 90%;
         --muted: 240 5.9% 94%;
       }
@@ -57,33 +60,92 @@
       .dark {
         --bkg: 240 10% 3.9%;
         --content: 0 0% 98%;
+        --muted-foreground: 240 5% 64.9%;
         --border: 240 3.7% 15.9%;
         --muted: 240 3.7% 11.9%;
       }
       
-      /* THEME: Zinc (Default) */
+      /* --- THEMES --- */
+      
+      /* Zinc (Default) */
       .theme-zinc { --primary: 240 5.9% 10%; --primary-focus: 240 5.9% 15%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
       .dark.theme-zinc { --primary: 0 0% 98%; --primary-focus: 0 0% 93%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
       
-      /* THEME: Blue */
-      .theme-blue { --primary: 221.2 83.2% 53.3%; --primary-focus: 221.2 83.2% 48.3%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
-      .dark.theme-blue { --primary: 221.2 83.2% 53.3%; --primary-focus: 221.2 83.2% 58.3%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+      /* Slate */
+      .theme-slate { --primary: 215 16% 47%; --primary-focus: 215 16% 42%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-slate { --primary: 215 16% 57%; --primary-focus: 215 16% 62%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+      
+      /* Stone */
+      .theme-stone { --primary: 24 5% 64%; --primary-focus: 24 5% 59%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-stone { --primary: 24 5% 74%; --primary-focus: 24 5% 79%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
 
-      /* THEME: Rose */
-      .theme-rose { --primary: 346.8 77.2% 49.8%; --primary-focus: 346.8 77.2% 44.8%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
-      .dark.theme-rose { --primary: 346.8 77.2% 49.8%; --primary-focus: 346.8 77.2% 54.8%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+      /* Red */
+      .theme-red { --primary: 0 72% 51%; --primary-focus: 0 72% 46%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-red { --primary: 0 72% 61%; --primary-focus: 0 72% 66%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
 
-      /* THEME: Green */
+      /* Orange */
+      .theme-orange { --primary: 24.6 95% 53.1%; --primary-focus: 24.6 95% 48.1%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-orange { --primary: 24.6 95% 53.1%; --primary-focus: 24.6 95% 58.1%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Amber */
+      .theme-amber { --primary: 38 92% 50%; --primary-focus: 38 92% 45%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-amber { --primary: 38 92% 50%; --primary-focus: 38 92% 55%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Yellow */
+      .theme-yellow { --primary: 48 96% 53%; --primary-focus: 48 96% 48%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-yellow { --primary: 48 96% 53%; --primary-focus: 48 96% 58%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Lime */
+      .theme-lime { --primary: 84 81% 44%; --primary-focus: 84 81% 39%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-lime { --primary: 84 81% 54%; --primary-focus: 84 81% 59%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Green */
       .theme-green { --primary: 142.1 76.2% 36.3%; --primary-focus: 142.1 76.2% 31.3%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
       .dark.theme-green { --primary: 142.1 70.2% 46.3%; --primary-focus: 142.1 70.2% 51.3%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
 
-      /* THEME: Violet */
+      /* Emerald */
+      .theme-emerald { --primary: 158 64% 52%; --primary-focus: 158 64% 47%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-emerald { --primary: 158 64% 52%; --primary-focus: 158 64% 57%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Teal */
+      .theme-teal { --primary: 173 58% 39%; --primary-focus: 173 58% 34%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-teal { --primary: 173 58% 49%; --primary-focus: 173 58% 54%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Cyan */
+      .theme-cyan { --primary: 189 94% 43%; --primary-focus: 189 94% 38%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-cyan { --primary: 189 94% 53%; --primary-focus: 189 94% 58%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Sky */
+      .theme-sky { --primary: 199 89% 48%; --primary-focus: 199 89% 43%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-sky { --primary: 199 89% 58%; --primary-focus: 199 89% 63%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Blue */
+      .theme-blue { --primary: 221.2 83.2% 53.3%; --primary-focus: 221.2 83.2% 48.3%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-blue { --primary: 221.2 83.2% 53.3%; --primary-focus: 221.2 83.2% 58.3%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Indigo */
+      .theme-indigo { --primary: 226 71% 51%; --primary-focus: 226 71% 46%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-indigo { --primary: 226 71% 61%; --primary-focus: 226 71% 66%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Violet */
       .theme-violet { --primary: 262.1 83.3% 57.8%; --primary-focus: 262.1 83.3% 52.8%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
       .dark.theme-violet { --primary: 262.1 83.3% 57.8%; --primary-focus: 262.1 83.3% 62.8%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
 
-      /* THEME: Orange */
-      .theme-orange { --primary: 24.6 95% 53.1%; --primary-focus: 24.6 95% 48.1%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
-      .dark.theme-orange { --primary: 24.6 95% 53.1%; --primary-focus: 24.6 95% 58.1%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+      /* Purple */
+      .theme-purple { --primary: 271 76% 53%; --primary-focus: 271 76% 48%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-purple { --primary: 271 76% 63%; --primary-focus: 271 76% 68%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Fuchsia */
+      .theme-fuchsia { --primary: 295 72% 50%; --primary-focus: 295 72% 45%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-fuchsia { --primary: 295 72% 60%; --primary-focus: 295 72% 65%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Pink */
+      .theme-pink { --primary: 330 81% 60%; --primary-focus: 330 81% 55%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-pink { --primary: 330 81% 70%; --primary-focus: 330 81% 75%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
+
+      /* Rose */
+      .theme-rose { --primary: 346.8 77.2% 49.8%; --primary-focus: 346.8 77.2% 44.8%; --success: 160 60% 40%; --danger: 0 84.2% 60.2%; }
+      .dark.theme-rose { --primary: 346.8 77.2% 49.8%; --primary-focus: 346.8 77.2% 54.8%; --success: 160 55% 55%; --danger: 0 74.2% 70.2%; }
 
       @media print {
         body {
