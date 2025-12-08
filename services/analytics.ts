@@ -182,3 +182,60 @@ const calculateSharpeRatio = (returns: number[]): number | null => {
     // Assuming risk-free rate of 0
     return mean / stdDev;
 };
+
+// --- New Helper for Account Stats (Risk Monitor) ---
+export const calculateAccountStats = (account: Account, trades: Trade[]) => {
+    // Filter and sort trades for this account
+    const accountTrades = trades
+        .filter(t => t.accountId === account.id)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    let equity = account.initialCapital;
+    let highWaterMark = account.initialCapital;
+
+    for (const trade of accountTrades) {
+        equity += trade.result;
+        if (equity > highWaterMark) {
+            highWaterMark = equity;
+        }
+    }
+
+    // Profit Target Calculation
+    const profitTargetValue = account.profitTargetType === ValueType.FIXED
+        ? account.profitTarget
+        : account.initialCapital * (account.profitTarget / 100);
+
+    const currentProfit = equity - account.initialCapital;
+    const profitProgress = profitTargetValue > 0 
+        ? Math.max(0, Math.min((currentProfit / profitTargetValue) * 100, 100))
+        : 0;
+
+    // Drawdown Calculation
+    const drawdownLimitValue = account.drawdownValueType === ValueType.FIXED
+        ? account.drawdownValue
+        : account.initialCapital * (account.drawdownValue / 100);
+
+    let currentDrawdownAmount = 0;
+    if (account.drawdownType === DrawdownType.TRAILING) {
+        // Trailing: Distance from High Water Mark
+        currentDrawdownAmount = Math.max(0, highWaterMark - equity);
+    } else {
+        // Maximum: Distance from Initial Capital (Static)
+        currentDrawdownAmount = Math.max(0, account.initialCapital - equity);
+    }
+
+    const drawdownProgress = drawdownLimitValue > 0
+        ? Math.max(0, Math.min((currentDrawdownAmount / drawdownLimitValue) * 100, 100))
+        : 0;
+
+    return {
+        equity,
+        highWaterMark,
+        profitTargetValue,
+        drawdownLimitValue,
+        profitProgress,
+        drawdownProgress,
+        currentProfit,
+        currentDrawdownAmount
+    };
+};

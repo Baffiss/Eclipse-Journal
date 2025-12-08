@@ -5,12 +5,13 @@ import AccountsPage from './pages/AccountsPage';
 import TradesPage from './pages/TradesPage';
 import StrategiesPage from './pages/StrategiesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
-import ChatPage from './pages/ChatPage';
-import { EclipseIcon, WalletIcon, TradesIcon, StrategiesIcon, BarChart3Icon, SunIcon, MoonIcon, SettingsIcon, TrashIcon, PanelLeftCloseIcon, DownloadIcon, UploadCloudIcon, MessageSquareIcon } from './components/Icons';
+import MarketsPage from './pages/MarketsPage';
+import DashboardPage from './pages/DashboardPage';
+import { EclipseIcon, WalletIcon, TradesIcon, StrategiesIcon, BarChart3Icon, SunIcon, MoonIcon, SettingsIcon, TrashIcon, PanelLeftCloseIcon, DownloadIcon, UploadCloudIcon, ActivityIcon, AlertTriangleIcon, LayoutDashboardIcon } from './components/Icons';
 import Modal from './components/Modal';
 import { exportData, importData } from './services/export';
 
-type Page = 'accounts' | 'trades' | 'strategies' | 'analytics' | 'chat';
+type Page = 'dashboard' | 'accounts' | 'trades' | 'strategies' | 'analytics' | 'markets';
 
 const THEMES = [
     { name: 'zinc', color: 'bg-slate-500' },
@@ -25,10 +26,20 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
     const { state, dispatch, t, colorTheme, setColorTheme, customColor, setCustomColor, resetData, language, setLanguage } = useApp();
     const [hexColor, setHexColor] = useState(customColor || '#000000');
     const importInputRef = useRef<HTMLInputElement>(null);
+    
+    // Confirmation States
+    const [confirmAction, setConfirmAction] = useState<{ type: 'reset' | 'import', file?: File } | null>(null);
 
     useEffect(() => {
         setHexColor(customColor || '#000000');
     }, [customColor]);
+
+    // Reset confirmation state when modal closes
+    useEffect(() => {
+        if (!isOpen) {
+            setConfirmAction(null);
+        }
+    }, [isOpen]);
 
     const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newColor = e.target.value;
@@ -39,11 +50,14 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
         }
     };
     
-    const handleResetData = () => {
-        if (window.confirm(t('deleteAllDataConfirmation'))) {
-            resetData();
-            onClose();
-        }
+    const handleResetClick = () => {
+        setConfirmAction({ type: 'reset' });
+    };
+
+    const confirmResetData = () => {
+        resetData();
+        setConfirmAction(null);
+        onClose();
     };
 
     const handleExport = () => {
@@ -54,31 +68,71 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
         importInputRef.current?.click();
     };
 
-    const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
-        if (window.confirm(t('importConfirmation'))) {
-            try {
-                const importedData = await importData(file);
-                const finalState = {
-                    ...state, // keep current theme settings
-                    ...importedData,
-                };
-                dispatch({ type: 'SET_STATE', payload: finalState });
-                onClose();
-            } catch (error) {
-                console.error("Import failed:", error);
-                alert(t('importError'));
-            }
-        }
+        setConfirmAction({ type: 'import', file });
         if (e.target) {
             e.target.value = ''; // Reset file input
         }
     };
 
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} title={t('settings')}>
+    const confirmImportData = async () => {
+        if (confirmAction?.type === 'import' && confirmAction.file) {
+            try {
+                const importedData = await importData(confirmAction.file);
+                const finalState = {
+                    ...state, // keep current theme settings
+                    ...importedData,
+                };
+                dispatch({ type: 'SET_STATE', payload: finalState });
+                setConfirmAction(null);
+                onClose();
+            } catch (error) {
+                console.error("Import failed:", error);
+                alert(t('importError'));
+                setConfirmAction(null);
+            }
+        }
+    };
+
+    const cancelConfirmation = () => {
+        setConfirmAction(null);
+    };
+
+    const renderContent = () => {
+        if (confirmAction) {
+            const isReset = confirmAction.type === 'reset';
+            return (
+                <div className="space-y-4 animate-fade-in">
+                    <div className="flex flex-col items-center text-center p-4 bg-muted/50 rounded-lg border border-border">
+                        <AlertTriangleIcon className="w-12 h-12 text-danger mb-3" />
+                        <h3 className="text-lg font-bold text-danger mb-2">
+                            {isReset ? t('deleteAllDataButton') : t('importData')}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            {isReset ? t('deleteAllDataConfirmation') : t('importConfirmation')}
+                        </p>
+                        <div className="flex gap-3 w-full justify-center">
+                            <button 
+                                onClick={cancelConfirmation} 
+                                className="px-4 py-2 bg-bkg border border-border rounded-md hover:bg-muted transition-colors"
+                            >
+                                {t('cancel')}
+                            </button>
+                            <button 
+                                onClick={isReset ? confirmResetData : confirmImportData} 
+                                className="px-4 py-2 bg-danger text-bkg rounded-md hover:bg-danger/90 transition-colors shadow-sm"
+                            >
+                                {isReset ? t('delete') : t('update')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
             <div className="space-y-6">
                  <div>
                     <h3 className="text-md font-semibold mb-2">{t('language')}</h3>
@@ -154,7 +208,7 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
                     <div className="mt-2 flex justify-between items-center">
                         <p className="text-sm text-muted-foreground">{t('deleteAllData')}</p>
                         <button
-                            onClick={handleResetData}
+                            onClick={handleResetClick}
                             className="flex items-center gap-2 px-3 py-2 bg-danger/10 text-danger rounded-md hover:bg-danger/20 text-sm font-semibold"
                         >
                             <TrashIcon className="w-4 h-4" />
@@ -163,18 +217,26 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
                     </div>
                 </div>
             </div>
+        );
+    };
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title={t('settings')}>
+            {renderContent()}
         </Modal>
     );
 };
 
 const AppContent: React.FC = () => {
-    const [page, setPage] = useState<Page>('accounts');
+    const [page, setPage] = useState<Page>('dashboard');
     const { theme, toggleTheme, t } = useApp();
     const [isSettingsOpen, setSettingsOpen] = useState(false);
     const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const renderPage = () => {
         switch (page) {
+            case 'dashboard':
+                return <DashboardPage />;
             case 'accounts':
                 return <AccountsPage />;
             case 'trades':
@@ -183,19 +245,20 @@ const AppContent: React.FC = () => {
                 return <StrategiesPage />;
             case 'analytics':
                 return <AnalyticsPage />;
-            case 'chat':
-                return <ChatPage />;
+            case 'markets':
+                return <MarketsPage />;
             default:
-                return <AccountsPage />;
+                return <DashboardPage />;
         }
     };
 
     const navItems = useMemo(() => [
+        { id: 'dashboard', label: t('dashboard'), icon: <LayoutDashboardIcon /> },
         { id: 'accounts', label: t('accounts'), icon: <WalletIcon /> },
         { id: 'trades', label: t('trades'), icon: <TradesIcon /> },
         { id: 'strategies', label: t('strategies'), icon: <StrategiesIcon /> },
         { id: 'analytics', label: t('analytics'), icon: <BarChart3Icon /> },
-        { id: 'chat', label: t('chat'), icon: <MessageSquareIcon /> },
+        { id: 'markets', label: t('markets'), icon: <ActivityIcon /> },
     ], [t]);
 
     return (

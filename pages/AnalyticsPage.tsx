@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { calculateAnalytics, calculateEquityCurve } from '../services/analytics';
@@ -104,10 +105,10 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isComponent = false, defa
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie data={winRateData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="60%" outerRadius="80%" paddingAngle={5}>
-                                            <Cell fill="hsl(var(--success))" />
-                                            <Cell fill="hsl(var(--danger))" />
+                                            <Cell fill="hsl(var(--success))" stroke="none"/>
+                                            <Cell fill="hsl(var(--danger))" stroke="none"/>
                                         </Pie>
-                                        <Tooltip formatter={(value, name) => [value, name]} />
+                                        <Tooltip formatter={(value, name) => [value, name]} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--content))' }} itemStyle={{ color: 'hsl(var(--content))' }} />
                                         <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-content text-4xl font-bold">
                                             {`${stats.winRate.toFixed(1)}%`}
                                         </text>
@@ -149,7 +150,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isComponent = false, defa
                                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                                     <XAxis dataKey="name" stroke="hsl(var(--content))" fontSize={12} label={{ value: "Trade Number", position: "insideBottom", offset: -5 }} />
                                     <YAxis stroke="hsl(var(--content))" fontSize={12} tickFormatter={val => `${currencySymbol}${val}`}/>
-                                    <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} />
+                                    <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--content))' }} />
                                     <Line type="monotone" dataKey="profit" stroke="hsl(var(--success))" strokeWidth={2} dot={false} />
                                 </LineChart>
                             </ChartContainer>
@@ -164,10 +165,38 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isComponent = false, defa
                                 {profitableAssetsData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
-                                            <Pie data={profitableAssetsData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" label={p => `${p.name} (${(p.percent * 100).toFixed(0)}%)`}>
-                                                {profitableAssetsData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]} />)}
+                                            <Pie 
+                                                data={profitableAssetsData} 
+                                                dataKey="value" 
+                                                nameKey="name" 
+                                                cx="50%" 
+                                                cy="50%" 
+                                                outerRadius="75%" 
+                                                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
+                                                    const RADIAN = Math.PI / 180;
+                                                    // Move label out a bit further
+                                                    const radius = outerRadius * 1.3;
+                                                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                                  
+                                                    return (
+                                                      <text 
+                                                        x={x} 
+                                                        y={y} 
+                                                        fill="hsl(var(--content))" 
+                                                        textAnchor={x > cx ? 'start' : 'end'} 
+                                                        dominantBaseline="central"
+                                                        fontSize={12}
+                                                        fontWeight="500"
+                                                      >
+                                                        {`${name} (${(percent * 100).toFixed(0)}%)`}
+                                                      </text>
+                                                    );
+                                                  }}
+                                            >
+                                                {profitableAssetsData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]} stroke="none" />)}
                                             </Pie>
-                                            <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} />
+                                            <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--content))' }} itemStyle={{ color: 'hsl(var(--content))' }} />
                                         </PieChart>
                                     </ResponsiveContainer>
                                 ) : (
@@ -241,7 +270,7 @@ const DistributionChart: React.FC<{title: string, tooltipText: string, data: any
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey={dataKey} stroke="hsl(var(--content))" fontSize={12} />
                 <YAxis stroke="hsl(var(--content))" fontSize={12} tickFormatter={(val) => `${currencySymbol}${val}`} />
-                <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} cursor={{fill: 'hsl(var(--border))'}} />
+                <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} cursor={{fill: 'hsl(var(--border))'}} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--content))' }} />
                 <Bar dataKey={valueKey}>
                 {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry[valueKey] >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />

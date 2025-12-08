@@ -5,7 +5,7 @@ import { Account, Trade, Strategy, Currency } from '../types';
 // Internationalization (i18n)
 const translations: Record<string, Record<string, string>> = {
     en: {
-        accounts: 'Accounts', trades: 'Trades', strategies: 'Strategies', analytics: 'Analytics',
+        accounts: 'Accounts', trades: 'Trades', strategies: 'Strategies', analytics: 'Analytics', markets: 'Markets', dashboard: 'Dashboard',
         settings: 'Settings', lightMode: 'Light Mode', darkMode: 'Dark Mode',
         colorTheme: 'Color Theme', dangerZone: 'Danger Zone', deleteAllData: 'Delete all accounts, trades, and strategies.',
         deleteAllDataButton: 'Delete All Data', deleteAllDataConfirmation: 'Are you sure you want to delete all data? This action cannot be undone.',
@@ -45,10 +45,25 @@ const translations: Record<string, Record<string, string>> = {
         importConfirmation: 'Are you sure you want to import data? This will overwrite all your current data and cannot be undone.',
         importError: 'The selected file is not a valid backup file or is corrupted.',
 
-        // Chat
-        chat: 'AI Chat',
-        askTheAI: 'Ask Eclipse AI...',
-        aiWelcomeMessage: 'Hello! I am Eclipse AI. How can I help you with your trading psychology today?',
+        // Dashboard
+        goodMorning: 'Good Morning',
+        goodAfternoon: 'Good Afternoon',
+        goodEvening: 'Good Evening',
+        todaysPnL: "Today's P&L",
+        todaysWinRate: "Today's Win Rate",
+        tradesToday: 'Trades Today',
+        upcomingEvents: 'Upcoming Events',
+        dailyOverview: 'Daily Overview',
+        noTradesToday: 'No trades recorded today.',
+        viewAllTrades: 'View All Trades',
+
+        // Markets
+        economicCalendar: 'Economic Calendar',
+        marketOverview: 'Market Overview',
+        forexHeatmap: 'Forex Heatmap',
+        cryptoHeatmap: 'Crypto Heatmap',
+        stockHeatmap: 'Stock Heatmap',
+        marketNews: 'Market News',
 
         // New Account fields
         currency: 'Currency',
@@ -66,6 +81,12 @@ const translations: Record<string, Record<string, string>> = {
         demo: 'Demo',
         real: 'Real',
         proprietary: 'Proprietary Account',
+
+        // Account Filtering
+        allStatuses: 'All Statuses',
+        allTypes: 'All Types',
+        noAccountsFound: 'No accounts found matching your filters.',
+        clearFilters: 'Clear Filters',
 
         // Visual enhancements
         progressToTarget: 'Progress to Target',
@@ -102,7 +123,7 @@ const translations: Record<string, Record<string, string>> = {
         notableTrades_desc: 'Highlights your single largest winning trade and your single largest losing trade.',
     },
     es: {
-        accounts: 'Cuentas', trades: 'Operaciones', strategies: 'Estrategias', analytics: 'Analíticas',
+        accounts: 'Cuentas', trades: 'Operaciones', strategies: 'Estrategias', analytics: 'Analíticas', markets: 'Mercados', dashboard: 'Panel Principal',
         settings: 'Configuración', lightMode: 'Modo Claro', darkMode: 'Modo Oscuro',
         colorTheme: 'Color del Tema', dangerZone: 'Zona de Peligro', deleteAllData: 'Eliminar todas las cuentas, operaciones y estrategias.',
         deleteAllDataButton: 'Eliminar Todos los Datos', deleteAllDataConfirmation: '¿Estás seguro de que quieres eliminar todos los datos? Esta acción no se puede deshacer.',
@@ -142,10 +163,25 @@ const translations: Record<string, Record<string, string>> = {
         importConfirmation: '¿Estás seguro de que quieres importar los datos? Esto sobrescribirá todos tus datos actuales y no se puede deshacer.',
         importError: 'El archivo seleccionado no es un archivo de respaldo válido o está dañado.',
 
-        // Chat
-        chat: 'Chat IA',
-        askTheAI: 'Pregunta a Eclipse IA...',
-        aiWelcomeMessage: '¡Hola! Soy Eclipse IA. ¿Cómo puedo ayudarte con tu psicología de trading hoy?',
+        // Dashboard
+        goodMorning: 'Buenos Días',
+        goodAfternoon: 'Buenas Tardes',
+        goodEvening: 'Buenas Noches',
+        todaysPnL: "P&L de Hoy",
+        todaysWinRate: "Tasa de Acierto Hoy",
+        tradesToday: 'Operaciones Hoy',
+        upcomingEvents: 'Próximos Eventos',
+        dailyOverview: 'Resumen Diario',
+        noTradesToday: 'No se registraron operaciones hoy.',
+        viewAllTrades: 'Ver Todas',
+
+        // Markets
+        economicCalendar: 'Calendario Económico',
+        marketOverview: 'Resumen de Mercado',
+        forexHeatmap: 'Mapa de Calor Forex',
+        cryptoHeatmap: 'Mapa de Calor Cripto',
+        stockHeatmap: 'Mapa de Calor Acciones',
+        marketNews: 'Noticias del Mercado',
 
         // New Account fields
         currency: 'Moneda',
@@ -163,6 +199,12 @@ const translations: Record<string, Record<string, string>> = {
         demo: 'Demo',
         real: 'Real',
         proprietary: 'Cuenta Financiada',
+
+        // Account Filtering
+        allStatuses: 'Todos los Estados',
+        allTypes: 'Todos los Tipos',
+        noAccountsFound: 'No se encontraron cuentas con esos filtros.',
+        clearFilters: 'Limpiar Filtros',
 
         // Visual enhancements
         progressToTarget: 'Progreso al Objetivo',

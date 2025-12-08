@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Strategy } from '../types';
 import Modal from '../components/Modal';
-import { PlusIcon, EditIcon, TrashIcon, ChevronLeftIcon, UploadCloudIcon, XIcon } from '../components/Icons';
+import { PlusIcon, EditIcon, TrashIcon, ChevronLeftIcon, UploadCloudIcon, XIcon, AlertTriangleIcon } from '../components/Icons';
 import { calculateAnalytics } from '../services/analytics';
 import AnalyticsPage from './AnalyticsPage';
 
@@ -138,12 +138,12 @@ const StrategyListItem: React.FC<{ strategy: Strategy; onSelect: () => void }> =
 const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> = ({ strategy, onBack }) => {
     const { deleteStrategy, t } = useApp();
     const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-    const handleDelete = () => {
-        if(confirm(t('deleteStrategyConfirmation'))) {
-            deleteStrategy(strategy.id); 
-            onBack(); 
-        }
+    const confirmDelete = () => {
+        deleteStrategy(strategy.id);
+        setShowDeleteConfirm(false);
+        onBack();
     }
 
     return (
@@ -155,7 +155,7 @@ const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> =
                 </div>
                  <div className="flex gap-2">
                     <button onClick={() => setEditingStrategy(strategy)} className="p-2 bg-muted rounded-md hover:bg-border"><EditIcon className="w-5 h-5"/></button>
-                    <button onClick={handleDelete} className="p-2 bg-muted rounded-md hover:bg-border text-danger"><TrashIcon className="w-5 h-5"/></button>
+                    <button onClick={() => setShowDeleteConfirm(true)} className="p-2 bg-muted rounded-md hover:bg-border text-danger"><TrashIcon className="w-5 h-5"/></button>
                 </div>
             </div>
             
@@ -180,6 +180,20 @@ const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> =
             </div>
 
             {editingStrategy && <StrategyForm isOpen={!!editingStrategy} onClose={() => setEditingStrategy(null)} strategy={editingStrategy} />}
+
+            {/* Delete Confirmation Modal */}
+             <Modal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title={t('delete')}>
+                <div className="space-y-4 text-center">
+                    <div className="flex justify-center text-danger mb-2">
+                        <AlertTriangleIcon className="w-12 h-12" />
+                    </div>
+                    <p>{t('deleteStrategyConfirmation')}</p>
+                    <div className="flex gap-2 justify-center mt-6">
+                        <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 bg-muted rounded-md hover:bg-border">{t('cancel')}</button>
+                        <button onClick={confirmDelete} className="px-4 py-2 bg-danger text-bkg rounded-md hover:bg-danger/90">{t('delete')}</button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

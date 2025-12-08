@@ -3,9 +3,9 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Account, DrawdownType, Trade, ValueType, AccountStatus, AccountType, Currency } from '../types';
 import Modal from '../components/Modal';
-import { PlusIcon, EditIcon, TrashIcon, TargetIcon, TrendingDownIcon, InfoIcon } from '../components/Icons';
+import { PlusIcon, EditIcon, TrashIcon, TargetIcon, TrendingDownIcon, InfoIcon, AlertTriangleIcon, FilterIcon } from '../components/Icons';
 import EquityChart from '../components/charts/EquityChart';
-import { calculateEquityCurve } from '../services/analytics';
+import { calculateEquityCurve, calculateAccountStats } from '../services/analytics';
 
 const AccountForm: React.FC<{
     isOpen: boolean;
@@ -144,31 +144,17 @@ const AccountForm: React.FC<{
 
 const ProgressBar: React.FC<{ value: number; colorClass: string; }> = ({ value, colorClass }) => (
     <div className="w-full bg-muted rounded-full h-2.5">
-        <div className={`${colorClass} h-2.5 rounded-full`} style={{ width: `${Math.max(0, Math.min(value, 100))}%` }}></div>
+        <div className={`${colorClass} h-2.5 rounded-full transition-all duration-500 ease-out`} style={{ width: `${Math.max(0, Math.min(value, 100))}%` }}></div>
     </div>
 );
 
 const AccountCard: React.FC<{ account: Account; onSelect: () => void }> = ({ account, onSelect }) => {
-    const { getCurrencySymbol, t } = useApp();
-    const profit = account.currentCapital - account.initialCapital;
+    const { getCurrencySymbol, t, trades } = useApp();
     const currencySymbol = getCurrencySymbol(account.currency);
 
-    const profitTargetValue = account.profitTargetType === ValueType.FIXED
-        ? account.profitTarget
-        : account.initialCapital * (account.profitTarget / 100);
+    const stats = useMemo(() => calculateAccountStats(account, trades), [account, trades]);
+    const profit = stats.equity - account.initialCapital;
     
-    const rawProgressToTarget = profitTargetValue > 0 ? (profit / profitTargetValue) * 100 : 0;
-    const progressToTarget = Math.max(0, Math.min(rawProgressToTarget, 100));
-    
-    const drawdownLimitValue = account.drawdownValueType === ValueType.FIXED
-        ? account.drawdownValue
-        : account.initialCapital * (account.drawdownValue / 100);
-    
-    const currentDrawdown = Math.max(0, account.initialCapital - account.currentCapital);
-    const rawDrawdownProgress = drawdownLimitValue > 0 ? (currentDrawdown / drawdownLimitValue) * 100 : 0;
-    const drawdownProgress = Math.max(0, Math.min(rawDrawdownProgress, 100));
-
-
     const typeColors: Record<AccountType, string> = {
         [AccountType.EVAL]: 'bg-yellow-500/20 text-yellow-800 dark:text-yellow-300',
         [AccountType.DEMO]: 'bg-blue-500/20 text-blue-800 dark:text-blue-300',
@@ -198,16 +184,16 @@ const AccountCard: React.FC<{ account: Account; onSelect: () => void }> = ({ acc
                  <div>
                     <div className="flex justify-between items-center text-xs mb-1">
                         <span className="font-medium text-muted-foreground">{t('progressToTarget')}</span>
-                        <span className="font-semibold">{progressToTarget.toFixed(1)}%</span>
+                        <span className="font-semibold">{stats.profitProgress.toFixed(1)}%</span>
                     </div>
-                    <ProgressBar value={progressToTarget} colorClass="bg-success" />
+                    <ProgressBar value={stats.profitProgress} colorClass="bg-success" />
                 </div>
                 <div>
                      <div className="flex justify-between items-center text-xs mb-1">
                         <span className="font-medium text-muted-foreground">{t('drawdownLimit')}</span>
-                        <span className="font-semibold">{drawdownProgress.toFixed(1)}%</span>
+                        <span className="font-semibold">{stats.drawdownProgress.toFixed(1)}%</span>
                     </div>
-                    <ProgressBar value={drawdownProgress} colorClass="bg-danger" />
+                    <ProgressBar value={stats.drawdownProgress} colorClass="bg-danger" />
                 </div>
             </div>
         </div>
@@ -218,6 +204,7 @@ const AccountCard: React.FC<{ account: Account; onSelect: () => void }> = ({ acc
 const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({ account, onBack }) => {
     const { trades, deleteAccount, t, getCurrencySymbol } = useApp();
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const accountTrades = useMemo(() => trades.filter(t => t.accountId === account.id).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [trades, account.id]);
     const equityCurve = useMemo(() => calculateEquityCurve(accountTrades, account.initialCapital, account), [accountTrades, account.initialCapital, account]);
@@ -230,11 +217,10 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
         ? account.initialCapital * (1 + account.profitTarget / 100)
         : account.initialCapital + account.profitTarget;
 
-    const handleDelete = () => {
-        if(confirm(t('deleteAccountConfirmation'))) { 
-            deleteAccount(account.id); 
-            onBack(); 
-        }
+    const confirmDelete = () => {
+        deleteAccount(account.id);
+        setShowDeleteConfirm(false);
+        onBack();
     }
 
     return (
@@ -246,7 +232,7 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
                 </div>
                 <div className="flex gap-2">
                     <button onClick={() => setEditingAccount(account)} className="p-2 bg-muted rounded-md hover:bg-border"><EditIcon className="w-5 h-5"/></button>
-                    <button onClick={handleDelete} className="p-2 bg-muted rounded-md hover:bg-border text-danger"><TrashIcon className="w-5 h-5"/></button>
+                    <button onClick={() => setShowDeleteConfirm(true)} className="p-2 bg-muted rounded-md hover:bg-border text-danger"><TrashIcon className="w-5 h-5"/></button>
                 </div>
             </div>
 
@@ -270,6 +256,20 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
             </div>
 
             {editingAccount && <AccountForm isOpen={!!editingAccount} onClose={() => setEditingAccount(null)} account={editingAccount} />}
+            
+            {/* Delete Confirmation Modal */}
+            <Modal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title={t('delete')}>
+                <div className="space-y-4 text-center">
+                     <div className="flex justify-center text-danger mb-2">
+                        <AlertTriangleIcon className="w-12 h-12" />
+                    </div>
+                    <p>{t('deleteAccountConfirmation')}</p>
+                    <div className="flex gap-2 justify-center mt-6">
+                        <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 bg-muted rounded-md hover:bg-border">{t('cancel')}</button>
+                        <button onClick={confirmDelete} className="px-4 py-2 bg-danger text-bkg rounded-md hover:bg-danger/90">{t('delete')}</button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };
@@ -292,6 +292,17 @@ const AccountsPage: React.FC = () => {
     const { accounts, t } = useApp();
     const [isFormOpen, setFormOpen] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+    const [filterStatus, setFilterStatus] = useState<string>('');
+    const [filterType, setFilterType] = useState<string>('');
+    const [showFilters, setShowFilters] = useState(false);
+
+    const filteredAccounts = useMemo(() => {
+        return accounts.filter(acc => {
+            if (filterStatus && acc.status !== filterStatus) return false;
+            if (filterType && acc.accountType !== filterType) return false;
+            return true;
+        });
+    }, [accounts, filterStatus, filterType]);
 
     if (selectedAccount) {
         return <AccountDetailView account={selectedAccount} onBack={() => setSelectedAccount(null)} />;
@@ -301,27 +312,71 @@ const AccountsPage: React.FC = () => {
         <div className="animate-fade-in">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">{t('accounts')}</h1>
-                <button onClick={() => setFormOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-primary text-bkg rounded-md hover:bg-primary-focus shadow-sm transition-shadow hover:shadow-md">
-                    <PlusIcon className="w-5 h-5"/>
-                    <span>{t('newAccount')}</span>
-                </button>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`p-2 rounded-md transition-all duration-200 ${showFilters ? 'bg-primary text-bkg shadow-sm' : 'bg-muted text-muted-foreground hover:bg-border'}`}
+                        title={t('toggleFilters')}
+                    >
+                        <FilterIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setFormOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-primary text-bkg rounded-md hover:bg-primary-focus shadow-sm transition-shadow hover:shadow-md">
+                        <PlusIcon className="w-5 h-5"/>
+                        <span>{t('newAccount')}</span>
+                    </button>
+                </div>
             </div>
+
+            {showFilters && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 p-4 bg-muted/30 rounded-lg border border-border animate-fade-in">
+                    <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">{t('status')}</label>
+                        <select 
+                            value={filterStatus} 
+                            onChange={e => setFilterStatus(e.target.value)} 
+                            className="w-full p-2 bg-bkg border border-border rounded-md text-sm"
+                        >
+                            <option value="">{t('allStatuses')}</option>
+                            {Object.values(AccountStatus).map(s => <option key={s} value={s}>{t(s.toLowerCase())}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">{t('accountType')}</label>
+                        <select 
+                            value={filterType} 
+                            onChange={e => setFilterType(e.target.value)} 
+                            className="w-full p-2 bg-bkg border border-border rounded-md text-sm"
+                        >
+                            <option value="">{t('allTypes')}</option>
+                            {Object.values(AccountType).map(type => <option key={type} value={type}>{t(type.toLowerCase())}</option>)}
+                        </select>
+                    </div>
+                </div>
+            )}
             
-            {accounts.length > 0 ? (
+            {filteredAccounts.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {accounts.map(acc => (
+                    {filteredAccounts.map(acc => (
                         <AccountCard key={acc.id} account={acc} onSelect={() => setSelectedAccount(acc)} />
                     ))}
                 </div>
             ) : (
                 <div className="text-center py-16 border-2 border-dashed border-border rounded-lg mt-8">
-                    <h3 className="text-xl font-semibold">{t('noAccountsYet')}</h3>
-                    <p className="text-muted-foreground mt-2">{t('createYourFirstAccount')}</p>
-
-                    <button onClick={() => setFormOpen(true)} className="mt-6 flex mx-auto items-center gap-2 px-4 py-2 bg-primary text-bkg rounded-md hover:bg-primary-focus">
-                        <PlusIcon className="w-5 h-5"/>
-                        <span>{t('createAccount')}</span>
-                    </button>
+                    <h3 className="text-xl font-semibold">{accounts.length === 0 ? t('noAccountsYet') : t('noAccountsFound')}</h3>
+                    
+                    {accounts.length === 0 ? (
+                         <>
+                            <p className="text-muted-foreground mt-2">{t('createYourFirstAccount')}</p>
+                            <button onClick={() => setFormOpen(true)} className="mt-6 flex mx-auto items-center gap-2 px-4 py-2 bg-primary text-bkg rounded-md hover:bg-primary-focus">
+                                <PlusIcon className="w-5 h-5"/>
+                                <span>{t('createAccount')}</span>
+                            </button>
+                        </>
+                    ) : (
+                        <button onClick={() => { setFilterStatus(''); setFilterType(''); }} className="mt-4 px-4 py-2 bg-muted hover:bg-border rounded-md transition-colors text-sm font-medium">
+                            {t('clearFilters')}
+                        </button>
+                    )}
                 </div>
             )}
             

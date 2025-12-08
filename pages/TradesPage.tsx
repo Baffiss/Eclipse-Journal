@@ -1,10 +1,9 @@
 
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Trade, TradeDirection } from '../types';
 import Modal from '../components/Modal';
-import { PlusIcon, EditIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, UploadCloudIcon, XIcon, FilterIcon } from '../components/Icons';
+import { PlusIcon, EditIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, UploadCloudIcon, XIcon, FilterIcon, AlertTriangleIcon } from '../components/Icons';
 
 const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -22,15 +21,36 @@ const getLocalDateString = (d: Date): string => {
     return `${year}-${month}-${day}`;
 };
 
+const getCurrentTimeRounded = () => {
+    const now = new Date();
+    const h = now.getHours();
+    let m = now.getMinutes();
+    m = Math.floor(m / 5) * 5; 
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+};
+
 const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade | null; selectedDate?: Date | null }> = ({ isOpen, onClose, trade, selectedDate }) => {
     const { accounts, strategies, addTrade, updateTrade, t, language } = useApp();
+    
+    // Generate time options with 5-minute intervals
+    const timeOptions = useMemo(() => {
+        const options = [];
+        for (let h = 0; h < 24; h++) {
+            for (let m = 0; m < 60; m += 5) {
+                const time = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                options.push(time);
+            }
+        }
+        return options;
+    }, []);
+
     const getInitialFormData = () => {
         const tradeDate = trade ? new Date(trade.date) : (selectedDate || new Date());
         return {
             accountId: trade?.accountId || accounts[0]?.id || '',
             strategyId: trade?.strategyId || '',
             date: getLocalDateString(tradeDate),
-            hour: trade?.hour !== undefined ? trade.hour : new Date().getHours(),
+            time: trade ? new Date(trade.date).toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'}) : getCurrentTimeRounded(),
             asset: trade?.asset || '',
             direction: trade?.direction || TradeDirection.BUY,
             lotSize: trade?.lotSize || 0.01,
@@ -64,8 +84,13 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Parse time from the new selector
+        const [hours, minutes] = formData.time.split(':').map(Number);
+        
         const localDate = new Date(`${formData.date}T00:00:00`);
-        localDate.setHours(Number(formData.hour));
+        localDate.setHours(hours);
+        localDate.setMinutes(minutes);
 
         const tradeData = {
             ...formData,
@@ -73,14 +98,19 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
             takeProfitPips: Number(formData.takeProfitPips),
             stopLossPips: Number(formData.stopLossPips),
             result: parseFloat(String(formData.result)) || 0,
-            hour: Number(formData.hour),
+            hour: hours, // Maintain hour property for analytics grouping
             date: localDate.toISOString(),
         };
 
+        // Remove the time property before sending to context as it is not part of Trade interface
+        // (Though TypeScript interface might need update if we wanted to enforce it strictly, 
+        // passing extra properties to JS object usually fine, but cleaner to conform)
+        const { time, ...finalTradeData } = tradeData as any;
+
         if (trade) {
-            updateTrade(trade, { ...trade, ...tradeData });
+            updateTrade(trade, { ...trade, ...finalTradeData });
         } else {
-            addTrade({ id: crypto.randomUUID(), ...tradeData });
+            addTrade({ id: crypto.randomUUID(), ...finalTradeData });
         }
         onClose();
     };
@@ -111,8 +141,8 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
                     </div>
                     <div>
                         <label className="text-sm font-medium">{t('hour')}</label>
-                        <select name="hour" value={formData.hour} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md mt-1">
-                            {Array.from({length: 24}, (_, i) => <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>)}
+                        <select name="time" value={formData.time} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md mt-1 font-mono">
+                            {timeOptions.map(tOption => <option key={tOption} value={tOption}>{tOption}</option>)}
                         </select>
                     </div>
                     
@@ -124,8 +154,8 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
                     <div>
                         <label className="text-sm font-medium">{t('direction')}</label>
                         <select name="direction" value={formData.direction} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md mt-1">
-                            <option value={TradeDirection.BUY}>{t('buy')}</option>
-                            <option value={TradeDirection.SELL}>{t('sell')}</option>
+                            <option value={TradeDirection.BUY}>Long</option>
+                            <option value={TradeDirection.SELL}>Short</option>
                         </select>
                     </div>
                     <div>
@@ -258,6 +288,7 @@ const TradesPage: React.FC = () => {
     const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
     
     const [filterAccountId, setFilterAccountId] = useState('');
     const [filterStrategyId, setFilterStrategyId] = useState('');
@@ -279,6 +310,13 @@ const TradesPage: React.FC = () => {
             .filter(t => new Date(t.date).toDateString() === selectedDate.toDateString())
             .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [filteredTrades, selectedDate]);
+
+    const confirmDeleteTrade = () => {
+        if (tradeToDelete) {
+            deleteTrade(tradeToDelete);
+            setTradeToDelete(null);
+        }
+    };
 
     return (
         <div className="animate-fade-in">
@@ -328,7 +366,15 @@ const TradesPage: React.FC = () => {
                                         <div key={trade.id} className="p-3 bg-bkg rounded-lg shadow-sm border border-border animate-slide-in-up">
                                             <div className="flex justify-between items-start">
                                                 <div>
-                                                    <p className="font-bold text-base">{trade.asset} <span className={`text-xs px-2 py-0.5 rounded-full ${trade.direction === 'Buy' ? 'bg-blue-500/20 text-blue-300' : 'bg-pink-500/20 text-pink-300'}`}>{trade.direction === 'Buy' ? t('buy') : t('sell')}</span></p>
+                                                    <p className="font-bold text-base">{trade.asset} 
+                                                        <span className={`text-xs px-2 py-0.5 rounded-full ml-2 ${
+                                                            trade.direction === 'Buy' 
+                                                                ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300' 
+                                                                : 'bg-red-500/20 text-red-700 dark:text-red-300'
+                                                        }`}>
+                                                            {trade.direction === 'Buy' ? 'Long' : 'Short'}
+                                                        </span>
+                                                    </p>
                                                     <p className="text-sm text-muted-foreground">{account?.name || 'N/A'}</p>
                                                 </div>
                                                 <p className={`font-semibold text-lg ${trade.result >= 0 ? 'text-success' : 'text-danger'}`}>{trade.result >= 0 ? '+' : ''}{currencySymbol}{trade.result.toFixed(2)}</p>
@@ -337,7 +383,7 @@ const TradesPage: React.FC = () => {
                                             {trade.notes && <p className="text-sm mt-2 pt-2 border-t border-border whitespace-pre-wrap">{trade.notes}</p>}
                                             <div className="flex gap-2 justify-end mt-2">
                                                 <button onClick={() => { setEditingTrade(trade); setFormOpen(true); }} className="p-1.5 hover:bg-border rounded-md text-muted-foreground hover:text-content transition-colors"><EditIcon className="w-4 h-4"/></button>
-                                                <button onClick={() => { if(confirm(t('deleteTradeConfirmation'))) deleteTrade(trade); }} className="p-1.5 hover:bg-border rounded-md text-danger transition-colors"><TrashIcon className="w-4 h-4"/></button>
+                                                <button onClick={() => setTradeToDelete(trade)} className="p-1.5 hover:bg-border rounded-md text-danger transition-colors"><TrashIcon className="w-4 h-4"/></button>
                                             </div>
                                         </div>
                                     )
@@ -353,6 +399,20 @@ const TradesPage: React.FC = () => {
             </div>
 
             <TradeForm isOpen={isFormOpen} onClose={() => setFormOpen(false)} trade={editingTrade} selectedDate={selectedDate} />
+            
+             {/* Delete Trade Confirmation Modal */}
+            <Modal isOpen={!!tradeToDelete} onClose={() => setTradeToDelete(null)} title={t('delete')}>
+                <div className="space-y-4 text-center">
+                    <div className="flex justify-center text-danger mb-2">
+                         <AlertTriangleIcon className="w-12 h-12" />
+                    </div>
+                    <p>{t('deleteTradeConfirmation')}</p>
+                    <div className="flex gap-2 justify-center mt-6">
+                         <button onClick={() => setTradeToDelete(null)} className="px-4 py-2 bg-muted rounded-md hover:bg-border">{t('cancel')}</button>
+                         <button onClick={confirmDeleteTrade} className="px-4 py-2 bg-danger text-bkg rounded-md hover:bg-danger/90">{t('delete')}</button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };
