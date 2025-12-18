@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
 import { EquityDataPoint, Account, ValueType, DrawdownType } from '../../types';
+import { useApp } from '../../context/AppContext';
 
 interface EquityChartProps {
     data: EquityDataPoint[];
@@ -9,13 +11,15 @@ interface EquityChartProps {
 }
 
 const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', account }) => {
-    
+    const { theme } = useApp();
+    const axisColor = theme === 'dark' ? '#A1A1AA' : '#71717A';
+
     const formatYAxis = (tickItem: number) => `${currencySymbol}${tickItem.toLocaleString()}`;
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-bkg p-2 border border-border rounded-md shadow-lg text-sm">
+                <div className="bg-bkg p-2 border border-border rounded-md shadow-lg text-sm text-content">
                     <p className="font-semibold mb-1">{`Date: ${label === 'Initial' ? 'Start' : new Date(label).toLocaleDateString()}`}</p>
                     {payload.map((p: any) => (
                          <p key={p.name} style={{ color: p.color }}>{`${p.name}: ${currencySymbol}${p.value.toLocaleString(undefined, {minimumFractionDigits: 2})}`}</p>
@@ -49,22 +53,26 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
         <div className="w-full h-full bg-muted/50 p-4 rounded-lg">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data} margin={{ top: 5, right: 20, left: 20, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis 
                         dataKey="date" 
                         tickFormatter={(str) => str === 'Initial' ? 'Start' : new Date(str).toLocaleDateString()}
-                        stroke="hsl(var(--content))"
+                        stroke={axisColor}
                         fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
                     />
                     <YAxis 
                         tickFormatter={formatYAxis} 
-                        stroke="hsl(var(--content))"
+                        stroke={axisColor}
                         fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
                         domain={['auto', 'auto']}
                         allowDataOverflow={true}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend verticalAlign="bottom" height={36} />
+                    <Legend verticalAlign="bottom" height={36} wrapperStyle={{ paddingTop: '20px' }} />
                     {profitTargetLine}
                     {maxDrawdownLine}
                     <Line type="monotone" name="Equity" dataKey="equity" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />

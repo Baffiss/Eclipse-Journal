@@ -25,9 +25,11 @@ const InfoTooltip: React.FC<{ text: string }> = ({ text }) => (
 );
 
 const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isComponent = false, defaultAccountId = '', defaultStrategyId = '' }) => {
-    const { trades, accounts, strategies, t, getCurrencySymbol } = useApp();
+    const { trades, accounts, strategies, t, getCurrencySymbol, theme } = useApp();
     const [filterAccountId, setFilterAccountId] = useState(defaultAccountId);
     const [filterStrategyId, setFilterStrategyId] = useState(defaultStrategyId);
+
+    const axisColor = theme === 'dark' ? '#A1A1AA' : '#71717A';
 
     const account = useMemo(() => accounts.find(a => a.id === filterAccountId), [accounts, filterAccountId]);
     
@@ -108,7 +110,11 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isComponent = false, defa
                                             <Cell fill="hsl(var(--success))" stroke="none"/>
                                             <Cell fill="hsl(var(--danger))" stroke="none"/>
                                         </Pie>
-                                        <Tooltip formatter={(value, name) => [value, name]} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--content))' }} itemStyle={{ color: 'hsl(var(--content))' }} />
+                                        <Tooltip 
+                                            formatter={(value, name) => [value, name]} 
+                                            contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} 
+                                            itemStyle={{ color: 'hsl(var(--content))' }} 
+                                        />
                                         <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-content text-4xl font-bold">
                                             {`${stats.winRate.toFixed(1)}%`}
                                         </text>
@@ -147,10 +153,14 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isComponent = false, defa
                             </div>
                             <ChartContainer>
                                 <LineChart data={profitCurveData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                                    <XAxis dataKey="name" stroke="hsl(var(--content))" fontSize={12} label={{ value: "Trade Number", position: "insideBottom", offset: -5 }} />
-                                    <YAxis stroke="hsl(var(--content))" fontSize={12} tickFormatter={val => `${currencySymbol}${val}`}/>
-                                    <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--content))' }} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                                    <XAxis dataKey="name" stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: "Trade Number", position: "insideBottom", offset: -5, fill: axisColor }} />
+                                    <YAxis stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} tickFormatter={val => `${currencySymbol}${val}`}/>
+                                    <Tooltip 
+                                        formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} 
+                                        contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} 
+                                        itemStyle={{ color: 'hsl(var(--content))' }}
+                                    />
                                     <Line type="monotone" dataKey="profit" stroke="hsl(var(--success))" strokeWidth={2} dot={false} />
                                 </LineChart>
                             </ChartContainer>
@@ -174,7 +184,6 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isComponent = false, defa
                                                 outerRadius="75%" 
                                                 label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
                                                     const RADIAN = Math.PI / 180;
-                                                    // Move label out a bit further
                                                     const radius = outerRadius * 1.3;
                                                     const x = cx + radius * Math.cos(-midAngle * RADIAN);
                                                     const y = cy + radius * Math.sin(-midAngle * RADIAN);
@@ -196,7 +205,11 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isComponent = false, defa
                                             >
                                                 {profitableAssetsData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]} stroke="none" />)}
                                             </Pie>
-                                            <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--content))' }} itemStyle={{ color: 'hsl(var(--content))' }} />
+                                            <Tooltip 
+                                                formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} 
+                                                contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} 
+                                                itemStyle={{ color: 'hsl(var(--content))' }} 
+                                            />
                                         </PieChart>
                                     </ResponsiveContainer>
                                 ) : (
@@ -206,8 +219,8 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isComponent = false, defa
                         </div>
                     </div>
                     
-                    <DistributionChart title={t('dailyDistribution')} tooltipText={t('dailyDistribution_desc')} data={stats.dailyDistribution} dataKey="day" valueKey="profit" currencySymbol={currencySymbol}/>
-                    <DistributionChart title={t('hourlyDistribution')} tooltipText={t('hourlyDistribution_desc')} data={stats.hourlyDistribution} dataKey="hour" valueKey="profit" currencySymbol={currencySymbol} />
+                    <DistributionChart title={t('dailyDistribution')} tooltipText={t('dailyDistribution_desc')} data={stats.dailyDistribution} dataKey="day" valueKey="profit" currencySymbol={currencySymbol} axisColor={axisColor} />
+                    <DistributionChart title={t('hourlyDistribution')} tooltipText={t('hourlyDistribution_desc')} data={stats.hourlyDistribution} dataKey="hour" valueKey="profit" currencySymbol={currencySymbol} axisColor={axisColor} />
                     
                      <div>
                         <div className="flex items-center gap-2 mb-2">
@@ -230,9 +243,6 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isComponent = false, defa
     );
 };
 
-// Fix: The original type for the icon prop was too generic (React.ReactElement),
-// causing a TypeScript error when trying to add a className with React.cloneElement.
-// By specifying `React.ReactElement<{ className?: string }>`, we ensure the icon can receive a className.
 const StatCard: React.FC<{ label: string; value: React.ReactNode; color?: 'success' | 'danger', icon: React.ReactElement<{ className?: string }>, tooltipText: string }> = ({ label, value, color, icon, tooltipText }) => {
     const colorClass = color === 'success' ? 'text-success' : color === 'danger' ? 'text-danger' : '';
     return (
@@ -259,7 +269,7 @@ const ChartContainer: React.FC<{children: React.ReactNode, height?: number}> = (
     </div>
 );
 
-const DistributionChart: React.FC<{title: string, tooltipText: string, data: any[], dataKey: string, valueKey: string, currencySymbol: string}> = ({ title, tooltipText, data, dataKey, valueKey, currencySymbol }) => (
+const DistributionChart: React.FC<{title: string, tooltipText: string, data: any[], dataKey: string, valueKey: string, currencySymbol: string, axisColor: string}> = ({ title, tooltipText, data, dataKey, valueKey, currencySymbol, axisColor }) => (
     <div>
         <div className="flex items-center gap-2 mb-2">
             <h3 className="text-lg font-semibold">{title}</h3>
@@ -267,11 +277,16 @@ const DistributionChart: React.FC<{title: string, tooltipText: string, data: any
         </div>
         <ChartContainer height={300}>
             <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey={dataKey} stroke="hsl(var(--content))" fontSize={12} />
-                <YAxis stroke="hsl(var(--content))" fontSize={12} tickFormatter={(val) => `${currencySymbol}${val}`} />
-                <Tooltip formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} cursor={{fill: 'hsl(var(--border))'}} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--content))' }} />
-                <Bar dataKey={valueKey}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey={dataKey} stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${currencySymbol}${val}`} />
+                <Tooltip 
+                    formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} 
+                    cursor={{fill: 'hsl(var(--border))', opacity: 0.4}} 
+                    contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} 
+                    itemStyle={{ color: 'hsl(var(--content))' }}
+                />
+                <Bar dataKey={valueKey} radius={[4, 4, 0, 0]}>
                 {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry[valueKey] >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />
                 ))}
@@ -285,7 +300,7 @@ const NotableTradeCard: React.FC<{trade: Trade | null, title: string, currencySy
     if (!trade) return null;
     const isWin = trade.result > 0;
     return (
-        <div className="bg-muted p-4 rounded-lg">
+        <div className="bg-muted p-4 rounded-lg border border-border">
             <p className="text-sm font-semibold text-muted-foreground">{title}</p>
             <div className="flex justify-between items-center mt-1">
                 <p className="font-bold text-lg">{trade.asset}</p>
