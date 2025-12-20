@@ -1,5 +1,3 @@
-
-
 export enum DrawdownType {
     MAXIMUM = 'Maximum',
     TRAILING = 'Trailing',
@@ -71,6 +69,16 @@ export interface Strategy {
     name: string;
     description: string;
     images?: string[]; // base64 data URLs
+}
+
+export interface TradePreset {
+    id: string;
+    name: string;
+    strategyId?: string;
+    asset: string;
+    lotSize: number;
+    takeProfitPips: number;
+    stopLossPips: number;
 }
 
 export interface AnalyticsStats {

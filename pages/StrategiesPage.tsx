@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Strategy } from '../types';
@@ -37,11 +38,9 @@ const StrategyForm: React.FC<{ isOpen: boolean; onClose: () => void; strategy?: 
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            // Fix: The `file` argument in `map` was being inferred as `unknown`.
-            // Using the spread operator to convert the FileList to an array of Files
-            // ensures correct type inference.
-            const files = [...e.target.files];
+        if (e.target.files && e.target.files.length > 0) {
+            // Fix: Explicitly cast to File[] to avoid 'unknown' inference in some environments during mapping
+            const files = Array.from(e.target.files) as File[];
             const base64Promises = files.map(file => fileToBase64(file));
             try {
                 const base64Images = await Promise.all(base64Promises);
@@ -129,7 +128,7 @@ const StrategyListItem: React.FC<{ strategy: Strategy; onSelect: () => void }> =
             <div className="hidden md:flex gap-6 text-center">
                 <div><p className="text-sm text-muted-foreground">{t('trades')}</p><p className="font-semibold text-lg">{stats.totalTrades}</p></div>
                 <div><p className="text-sm text-muted-foreground">{t('winRate')}</p><p className="font-semibold text-lg">{stats.winRate.toFixed(1)}%</p></div>
-                <div><p className="text-sm text-muted-foreground">{t('profitFactor').substring(0,8)}.</p><p className="font-semibold text-lg">{stats.profitFactor?.toFixed(2) || 'N/A'}</p></div>
+                <div><p className="text-sm text-muted-foreground">{t('profitFactor')?.substring(0,8) || 'Factor'}.</p><p className="font-semibold text-lg">{stats.profitFactor?.toFixed(2) || 'N/A'}</p></div>
             </div>
         </div>
     );

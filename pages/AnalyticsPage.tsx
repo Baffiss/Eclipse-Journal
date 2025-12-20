@@ -3,312 +3,445 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { calculateAnalytics, calculateEquityCurve } from '../services/analytics';
 import EquityChart from '../components/charts/EquityChart';
-import { BarChart3Icon, TargetIcon, TrendingDownIcon, InfoIcon } from '../components/Icons';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, LineChart, Line, PieChart, Pie } from 'recharts';
-import { Trade } from '../types';
-
-interface AnalyticsPageProps {
-    isComponent?: boolean;
-    defaultAccountId?: string;
-    defaultStrategyId?: string;
-}
+import { 
+    BarChart3Icon, TargetIcon, TrendingDownIcon, InfoIcon, 
+    ActivityIcon, ZapIcon, ArrowUpRightIcon, ArrowDownRightIcon,
+    CalendarIcon, LayoutGridIcon, PieChartIcon, TrendingUpIcon,
+    BanknoteIcon
+} from '../components/Icons';
+import { 
+    ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
+    CartesianGrid, Tooltip, Cell, PieChart, Pie, AreaChart, Area
+} from 'recharts';
 
 const PIE_CHART_COLORS = ['#34d399', '#60a5fa', '#f87171', '#fbbf24', '#a78bfa', '#f472b6'];
 
 const InfoTooltip: React.FC<{ text: string }> = ({ text }) => (
-    <div className="relative group flex items-center">
-        <InfoIcon className="w-4 h-4 text-muted-foreground/70 cursor-help" />
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-bkg border border-border rounded-lg shadow-xl text-xs text-content z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+    <div className="relative group flex items-center z-50">
+        <InfoIcon className="w-3.5 h-3.5 text-muted-foreground/50 cursor-help transition-colors group-hover:text-primary" />
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-56 p-3 bg-muted/95 backdrop-blur-md border border-border rounded-xl shadow-2xl text-[11px] font-medium leading-relaxed text-content z-[100] opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none transform translate-y-2 group-hover:translate-y-0 text-center">
             {text}
         </div>
     </div>
 );
 
-const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ isComponent = false, defaultAccountId = '', defaultStrategyId = '' }) => {
+const DataTile: React.FC<{ 
+    label: string; 
+    value: React.ReactNode; 
+    color?: 'success' | 'danger' | 'primary'; 
+    icon: React.ReactNode; 
+    trend?: string;
+    description: string;
+    extra?: React.ReactNode;
+}> = ({ label, value, color, icon, trend, description, extra }) => {
+    const colorMap = {
+        success: 'text-success bg-success/10',
+        danger: 'text-danger bg-danger/10',
+        primary: 'text-primary bg-primary/10',
+    };
+
+    return (
+        <div className="group relative bg-muted/20 backdrop-blur-xl border border-border/50 rounded-[2rem] p-6 hover:border-primary/40 transition-all duration-300 min-h-[160px] flex flex-col justify-between">
+            <div className={`absolute top-0 right-0 w-24 h-24 blur-[60px] opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-full ${color === 'success' ? 'bg-success' : color === 'danger' ? 'bg-danger' : 'bg-primary'}`} />
+            
+            <div className="flex justify-between items-start relative z-10">
+                <div className={`p-2.5 rounded-xl transition-transform duration-300 group-hover:scale-110 ${color ? colorMap[color] : 'bg-bkg text-muted-foreground'}`}>
+                    {React.cloneElement(icon as React.ReactElement, { className: "w-4 h-4" })}
+                </div>
+                <InfoTooltip text={description} />
+            </div>
+
+            <div className="relative z-10 flex justify-between items-end mt-4">
+                <div>
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">{label}</p>
+                    <div className="flex items-baseline gap-2">
+                        <h3 className={`text-2xl font-black tracking-tighter ${color === 'success' ? 'text-success' : color === 'danger' ? 'text-danger' : ''}`}>
+                            {value}
+                        </h3>
+                        {trend && (
+                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${trend.startsWith('+') ? 'bg-success/20 text-success' : 'bg-danger/20 text-danger'}`}>
+                                {trend}
+                            </span>
+                        )}
+                    </div>
+                </div>
+                {extra && <div className="ml-2">{extra}</div>}
+            </div>
+        </div>
+    );
+};
+
+const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string; defaultStrategyId?: string }> = ({ 
+    isComponent = false, 
+    defaultAccountId = '', 
+    defaultStrategyId = '' 
+}) => {
     const { trades, accounts, strategies, t, getCurrencySymbol, theme } = useApp();
     const [filterAccountId, setFilterAccountId] = useState(defaultAccountId);
     const [filterStrategyId, setFilterStrategyId] = useState(defaultStrategyId);
 
-    const axisColor = theme === 'dark' ? '#A1A1AA' : '#71717A';
-
-    const account = useMemo(() => accounts.find(a => a.id === filterAccountId), [accounts, filterAccountId]);
-    
-    const initialCapital = useMemo(() => {
-        if (filterAccountId) {
-            return account?.initialCapital ?? 0;
-        }
-        if (accounts.length > 0) {
-            return accounts.reduce((sum, acc) => sum + acc.initialCapital, 0);
-        }
-        return 0;
-    }, [accounts, filterAccountId, account]);
-
-    const currencySymbol = getCurrencySymbol(account?.currency);
+    const axisColor = theme === 'dark' ? '#52525B' : '#A1A1AA';
+    const activeAccount = accounts.find(a => a.id === filterAccountId);
+    const initialCapital = filterAccountId ? (activeAccount?.initialCapital ?? 0) : accounts.reduce((sum, acc) => sum + acc.initialCapital, 0);
+    const currencySymbol = getCurrencySymbol(activeAccount?.currency);
 
     const filteredTrades = useMemo(() => {
-        if (!filterAccountId && !filterStrategyId) return trades;
-        return trades.filter(trade => {
-            const accountMatch = filterAccountId ? trade.accountId === filterAccountId : true;
-            const strategyMatch = filterStrategyId ? trade.strategyId === filterStrategyId : true;
-            return accountMatch && strategyMatch;
-        });
+        return trades.filter(t => 
+            (filterAccountId ? t.accountId === filterAccountId : true) && 
+            (filterStrategyId ? t.strategyId === filterStrategyId : true)
+        ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [trades, filterAccountId, filterStrategyId]);
 
     const stats = useMemo(() => calculateAnalytics(filteredTrades, initialCapital), [filteredTrades, initialCapital]);
-    const equityCurve = useMemo(() => calculateEquityCurve(filteredTrades, initialCapital, account), [filteredTrades, initialCapital, account]);
+    const equityCurveData = useMemo(() => calculateEquityCurve(filteredTrades, initialCapital, activeAccount), [filteredTrades, initialCapital, activeAccount]);
 
-    const profitCurveData = useMemo(() => {
-        let cumulativeProfit = 0;
-        return filteredTrades
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-            .map((trade, index) => {
-                cumulativeProfit += trade.result;
-                return { name: index + 1, profit: cumulativeProfit };
-            });
+    const totalProfitCurveData = useMemo(() => {
+        let cumulative = 0;
+        const points = filteredTrades.map(t => {
+            cumulative += (parseFloat(String(t.result)) || 0);
+            return {
+                date: t.date,
+                profit: cumulative
+            };
+        });
+        return [{ date: 'Initial', profit: 0 }, ...points];
     }, [filteredTrades]);
 
-    const winRateData = [
-        { name: t('wins'), value: stats.totalWins },
-        { name: t('losses'), value: stats.totalLosses }
-    ];
+    const winRatePieData = useMemo(() => [
+        { name: 'Wins', value: stats.totalWins || (stats.totalTrades === 0 ? 1 : 0), color: 'hsl(var(--success))' },
+        { name: 'Losses', value: stats.totalLosses, color: 'hsl(var(--danger))' }
+    ], [stats]);
 
-    const profitableAssetsData = useMemo(() => 
-        stats.assetPerformance.filter(a => a.profit > 0).map(a => ({ name: a.asset, value: a.profit }))
-    , [stats.assetPerformance]);
+    if (filteredTrades.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-32 bg-muted/10 border-2 border-dashed border-border/50 rounded-[3rem] animate-fade-in">
+                <BarChart3Icon className="w-20 h-20 text-muted-foreground/10 mb-6" />
+                <h3 className="text-2xl font-black tracking-tight">{t('notEnoughData')}</h3>
+                <p className="text-muted-foreground font-bold mt-2 max-w-sm text-center">{t('selectAccountOrStrategyForAnalytics')}</p>
+            </div>
+        );
+    }
 
     return (
-        <div className="animate-fade-in print-bkg-white print-text-black">
+        <div className="animate-fade-in flex flex-col gap-8 pb-20">
+            {/* Premium Header Control Bar */}
             {!isComponent && (
-                <div className="flex justify-between items-center mb-6 no-print">
-                    <h1 className="text-3xl font-bold">{t('analytics')}</h1>
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-muted/30 backdrop-blur-xl border border-border/50 rounded-[2.5rem] p-6 lg:p-8">
+                    <div>
+                        <h1 className="text-4xl font-black tracking-tight leading-none">{t('analytics')}</h1>
+                    </div>
+                    <div className="flex flex-wrap gap-4 w-full lg:w-auto">
+                        <div className="relative group flex-1 lg:w-56">
+                            <LayoutGridIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <select 
+                                value={filterAccountId} 
+                                onChange={e => setFilterAccountId(e.target.value)} 
+                                className="w-full pl-11 pr-4 py-3 bg-bkg/50 border border-border rounded-2xl outline-none font-bold text-xs appearance-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+                            >
+                                <option value="">{t('allAccounts')}</option>
+                                {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                            </select>
+                        </div>
+                        <div className="relative group flex-1 lg:w-56">
+                            <TargetIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <select 
+                                value={filterStrategyId} 
+                                onChange={e => setFilterStrategyId(e.target.value)} 
+                                className="w-full pl-11 pr-4 py-3 bg-bkg/50 border border-border rounded-2xl outline-none font-bold text-xs appearance-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+                            >
+                                <option value="">{t('allStrategies')}</option>
+                                {strategies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                        </div>
+                    </div>
                 </div>
             )}
-            
-            <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 ${isComponent ? 'hidden' : ''} no-print`}>
-                <select value={filterAccountId} onChange={e => setFilterAccountId(e.target.value)} className="w-full p-2 bg-muted border border-border rounded-md">
-                    <option value="">{t('allAccounts')}</option>
-                    {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                </select>
-                <select value={filterStrategyId} onChange={e => setFilterStrategyId(e.target.value)} className="w-full p-2 bg-muted border border-border rounded-md">
-                    <option value="">{t('allStrategies')}</option>
-                    {strategies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-            </div>
-            
-            {filteredTrades.length > 0 ? (
-                <div className="space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-1">
-                            <div className="flex items-center gap-2 mb-2">
-                                <h3 className="text-lg font-semibold">{t('winRate')}</h3>
-                                <InfoTooltip text={t('winRate_desc')} />
-                            </div>
-                            <ChartContainer height={300}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie data={winRateData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="60%" outerRadius="80%" paddingAngle={5}>
-                                            <Cell fill="hsl(var(--success))" stroke="none"/>
-                                            <Cell fill="hsl(var(--danger))" stroke="none"/>
-                                        </Pie>
-                                        <Tooltip 
-                                            formatter={(value, name) => [value, name]} 
-                                            contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} 
-                                            itemStyle={{ color: 'hsl(var(--content))' }} 
-                                        />
-                                        <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-content text-4xl font-bold">
-                                            {`${stats.winRate.toFixed(1)}%`}
-                                        </text>
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </ChartContainer>
-                        </div>
-                        <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">
-                            <StatCard label={t('totalProfit')} value={`${currencySymbol}${stats.totalProfit.toFixed(2)}`} color={stats.totalProfit >= 0 ? 'success' : 'danger'} icon={<BarChart3Icon />} tooltipText={t('totalProfit_desc')} />
-                            <StatCard label={t('totalTrades')} value={stats.totalTrades} icon={<InfoIcon/>} tooltipText={t('totalTrades_desc')} />
-                            <StatCard label={t('profitFactor')} value={stats.profitFactor?.toFixed(2) || 'N/A'} icon={<InfoIcon />} tooltipText={t('profitFactor_desc')} />
-                             <StatCard 
-                                label={t('avgWinLoss')} 
-                                value={<span><span className="text-success">{currencySymbol}{stats.averageWin.toFixed(2)}</span> / <span className="text-danger">{currencySymbol}{stats.averageLoss.toFixed(2)}</span></span>} 
-                                icon={<InfoIcon />} 
-                                tooltipText={t('avgWinLoss_desc')}
-                            />
-                            <StatCard label={t('expectedValue')} value={`${currencySymbol}${stats.expectedValue.toFixed(2)}`} color={stats.expectedValue >= 0 ? 'success' : 'danger'} icon={<InfoIcon />} tooltipText={t('expectedValue_desc')} />
-                            <StatCard label={t('maxDrawdown')} value={`${stats.maxDrawdown.toFixed(2)}%`} color={stats.maxDrawdown > 15 ? 'danger' : 'success'} icon={<TrendingDownIcon />} tooltipText={t('maxDrawdown_desc')} />
-                        </div>
-                    </div>
-                    
-                    <div className="h-96">
-                        <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-lg font-semibold">{t('equityCurve')}</h3>
-                            <InfoTooltip text={t('equityCurve_desc')} />
-                        </div>
-                        <EquityChart data={equityCurve} currencySymbol={currencySymbol} account={account}/>
-                    </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="h-96">
-                            <div className="flex items-center gap-2 mb-2">
-                                <h3 className="text-lg font-semibold">{t('totalProfitCurve')}</h3>
-                                <InfoTooltip text={t('totalProfitCurve_desc')} />
-                            </div>
-                            <ChartContainer>
-                                <LineChart data={profitCurveData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                                    <XAxis dataKey="name" stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: "Trade Number", position: "insideBottom", offset: -5, fill: axisColor }} />
-                                    <YAxis stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} tickFormatter={val => `${currencySymbol}${val}`}/>
-                                    <Tooltip 
-                                        formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} 
-                                        contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} 
-                                        itemStyle={{ color: 'hsl(var(--content))' }}
-                                    />
-                                    <Line type="monotone" dataKey="profit" stroke="hsl(var(--success))" strokeWidth={2} dot={false} />
-                                </LineChart>
-                            </ChartContainer>
-                        </div>
-
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                 <h3 className="text-lg font-semibold">{t('performanceByAsset')}</h3>
-                                 <InfoTooltip text={t('performanceByAsset_desc')} />
-                            </div>
-                             <ChartContainer height={384}>
-                                {profitableAssetsData.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie 
-                                                data={profitableAssetsData} 
-                                                dataKey="value" 
-                                                nameKey="name" 
-                                                cx="50%" 
-                                                cy="50%" 
-                                                outerRadius="75%" 
-                                                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
-                                                    const RADIAN = Math.PI / 180;
-                                                    const radius = outerRadius * 1.3;
-                                                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                                                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                                                  
-                                                    return (
-                                                      <text 
-                                                        x={x} 
-                                                        y={y} 
-                                                        fill="hsl(var(--content))" 
-                                                        textAnchor={x > cx ? 'start' : 'end'} 
-                                                        dominantBaseline="central"
-                                                        fontSize={12}
-                                                        fontWeight="500"
-                                                      >
-                                                        {`${name} (${(percent * 100).toFixed(0)}%)`}
-                                                      </text>
-                                                    );
-                                                  }}
-                                            >
-                                                {profitableAssetsData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]} stroke="none" />)}
-                                            </Pie>
-                                            <Tooltip 
-                                                formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} 
-                                                contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} 
-                                                itemStyle={{ color: 'hsl(var(--content))' }} 
-                                            />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-muted-foreground">{t('noProfitableAssets')}</div>
-                                )}
-                             </ChartContainer>
-                        </div>
-                    </div>
-                    
-                    <DistributionChart title={t('dailyDistribution')} tooltipText={t('dailyDistribution_desc')} data={stats.dailyDistribution} dataKey="day" valueKey="profit" currencySymbol={currencySymbol} axisColor={axisColor} />
-                    <DistributionChart title={t('hourlyDistribution')} tooltipText={t('hourlyDistribution_desc')} data={stats.hourlyDistribution} dataKey="hour" valueKey="profit" currencySymbol={currencySymbol} axisColor={axisColor} />
-                    
-                     <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-lg font-semibold">{t('notableTrades')}</h3>
-                            <InfoTooltip text={t('notableTrades_desc')} />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <NotableTradeCard trade={stats.maxWin} title={t('maxWin')} currencySymbol={currencySymbol} />
-                            <NotableTradeCard trade={stats.maxLoss} title={t('maxLoss')} currencySymbol={currencySymbol} />
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                <div className="text-center py-16 border-2 border-dashed border-border rounded-lg">
-                    <h3 className="text-xl font-semibold">{t('notEnoughData')}</h3>
-                    <p className="text-muted-foreground mt-2">{t('selectAccountOrStrategyForAnalytics')}</p>
-                </div>
-            )}
-        </div>
-    );
-};
-
-const StatCard: React.FC<{ label: string; value: React.ReactNode; color?: 'success' | 'danger', icon: React.ReactElement<{ className?: string }>, tooltipText: string }> = ({ label, value, color, icon, tooltipText }) => {
-    const colorClass = color === 'success' ? 'text-success' : color === 'danger' ? 'text-danger' : '';
-    return (
-        <div className="bg-muted p-4 rounded-lg flex items-start gap-4 animate-slide-in-up">
-            <div className="bg-bkg p-3 rounded-lg text-primary">
-                {React.cloneElement(icon, { className: "w-6 h-6" })}
-            </div>
-            <div>
-                 <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground font-medium">{label}</p>
-                    <InfoTooltip text={tooltipText} />
-                </div>
-                <p className={`text-2xl font-bold ${colorClass}`}>{value}</p>
-            </div>
-        </div>
-    );
-};
-
-const ChartContainer: React.FC<{children: React.ReactNode, height?: number}> = ({ children, height=384 }) => (
-    <div style={{height: `${height}px`}} className="bg-muted/50 p-4 rounded-lg">
-        <ResponsiveContainer width="100%" height="100%">
-            {children}
-        </ResponsiveContainer>
-    </div>
-);
-
-const DistributionChart: React.FC<{title: string, tooltipText: string, data: any[], dataKey: string, valueKey: string, currencySymbol: string, axisColor: string}> = ({ title, tooltipText, data, dataKey, valueKey, currencySymbol, axisColor }) => (
-    <div>
-        <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold">{title}</h3>
-            <InfoTooltip text={tooltipText} />
-        </div>
-        <ChartContainer height={300}>
-            <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey={dataKey} stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${currencySymbol}${val}`} />
-                <Tooltip 
-                    formatter={(value: number) => `${currencySymbol}${value.toFixed(2)}`} 
-                    cursor={{fill: 'hsl(var(--border))', opacity: 0.4}} 
-                    contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} 
-                    itemStyle={{ color: 'hsl(var(--content))' }}
+            {/* Bento Stat Grid - Updated to 6 columns for Avg. R:R */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6">
+                <DataTile 
+                    label="Total P&L" 
+                    value={`${currencySymbol}${stats.totalProfit.toLocaleString()}`} 
+                    color={stats.totalProfit >= 0 ? 'success' : 'danger'} 
+                    icon={<ZapIcon />} 
+                    description={t('totalProfit_desc')}
                 />
-                <Bar dataKey={valueKey} radius={[4, 4, 0, 0]}>
-                {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry[valueKey] >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />
-                ))}
-                </Bar>
-            </BarChart>
-        </ChartContainer>
-    </div>
-);
-
-const NotableTradeCard: React.FC<{trade: Trade | null, title: string, currencySymbol: string}> = ({ trade, title, currencySymbol }) => {
-    if (!trade) return null;
-    const isWin = trade.result > 0;
-    return (
-        <div className="bg-muted p-4 rounded-lg border border-border">
-            <p className="text-sm font-semibold text-muted-foreground">{title}</p>
-            <div className="flex justify-between items-center mt-1">
-                <p className="font-bold text-lg">{trade.asset}</p>
-                <p className={`text-xl font-bold ${isWin ? 'text-success' : 'text-danger'}`}>{currencySymbol}{trade.result.toFixed(2)}</p>
+                <DataTile 
+                    label="Win Rate" 
+                    value={`${stats.winRate.toFixed(1)}%`} 
+                    color="primary"
+                    icon={<TargetIcon />} 
+                    description={t('winRate_desc')}
+                    extra={
+                        <div className="w-24 h-24">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={winRatePieData}
+                                        innerRadius={28}
+                                        outerRadius={40}
+                                        dataKey="value"
+                                        stroke="none"
+                                    >
+                                        {winRatePieData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    }
+                />
+                <DataTile 
+                    label="Profit Factor" 
+                    value={stats.profitFactor?.toFixed(2) || '0.00'} 
+                    color={Number(stats.profitFactor) > 1.5 ? 'success' : 'primary'}
+                    icon={<ActivityIcon />} 
+                    description={t('profitFactor_desc')}
+                />
+                <DataTile 
+                    label="Avg. R:R" 
+                    value={stats.payoffRatio ? `1:${stats.payoffRatio.toFixed(2)}` : 'N/A'} 
+                    color="primary"
+                    icon={<TrendingUpIcon />} 
+                    description={t('payoffRatio_desc') || 'The realized risk to reward ratio based on average win and average loss.'}
+                />
+                <DataTile 
+                    label="Expected Value" 
+                    value={`${currencySymbol}${stats.expectedValue.toFixed(2)}`} 
+                    color={stats.expectedValue >= 0 ? 'success' : 'danger'}
+                    icon={<BanknoteIcon />} 
+                    description={t('expectedValue_desc')}
+                />
+                <DataTile 
+                    label="Max Drawdown" 
+                    value={`${stats.maxDrawdown.toFixed(1)}%`} 
+                    color="danger" 
+                    icon={<TrendingDownIcon />} 
+                    description={t('maxDrawdown_desc')}
+                />
             </div>
-             <p className="text-xs text-muted-foreground">{new Date(trade.date).toLocaleString()}</p>
+
+            {/* Visualization Area */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                {/* Equity Curve */}
+                <div className="bg-muted/10 border border-border/40 rounded-[3rem] p-8 lg:p-10 min-h-[480px] flex flex-col">
+                    <div className="flex justify-between items-center mb-8">
+                        <div>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">Equity Curve</h3>
+                        </div>
+                        <div className="p-3 bg-muted/20 rounded-2xl border border-border/50">
+                            <ActivityIcon className="w-5 h-5 text-primary" />
+                        </div>
+                    </div>
+                    <div className="flex-1">
+                        <EquityChart data={equityCurveData} currencySymbol={currencySymbol} account={activeAccount} />
+                    </div>
+                </div>
+
+                {/* Total Profit Curve */}
+                <div className="bg-muted/10 border border-border/40 rounded-[3rem] p-8 lg:p-10 min-h-[480px] flex flex-col">
+                    <div className="flex justify-between items-center mb-8">
+                        <div>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">Total Profit Curve</h3>
+                            <p className="text-muted-foreground font-bold text-xs uppercase tracking-widest">Cumulative Result Progression</p>
+                        </div>
+                        <div className="p-3 bg-muted/20 rounded-2xl border border-border/50">
+                            <TrendingUpIcon className="w-5 h-5 text-primary" />
+                        </div>
+                    </div>
+                    <div className="flex-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={totalProfitCurveData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.15}/>
+                                        <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+                                <XAxis 
+                                    dataKey="date" 
+                                    tickFormatter={(str) => str === 'Initial' ? 'Start' : new Date(str).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                    stroke={axisColor} 
+                                    fontSize={10} 
+                                    fontWeight="bold"
+                                    tickLine={false} 
+                                    axisLine={false} 
+                                    dy={10}
+                                />
+                                <YAxis 
+                                    stroke={axisColor} 
+                                    fontSize={10} 
+                                    fontWeight="bold"
+                                    tickLine={false} 
+                                    axisLine={false} 
+                                    tickFormatter={(v) => `${v < 0 ? '-' : ''}${currencySymbol}${Math.abs(v) >= 1000 ? (Math.abs(v)/1000).toFixed(0) + 'k' : Math.abs(v)}`}
+                                />
+                                <Tooltip 
+                                    contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderRadius: '16px', border: '1px solid hsl(var(--border))', fontSize: '12px' }}
+                                    formatter={(value: number) => [`${currencySymbol}${value.toLocaleString()}`, 'Profit']}
+                                />
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="profit" 
+                                    stroke="hsl(var(--success))" 
+                                    fill="url(#colorProfit)" 
+                                    strokeWidth={3} 
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+
+            {/* Tertiary Analysis Row */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                {/* Daily Flux Distribution */}
+                <div className="bg-muted/30 border border-border/50 rounded-[3rem] p-8 lg:p-10 flex flex-col xl:col-span-1">
+                    <div className="mb-10">
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-primary mb-2">Daily Flux</h3>
+                        <p className="text-muted-foreground font-medium text-xs">Profit/Loss distribution per day.</p>
+                    </div>
+                    <div className="flex-1 min-h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={stats.dailyDistribution} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} opacity={0.3} />
+                                <XAxis dataKey="day" stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} />
+                                <YAxis stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} tickFormatter={(v) => `${v < 0 ? '-' : ''}${currencySymbol}${Math.abs(v)}`} />
+                                <Tooltip 
+                                    cursor={{ fill: 'hsl(var(--primary))', opacity: 0.05 }}
+                                    contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '20px', padding: '12px' }}
+                                    itemStyle={{ color: 'hsl(var(--content))', fontWeight: 'black', fontSize: '12px' }}
+                                    labelStyle={{ display: 'none' }}
+                                    formatter={(value: number) => [`${value >= 0 ? '+' : ''}${currencySymbol}${value.toLocaleString()}`, 'Net P/L']}
+                                />
+                                <Bar dataKey="profit" radius={[8, 8, 0, 0]}>
+                                    {stats.dailyDistribution.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Alpha Dominance (Assets) */}
+                <div className="bg-muted/20 border border-border/50 rounded-[3rem] p-10 flex flex-col md:flex-row gap-8 items-center xl:col-span-1">
+                    <div className="flex-1">
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-primary mb-2">Alpha Dominance</h3>
+                        <p className="text-muted-foreground font-medium text-xs mb-8">Identification of top performing assets.</p>
+                        
+                        <div className="space-y-4">
+                            {stats.assetPerformance.slice(0, 3).map((asset, i) => (
+                                <div key={asset.asset} className="flex justify-between items-center p-4 bg-bkg/40 border border-border rounded-2xl">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: PIE_CHART_COLORS[i] }} />
+                                        <span className="text-sm font-black uppercase tracking-tight">{asset.asset}</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-success">+{currencySymbol}{asset.profit.toLocaleString()}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="w-full md:w-48 h-48 relative">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie 
+                                    data={stats.assetPerformance.filter(a => a.profit > 0)} 
+                                    dataKey="profit" 
+                                    nameKey="asset" 
+                                    innerRadius={55} 
+                                    outerRadius={75} 
+                                    paddingAngle={10}
+                                    stroke="none"
+                                >
+                                    {stats.assetPerformance.map((_, i) => <Cell key={i} fill={PIE_CHART_COLORS[i % PIE_CHART_COLORS.length]} />)}
+                                </Pie>
+                                <Tooltip 
+                                    contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderRadius: '16px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <PieChartIcon className="w-5 h-5 text-muted-foreground/30 mb-1" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Notable Trades */}
+                <div className="space-y-6 xl:col-span-1">
+                    <div className="group bg-success/5 border border-success/20 rounded-[2.5rem] p-8 hover:bg-success/10 transition-all duration-300">
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="p-3 bg-success/10 text-success rounded-2xl">
+                                <ArrowUpRightIcon className="w-6 h-6" />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-success">Peak Execution</span>
+                        </div>
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <h4 className="text-3xl font-black tracking-tighter uppercase mb-1">{stats.maxWin?.asset}</h4>
+                                <p className="text-xs font-bold text-muted-foreground">{new Date(stats.maxWin?.date || '').toLocaleDateString()}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-2xl font-black text-success">+{currencySymbol}{stats.maxWin?.result.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="group bg-danger/5 border border-danger/20 rounded-[2.5rem] p-8 hover:bg-danger/10 transition-all duration-300">
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="p-3 bg-danger/10 text-danger rounded-2xl">
+                                <ArrowDownRightIcon className="w-6 h-6" />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-danger">Bottom Out</span>
+                        </div>
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <h4 className="text-3xl font-black tracking-tighter uppercase mb-1">{stats.maxLoss?.asset}</h4>
+                                <p className="text-xs font-bold text-muted-foreground">{new Date(stats.maxLoss?.date || '').toLocaleDateString()}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-2xl font-black text-danger">{currencySymbol}{stats.maxLoss?.result.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Hourly Psychology Panel */}
+            <div className="bg-muted/20 border border-border/50 rounded-[3rem] p-8 lg:p-10">
+                <div className="flex items-center gap-4 mb-10">
+                    <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                        <CalendarIcon className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-black tracking-tight">{t('hourlyDistribution')}</h3>
+                    </div>
+                </div>
+                <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={stats.hourlyDistribution} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} opacity={0.3} />
+                            <XAxis dataKey="hour" stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} />
+                            <YAxis stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} />
+                            <Tooltip 
+                                cursor={{ fill: 'hsl(var(--primary))', opacity: 0.05 }}
+                                contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '16px' }}
+                                itemStyle={{ color: 'hsl(var(--content))', fontWeight: 'black' }}
+                                labelFormatter={(h) => `Time: ${h}:00`}
+                            />
+                            <Bar dataKey="profit" radius={[4, 4, 0, 0]}>
+                                {stats.hourlyDistribution.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
         </div>
-    )
-}
+    );
+};
 
 export default AnalyticsPage;

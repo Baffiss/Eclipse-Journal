@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import AccountsPage from './pages/AccountsPage';

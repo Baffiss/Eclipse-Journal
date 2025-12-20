@@ -1,6 +1,5 @@
-
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useContext, useCallback } from 'react';
-import { Account, Trade, Strategy, Currency } from '../types';
+import { Account, Trade, Strategy, Currency, TradePreset } from '../types';
 
 // Internationalization (i18n)
 const translations: Record<string, Record<string, string>> = {
@@ -107,20 +106,21 @@ const translations: Record<string, Record<string, string>> = {
         losses: 'Losses',
         noProfitableAssets: 'No profitable assets to display.',
 
-        // Analytics Tooltip Descriptions
-        winRate_desc: 'The percentage of winning trades out of the total number of trades. A higher percentage indicates more frequent wins.',
-        profitFactor_desc: 'The ratio of gross profit to gross loss. A value greater than 1 indicates a profitable system. Calculated as (Gross Profit / Gross Loss).',
-        totalProfit_desc: 'The net result of all winning and losing trades combined. It represents the total amount of money gained or lost.',
-        totalTrades_desc: 'The total number of trades taken within the selected period or account.',
-        avgWinLoss_desc: 'The average amount of money made on winning trades compared to the average amount of money lost on losing trades.',
-        expectedValue_desc: 'The average amount you can expect to win or lose per trade over a large number of trades. A positive value is desirable.',
-        maxDrawdown_desc: 'The largest peak-to-trough decline in account equity, expressed as a percentage. It measures the biggest loss from a single peak.',
-        equityCurve_desc: "A visual representation of your account's capital growth over time. It plots the equity value after each trade.",
-        totalProfitCurve_desc: 'A chart showing the cumulative profit or loss after each trade, illustrating the consistency of profitability.',
-        performanceByAsset_desc: 'A breakdown of total net profit contributed by each profitable traded asset.',
-        dailyDistribution_desc: 'Shows your net profit and loss for each day of the week, helping to identify your most and least profitable trading days.',
-        hourlyDistribution_desc: 'Shows your net profit and loss for each hour of the day, helping to identify your most and least profitable trading times.',
-        notableTrades_desc: 'Highlights your single largest winning trade and your single largest losing trade.',
+        // Analytics Descriptions
+        totalProfit_desc: 'The cumulative sum of all profits and losses across the selected trades.',
+        winRate_desc: 'The percentage of trades that resulted in a profit out of the total number of trades closed.',
+        profitFactor_desc: 'The ratio of gross profit to gross loss. A value greater than 1.0 indicates a profitable system.',
+        payoffRatio_desc: 'Average Risk to Reward ratio. It measures the relationship between your average winning trade and your average losing trade. A value over 1.0 means your wins are larger than your losses.',
+        expectedValue_desc: 'The average amount you can expect to win or lose per trade based on historical performance.',
+        maxDrawdown_desc: 'The maximum peak-to-trough decline in equity, expressed as a percentage of the peak value.',
+
+        // Presets
+        tradePresets: 'Trade Presets',
+        saveAsPreset: 'Save as Preset',
+        presetName: 'Preset Name',
+        selectPreset: 'Apply Preset',
+        noPresets: 'No presets saved.',
+        save: 'Save'
     },
     es: {
         accounts: 'Cuentas', trades: 'Operaciones', strategies: 'Estrategias', analytics: 'Analíticas', markets: 'Mercados', dashboard: 'Panel Principal',
@@ -225,20 +225,21 @@ const translations: Record<string, Record<string, string>> = {
         losses: 'Perdidas',
         noProfitableAssets: 'No hay activos con ganancias para mostrar.',
 
-        // Analytics Tooltip Descriptions
-        winRate_desc: 'El porcentaje de operaciones ganadoras sobre el número total de operaciones. Un porcentaje más alto indica ganancias más frecuentes.',
-        profitFactor_desc: 'La relación entre la ganancia bruta y la pérdida bruta. Un valor mayor que 1 indica un sistema rentable. Se calcula como (Ganancia Bruta / Pérdida Bruta).',
-        totalProfit_desc: 'El resultado neto de todas las operaciones ganadoras y perdedoras combinadas. Representa la cantidad total de dinero ganado o perdido.',
-        totalTrades_desc: 'El número total de operaciones realizadas en el período o cuenta seleccionada.',
-        avgWinLoss_desc: 'La cantidad promedio de dinero ganado en operaciones ganadoras en comparación con la cantidad promedio de dinero perdido en operaciones perdedoras.',
-        expectedValue_desc: 'La cantidad promedio que puedes esperar ganar o perder por operación en un gran número de operaciones. Un valor positivo es deseable.',
-        maxDrawdown_desc: 'La mayor caída de pico a valle en el capital de la cuenta, expresada como un porcentaje. Mide la mayor pérdida desde un único pico.',
-        equityCurve_desc: 'Una representación visual del crecimiento del capital de tu cuenta a lo largo del tiempo. Grafica el valor del capital después de cada operación.',
-        totalProfitCurve_desc: 'Un gráfico que muestra la ganancia o pérdida acumulada después de cada operación, ilustrando la consistencia de la rentabilidad.',
-        performanceByAsset_desc: 'Un desglose del beneficio neto total contribuido por cada activo operado con ganancias.',
-        dailyDistribution_desc: 'Muestra tu ganancia y pérdida neta para cada día de la semana, ayudando a identificar tus días de trading más y menos rentables.',
-        hourlyDistribution_desc: 'Muestra tu ganancia y pérdida neta para cada hora del día, ayudando a identificar tus horas de trading más y menos rentables.',
-        notableTrades_desc: 'Destaca tu mayor operación ganadora individual y tu mayor operación perdedora individual.',
+        // Analytics Descriptions
+        totalProfit_desc: 'La suma acumulativa de todas las ganancias y pérdidas de las operaciones seleccionadas.',
+        winRate_desc: 'El porcentaje de operaciones que resultaron en ganancia del total de operaciones cerradas.',
+        profitFactor_desc: 'La relación entre el beneficio bruto y la pérdida bruta. Un valor superior a 1.0 indica un sistema rentable.',
+        payoffRatio_desc: 'Ratio Riesgo/Beneficio promedio. Mide la relación entre tu ganancia promedio y tu pérdida promedio. Un valor superior a 1.0 significa que tus ganancias son mayores que tus pérdidas.',
+        expectedValue_desc: 'La cantidad promedio que puedes esperar ganar o perder por operación basada en el rendimiento histórico.',
+        maxDrawdown_desc: 'La caída máxima de pico a valle en el capital, expresada como un porcentaje del valor máximo.',
+
+        // Presets
+        tradePresets: 'Presets de Operación',
+        saveAsPreset: 'Guardar como Preset',
+        presetName: 'Nombre del Preset',
+        selectPreset: 'Aplicar Preset',
+        noPresets: 'No hay presets guardados.',
+        save: 'Guardar'
     },
 };
 
@@ -247,6 +248,7 @@ export interface AppState {
     accounts: Account[];
     trades: Trade[];
     strategies: Strategy[];
+    presets: TradePreset[];
     theme: 'light' | 'dark';
     colorTheme: string;
     customColor: string | null;
@@ -263,6 +265,8 @@ type Action =
     | { type: 'ADD_STRATEGY'; payload: Strategy }
     | { type: 'UPDATE_STRATEGY'; payload: Strategy }
     | { type: 'DELETE_STRATEGY'; payload: string }
+    | { type: 'ADD_PRESET'; payload: TradePreset }
+    | { type: 'DELETE_PRESET'; payload: string }
     | { type: 'TOGGLE_THEME' }
     | { type: 'SET_COLOR_THEME'; payload: string }
     | { type: 'SET_CUSTOM_COLOR'; payload: string | null }
@@ -274,6 +278,7 @@ const initialState: AppState = {
     accounts: [],
     trades: [],
     strategies: [],
+    presets: [],
     theme: 'light',
     colorTheme: 'zinc',
     customColor: null,
@@ -354,6 +359,10 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
                 accounts: prevState.accounts.map(a => a.strategyId === action.payload ? { ...a, strategyId: undefined } : a),
                 trades: prevState.trades.map(t => t.strategyId === action.payload ? { ...t, strategyId: undefined } : t)
              };
+        case 'ADD_PRESET':
+            return { ...prevState, presets: [...prevState.presets, action.payload] };
+        case 'DELETE_PRESET':
+            return { ...prevState, presets: prevState.presets.filter(p => p.id !== action.payload) };
         case 'TOGGLE_THEME':
             return { ...prevState, theme: prevState.theme === 'light' ? 'dark' : 'light' };
         case 'SET_COLOR_THEME':
@@ -363,7 +372,7 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
         case 'SET_LANGUAGE':
             return { ...prevState, language: action.payload };
         case 'RESET_DATA':
-            return { ...prevState, accounts: [], trades: [], strategies: [] };
+            return { ...prevState, accounts: [], trades: [], strategies: [], presets: [] };
         case 'SET_STATE':
              return action.payload;
         default:
@@ -381,12 +390,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 const parsedState = JSON.parse(savedState);
                 
                 if (parsedState && typeof parsedState === 'object') {
-                    // Ensure top-level keys are arrays
                     const accounts = Array.isArray(parsedState.accounts) ? parsedState.accounts : [];
                     const trades = Array.isArray(parsedState.trades) ? parsedState.trades : [];
                     const strategies = Array.isArray(parsedState.strategies) ? parsedState.strategies : [];
+                    const presets = Array.isArray(parsedState.presets) ? parsedState.presets : [];
                     
-                    // "Self-healing" and sanitization logic
                     const sanitizedTrades = trades.map((trade: any) => ({
                         ...trade,
                         result: parseFloat(String(trade.result)) || 0,
@@ -415,6 +423,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                         accounts: sanitizedAccounts,
                         trades: sanitizedTrades,
                         strategies: strategies,
+                        presets: presets,
                     };
 
                     dispatch({ type: 'SET_STATE', payload: finalState });
@@ -523,6 +532,9 @@ export const useApp = () => {
     const updateStrategy = useCallback((strategy: Strategy) => dispatch({ type: 'UPDATE_STRATEGY', payload: strategy }), [dispatch]);
     const deleteStrategy = useCallback((strategyId: string) => dispatch({ type: 'DELETE_STRATEGY', payload: strategyId }), [dispatch]);
 
+    const addPreset = useCallback((preset: TradePreset) => dispatch({ type: 'ADD_PRESET', payload: preset }), [dispatch]);
+    const deletePreset = useCallback((presetId: string) => dispatch({ type: 'DELETE_PRESET', payload: presetId }), [dispatch]);
+
     return {
         state,
         dispatch,
@@ -542,6 +554,8 @@ export const useApp = () => {
         deleteTrade,
         addStrategy,
         updateStrategy,
-        deleteStrategy
+        deleteStrategy,
+        addPreset,
+        deletePreset
     };
 };

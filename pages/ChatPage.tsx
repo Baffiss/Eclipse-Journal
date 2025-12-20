@@ -62,6 +62,7 @@ const ChatPage: React.FC = () => {
         }
 
         try {
+            // Initializing GoogleGenAI with the API key from process.env.API_KEY
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             
             // Construct history for context
@@ -71,7 +72,7 @@ const ChatPage: React.FC = () => {
             }));
 
             const chat = ai.chats.create({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-3-flash-preview',
                 config: {
                     systemInstruction: "You are Eclipse AI, an expert trading assistant specialized in psychotrading (trading psychology). Your primary focus is to help traders master their emotions, discipline, and mental state. While you can discuss strategies and risk management, always emphasize the psychological aspects—such as controlling fear, greed, FOMO, and maintaining patience. Help users build a professional trader's mindset. Do not provide financial advice or trade signals. Be concise, professional, and supportive.",
                 },
@@ -85,6 +86,7 @@ const ChatPage: React.FC = () => {
 
             let fullText = '';
             for await (const chunk of result) {
+                // Accessing the .text property of the chunk as per guidelines
                 const text = chunk.text;
                 if (text) {
                     fullText += text;
