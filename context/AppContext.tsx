@@ -1,3 +1,4 @@
+
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useContext, useCallback } from 'react';
 import { Account, Trade, Strategy, Currency, TradePreset } from '../types';
 
@@ -120,7 +121,8 @@ const translations: Record<string, Record<string, string>> = {
         presetName: 'Preset Name',
         selectPreset: 'Apply Preset',
         noPresets: 'No presets saved.',
-        save: 'Save'
+        save: 'Save',
+        viewScreenshot: 'View Screenshot'
     },
     es: {
         accounts: 'Cuentas', trades: 'Operaciones', strategies: 'Estrategias', analytics: 'Analíticas', markets: 'Mercados', dashboard: 'Panel Principal',
@@ -239,10 +241,12 @@ const translations: Record<string, Record<string, string>> = {
         presetName: 'Nombre del Preset',
         selectPreset: 'Aplicar Preset',
         noPresets: 'No hay presets guardados.',
-        save: 'Guardar'
+        save: 'Guardar',
+        viewScreenshot: 'Ver Captura'
     },
 };
 
+export type ActivePage = 'dashboard' | 'accounts' | 'trades' | 'strategies' | 'analytics' | 'markets';
 
 export interface AppState {
     accounts: Account[];
@@ -253,6 +257,8 @@ export interface AppState {
     colorTheme: string;
     customColor: string | null;
     language: 'en' | 'es';
+    activePage: ActivePage;
+    focusedTradeId: string | null;
 }
 
 type Action =
@@ -272,6 +278,8 @@ type Action =
     | { type: 'SET_CUSTOM_COLOR'; payload: string | null }
     | { type: 'SET_LANGUAGE'; payload: 'en' | 'es' }
     | { type: 'RESET_DATA' }
+    | { type: 'SET_PAGE'; payload: ActivePage }
+    | { type: 'FOCUS_TRADE'; payload: string | null }
     | { type: 'SET_STATE'; payload: AppState };
 
 const initialState: AppState = {
@@ -283,6 +291,8 @@ const initialState: AppState = {
     colorTheme: 'zinc',
     customColor: null,
     language: 'en',
+    activePage: 'dashboard',
+    focusedTradeId: null,
 };
 
 const AppContext = createContext<{ state: AppState; dispatch: Dispatch<Action> } | undefined>(undefined);
@@ -373,6 +383,10 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
             return { ...prevState, language: action.payload };
         case 'RESET_DATA':
             return { ...prevState, accounts: [], trades: [], strategies: [], presets: [] };
+        case 'SET_PAGE':
+            return { ...prevState, activePage: action.payload };
+        case 'FOCUS_TRADE':
+            return { ...prevState, focusedTradeId: action.payload };
         case 'SET_STATE':
              return action.payload;
         default:
@@ -519,6 +533,8 @@ export const useApp = () => {
     const setCustomColor = useCallback((color: string | null) => dispatch({ type: 'SET_CUSTOM_COLOR', payload: color }), [dispatch]);
     const setLanguage = useCallback((lang: 'en' | 'es') => dispatch({ type: 'SET_LANGUAGE', payload: lang }), [dispatch]);
     const resetData = useCallback(() => dispatch({ type: 'RESET_DATA' }), [dispatch]);
+    const setPage = useCallback((page: ActivePage) => dispatch({ type: 'SET_PAGE', payload: page }), [dispatch]);
+    const focusTrade = useCallback((tradeId: string | null) => dispatch({ type: 'FOCUS_TRADE', payload: tradeId }), [dispatch]);
     
     const addAccount = useCallback((account: Account) => dispatch({ type: 'ADD_ACCOUNT', payload: account }), [dispatch]);
     const updateAccount = useCallback((account: Account) => dispatch({ type: 'UPDATE_ACCOUNT', payload: account }), [dispatch]);
@@ -546,6 +562,8 @@ export const useApp = () => {
         setCustomColor,
         setLanguage,
         resetData,
+        setPage,
+        focusTrade,
         addAccount,
         updateAccount,
         deleteAccount,

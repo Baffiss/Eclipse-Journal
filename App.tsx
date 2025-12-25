@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import AccountsPage from './pages/AccountsPage';
@@ -9,8 +10,6 @@ import DashboardPage from './pages/DashboardPage';
 import { EclipseIcon, WalletIcon, TradesIcon, StrategiesIcon, BarChart3Icon, SunIcon, MoonIcon, SettingsIcon, TrashIcon, PanelLeftCloseIcon, DownloadIcon, UploadCloudIcon, ActivityIcon, AlertTriangleIcon, LayoutDashboardIcon } from './components/Icons';
 import Modal from './components/Modal';
 import { exportData, importData } from './services/export';
-
-type Page = 'dashboard' | 'accounts' | 'trades' | 'strategies' | 'analytics' | 'markets';
 
 const THEMES = [
     { name: 'zinc', color: 'bg-zinc-500' },
@@ -213,13 +212,12 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
 };
 
 const AppContent: React.FC = () => {
-    const [page, setPage] = useState<Page>('dashboard');
-    const { theme, toggleTheme, t } = useApp();
+    const { theme, toggleTheme, t, activePage, setPage } = useApp();
     const [isSettingsOpen, setSettingsOpen] = useState(false);
     const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const renderPage = () => {
-        switch (page) {
+        switch (activePage) {
             case 'dashboard':
                 return <DashboardPage />;
             case 'accounts':
@@ -248,85 +246,138 @@ const AppContent: React.FC = () => {
 
     return (
         <div className={`flex h-screen bg-bkg text-content ${theme}`}>
-            <aside className={`bg-muted/50 border-r border-border flex-col p-3 hidden md:flex no-print transition-all duration-300 ${isSidebarCollapsed ? 'w-20 items-center' : 'w-64'}`}>
-                <div className={`flex items-center w-full mb-8 h-10 ${isSidebarCollapsed ? 'justify-center' : 'justify-between pl-2'}`}>
-                    <div className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ${isSidebarCollapsed ? 'w-0' : 'w-full'}`}>
-                         <EclipseIcon className="text-primary h-8 w-8 flex-shrink-0" />
-                        <h1 className="text-xl font-bold whitespace-nowrap">{t('appName')}</h1>
+            {/* Improved Collapsible Sidebar */}
+            <aside 
+                className={`bg-muted/30 backdrop-blur-3xl border-r border-border/40 flex-col p-4 hidden md:flex no-print transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] relative z-40 ${isSidebarCollapsed ? 'w-24' : 'w-72'}`}
+            >
+                {/* Brand Logo & Collapse Trigger */}
+                <div className={`flex items-center mb-10 h-10 ${isSidebarCollapsed ? 'justify-center' : 'justify-between px-2'}`}>
+                    <div className={`flex items-center gap-3 overflow-hidden transition-all duration-500 ${isSidebarCollapsed ? 'w-0 opacity-0' : 'w-full opacity-100'}`}>
+                        <div className="bg-primary/10 p-2 rounded-xl">
+                            <EclipseIcon className="text-primary h-6 w-6 flex-shrink-0" />
+                        </div>
+                        <h1 className="text-lg font-black uppercase tracking-tighter whitespace-nowrap bg-clip-text text-transparent bg-gradient-to-br from-content to-content/60">{t('appName')}</h1>
                     </div>
+                    
+                    {/* Collapsed Mini Logo */}
+                    {isSidebarCollapsed && (
+                        <div className="absolute inset-x-0 top-4 flex justify-center opacity-100 transition-opacity duration-300">
+                             <div className="bg-primary/10 p-2 rounded-xl">
+                                <EclipseIcon className="text-primary h-6 w-6" />
+                             </div>
+                        </div>
+                    )}
+
                     <button
                         onClick={() => setSidebarCollapsed(!isSidebarCollapsed)}
-                        className={`p-2 rounded-md text-sm font-medium transition-colors hover:bg-border`}
+                        className={`p-2 rounded-xl text-muted-foreground transition-all duration-300 hover:bg-muted hover:text-primary ${isSidebarCollapsed ? 'mt-14' : ''}`}
                         title={isSidebarCollapsed ? t('expand') : t('collapse')}
                     >
-                        <PanelLeftCloseIcon className={`w-5 h-5 transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
+                        <PanelLeftCloseIcon className={`w-5 h-5 transition-transform duration-500 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
                     </button>
                 </div>
 
-                <nav className="flex-grow w-full">
-                    <ul className="space-y-2">
-                        {navItems.map(item => (
-                            <li key={item.id}>
-                                <button
-                                    onClick={() => setPage(item.id as Page)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-semibold transition-all duration-200 ${
-                                        page === item.id ? 'bg-primary text-bkg shadow-sm' : 'hover:bg-muted'
-                                    } ${isSidebarCollapsed ? 'justify-center' : ''}`}
-                                    title={isSidebarCollapsed ? item.label : undefined}
-                                >
-                                    {React.cloneElement(item.icon, { className: 'w-5 h-5 flex-shrink-0' })}
-                                    {!isSidebarCollapsed && <span className="transition-opacity duration-200">{item.label}</span>}
-                                </button>
-                            </li>
-                        ))}
+                {/* Primary Navigation */}
+                <nav className="flex-grow w-full space-y-1">
+                    <div className={`text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4 px-3 transition-opacity duration-300 ${isSidebarCollapsed ? 'opacity-0' : 'opacity-100'}`}>
+                        Menu
+                    </div>
+                    <ul className="space-y-1.5">
+                        {navItems.map(item => {
+                            const isActive = activePage === item.id;
+                            return (
+                                <li key={item.id}>
+                                    <button
+                                        onClick={() => setPage(item.id as any)}
+                                        className={`relative group w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                                            isActive 
+                                                ? 'bg-primary text-bkg shadow-lg shadow-primary/20 scale-[1.02]' 
+                                                : 'text-muted-foreground hover:bg-muted/60 hover:text-content'
+                                        } ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
+                                        title={isSidebarCollapsed ? item.label : undefined}
+                                    >
+                                        {/* Active Indicator Bar */}
+                                        {isActive && !isSidebarCollapsed && (
+                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-bkg rounded-r-full" />
+                                        )}
+                                        
+                                        {React.cloneElement(item.icon, { className: `w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}` })}
+                                        {!isSidebarCollapsed && <span className="transition-opacity duration-300">{item.label}</span>}
+                                        
+                                        {/* Collapsed Tooltip (Simulated) */}
+                                        {isSidebarCollapsed && (
+                                            <div className="absolute left-full ml-4 px-3 py-1.5 bg-content text-bkg rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap text-[10px] font-black tracking-widest z-50">
+                                                {item.label}
+                                            </div>
+                                        )}
+                                    </button>
+                                </li>
+                            )
+                        })}
                     </ul>
                 </nav>
-                <div className="w-full space-y-2">
+
+                {/* System Controls */}
+                <div className="w-full pt-6 border-t border-border/20 space-y-2">
+                    <div className={`text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-2 px-3 transition-opacity duration-300 ${isSidebarCollapsed ? 'opacity-0' : 'opacity-100'}`}>
+                        System
+                    </div>
                      <button
                         onClick={() => setSettingsOpen(true)}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-muted ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                        className={`group relative w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 hover:bg-muted/60 text-muted-foreground hover:text-content ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
                         title={t('settings')}
                     >
-                        <SettingsIcon className="w-5 h-5" />
+                        <SettingsIcon className="w-5 h-5 flex-shrink-0 group-hover:rotate-90 transition-transform duration-500" />
+                        {!isSidebarCollapsed && <span>{t('settings')}</span>}
                     </button>
                     <button
                         onClick={toggleTheme}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-muted ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                        className={`group relative w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 hover:bg-muted/60 text-muted-foreground hover:text-content ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
                         title={theme === 'light' ? t('darkMode') : t('lightMode')}
                     >
-                        {theme === 'light' ? <MoonIcon className="w-5 h-5" /> : <SunIcon className="w-5 h-5" />}
+                        {theme === 'light' ? (
+                            <MoonIcon className="w-5 h-5 flex-shrink-0 transition-transform duration-500 group-hover:-rotate-12" />
+                        ) : (
+                            <SunIcon className="w-5 h-5 flex-shrink-0 transition-transform duration-500 group-hover:rotate-45" />
+                        )}
+                        {!isSidebarCollapsed && <span>{theme === 'light' ? t('darkMode') : t('lightMode')}</span>}
                     </button>
                 </div>
             </aside>
-             <main className="flex-1 flex flex-col overflow-hidden">
-                 <header className="h-14 flex items-center justify-between border-b border-border px-6 no-print md:hidden">
-                    <div className="flex items-center gap-2">
-                         <EclipseIcon className="text-primary h-7 w-7" />
-                         <h1 className="text-lg font-bold">{t('appNameShort')}</h1>
+
+             <main className="flex-1 flex flex-col overflow-hidden relative z-10">
+                 <header className="h-16 flex items-center justify-between border-b border-border px-6 no-print md:hidden bg-bkg/80 backdrop-blur-lg">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-primary/10 p-1.5 rounded-lg">
+                            <EclipseIcon className="text-primary h-6 w-6" />
+                        </div>
+                        <h1 className="text-lg font-black uppercase tracking-tighter">{t('appNameShort')}</h1>
                     </div>
-                    <div className="flex items-center gap-1">
-                        <button onClick={() => setSettingsOpen(true)} className="p-2 rounded-full hover:bg-muted">
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setSettingsOpen(true)} className="p-2.5 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
                            <SettingsIcon className="w-5 h-5"/>
                         </button>
-                        <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-muted">
+                        <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
                             {theme === 'light' ? <MoonIcon className="w-5 h-5"/> : <SunIcon className="w-5 h-5"/>}
                         </button>
                     </div>
                 </header>
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 scrollbar-thin">
                     {renderPage()}
                 </div>
-                <footer className="md:hidden flex justify-around p-2 border-t border-border bg-bkg no-print">
+                
+                {/* Mobile Tab Bar */}
+                <footer className="md:hidden flex justify-around p-3 border-t border-border bg-bkg/80 backdrop-blur-xl no-print">
                      {navItems.map(item => (
                         <button
                             key={item.id}
-                            onClick={() => setPage(item.id as Page)}
-                            className={`flex flex-col items-center gap-1 p-2 rounded-md text-xs transition-colors w-16 ${
-                                page === item.id ? 'text-primary' : 'text-muted-foreground'
+                            onClick={() => setPage(item.id as any)}
+                            className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all duration-300 w-16 ${
+                                activePage === item.id ? 'text-primary scale-110' : 'text-muted-foreground'
                             }`}
                         >
                             {React.cloneElement(item.icon, { className: "h-5 w-5" })}
-                            {item.label}
+                            <span className="text-[8px] font-black uppercase tracking-widest">{item.label.slice(0, 4)}</span>
                         </button>
                     ))}
                 </footer>

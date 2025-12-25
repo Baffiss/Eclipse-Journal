@@ -4,7 +4,10 @@ import { useApp } from '../context/AppContext';
 import { 
     BarChart3Icon, TargetIcon, ActivityIcon, CalendarIcon, 
     EyeIcon, EditIcon, PlusIcon, TrashIcon, 
-    ZapIcon
+    ZapIcon,
+    ArrowUpRightIcon,
+    ArrowDownRightIcon,
+    TradesIcon
 } from '../components/Icons';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { TradeDirection } from '../types';
@@ -126,16 +129,18 @@ const WatchlistWidget = memo(({ theme, locale }: { theme: string, locale: string
 });
 
 const DashboardPage: React.FC = () => {
-    const { trades, accounts, t, getCurrencySymbol, theme, language } = useApp();
+    const { trades, accounts, t, getCurrencySymbol, theme, language, setPage, focusTrade } = useApp();
     const widgetTheme = theme === 'dark' ? 'dark' : 'light';
     const axisColor = theme === 'dark' ? '#A1A1AA' : '#3F3F46';
 
     const todayTrades = useMemo(() => {
         const today = new Date().toDateString();
-        return trades.filter(t => {
-            if (!t.date) return false;
-            return new Date(t.date).toDateString() === today;
-        });
+        return trades
+            .filter(t => {
+                if (!t.date) return false;
+                return new Date(t.date).toDateString() === today;
+            })
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [trades]);
 
     const stats = useMemo(() => {
@@ -156,7 +161,9 @@ const DashboardPage: React.FC = () => {
 
     const pnlData = useMemo(() => {
         let cumulative = 0;
-        const points = todayTrades.map(t => {
+        // Need ascending order for the chart
+        const ascendingToday = [...todayTrades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const points = ascendingToday.map(t => {
             cumulative += (parseFloat(String(t.result)) || 0);
             const dateObj = new Date(t.date);
             return { 
@@ -166,6 +173,11 @@ const DashboardPage: React.FC = () => {
         });
         return [{time: '00:00', pnl: 0}, ...points];
     }, [todayTrades]);
+
+    const handleTradeClick = (tradeId: string) => {
+        focusTrade(tradeId);
+        setPage('trades');
+    };
 
     const defaultCurrency = getCurrencySymbol(accounts[0]?.currency);
 
@@ -281,6 +293,68 @@ const DashboardPage: React.FC = () => {
                                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-4">
                                     <BarChart3Icon className="w-16 h-16 opacity-10" />
                                     <p className="font-bold text-sm uppercase tracking-widest">{t('noTradesToday')}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Today's Trades History Section */}
+                    <div className="bg-muted/20 border border-border rounded-[3rem] overflow-hidden">
+                        <div className="px-8 py-6 border-b border-border/50 bg-muted/10 flex justify-between items-center">
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                                <TradesIcon className="w-5 h-5 text-primary"/> {t('recentTrades')}
+                            </h3>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{todayTrades.length} {t('tradesToday')}</span>
+                        </div>
+                        <div className="p-4 overflow-x-auto">
+                            {todayTrades.length > 0 ? (
+                                <div className="space-y-4">
+                                    {todayTrades.map(trade => {
+                                        const tradeAccount = accounts.find(a => a.id === trade.accountId);
+                                        const currencySym = getCurrencySymbol(tradeAccount?.currency);
+                                        const isWin = (parseFloat(String(trade.result)) || 0) > 0;
+                                        const tradeTime = new Date(trade.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                                        return (
+                                            <div 
+                                                key={trade.id} 
+                                                onClick={() => handleTradeClick(trade.id)}
+                                                className="group bg-bkg/50 hover:bg-muted/50 border border-border/50 rounded-2xl p-5 flex flex-col animate-slide-in-up cursor-pointer transition-colors"
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isWin ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
+                                                            {isWin ? <ArrowUpRightIcon className="w-5 h-5" /> : <ArrowDownRightIcon className="w-5 h-5" />}
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-sm font-black uppercase tracking-tight">{trade.asset}</span>
+                                                                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest ${trade.direction === TradeDirection.BUY ? 'bg-primary/10 text-primary' : 'bg-danger/10 text-danger'}`}>
+                                                                    {trade.direction === TradeDirection.BUY ? 'Long' : 'Short'}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+                                                                {tradeAccount?.name || 'Unknown Account'} • {tradeTime}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className={`text-base font-black tracking-tighter ${isWin ? 'text-success' : 'text-danger'}`}>
+                                                            {isWin ? '+' : ''}{currencySym}{trade.result.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </p>
+                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                                            {trade.lotSize} Lots
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="py-12 flex flex-col items-center justify-center text-muted-foreground/30 opacity-50">
+                                    <TradesIcon className="w-12 h-12 mb-3" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest">{t('noTradesToday')}</p>
                                 </div>
                             )}
                         </div>

@@ -7,9 +7,10 @@ interface ModalProps {
     onClose: () => void;
     title: string;
     children: ReactNode;
+    maxWidth?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidth = 'max-w-lg' }) => {
     if (!isOpen) return null;
 
     return (
@@ -18,7 +19,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
             onClick={onClose}
         >
             <div
-                className="bg-bkg rounded-lg shadow-xl w-full max-w-lg m-4 max-h-[90vh] flex flex-col"
+                className={`bg-bkg rounded-lg shadow-xl w-full ${maxWidth} m-4 max-h-[90vh] flex flex-col`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center p-4 border-b border-border">

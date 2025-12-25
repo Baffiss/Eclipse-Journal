@@ -357,23 +357,52 @@ const CalendarView: React.FC<{
                 {days.map(d => {
                     const tradesOnDay = trades.filter(t => isSameDay(new Date(t.date), d));
                     const dayProfit = tradesOnDay.reduce((sum, t) => sum + t.result, 0);
+                    const hasTrades = tradesOnDay.length > 0;
+                    const isWin = hasTrades && dayProfit > 0;
+                    const isLoss = hasTrades && dayProfit < 0;
+                    
                     const isToday = isSameDay(d, new Date());
                     const isSelected = selectedDate ? isSameDay(d, selectedDate) : false;
                     const defaultCurrency = getCurrencySymbol(accounts.length > 0 ? accounts[0]?.currency : undefined);
+                    
+                    let bgClasses = "bg-bkg hover:border-primary/50 shadow-sm";
+                    let borderClasses = "border-transparent";
+
+                    if (d.getMonth() !== currentDate.getMonth()) {
+                        bgClasses = "bg-transparent text-muted-foreground/20 border-transparent opacity-40 pointer-events-none";
+                    } else if (hasTrades) {
+                        if (isWin) {
+                            bgClasses = "bg-success/5 hover:bg-success/10 shadow-[0_0_15px_-5px_rgba(34,197,94,0.15)]";
+                            borderClasses = "border-success/30";
+                        } else if (isLoss) {
+                            bgClasses = "bg-danger/5 hover:bg-danger/10 shadow-[0_0_15px_-5px_rgba(239,68,68,0.15)]";
+                            borderClasses = "border-danger/30";
+                        }
+                    }
+
                     return (
                         <div 
                             key={d.toString()} 
                             onClick={() => onDayClick(d)} 
-                            className={`p-2 h-20 md:h-24 flex flex-col rounded-2xl cursor-pointer transition-all duration-200 border-2 ${d.getMonth() !== currentDate.getMonth() ? 'bg-transparent text-muted-foreground/20 border-transparent opacity-40 pointer-events-none' : 'bg-bkg hover:border-primary/50 shadow-sm'} ${isSelected ? 'bg-primary/10 border-primary ring-2 ring-primary/5' : isToday ? 'border-primary/20 bg-primary/5' : 'border-transparent'}`}
+                            className={`group relative p-2 h-20 md:h-24 flex flex-col rounded-2xl cursor-pointer transition-all duration-300 border-2 ${bgClasses} ${borderClasses} ${isSelected ? 'border-primary bg-primary/10 ring-2 ring-primary/5 z-10' : isToday ? 'border-primary/30 ring-1 ring-primary/10' : ''}`}
                         >
-                            <span className="text-xs font-black">{d.getDate()}</span>
-                            {tradesOnDay.length > 0 && (
-                                <div className="mt-auto text-center flex-grow flex items-center justify-center">
-                                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-lg ${dayProfit > 0 ? 'bg-success/10 text-success' : dayProfit < 0 ? 'bg-danger/10 text-danger' : 'bg-muted-foreground/10 text-muted-foreground'}`}>
+                            <div className="flex justify-between items-start">
+                                <span className={`text-[11px] font-black ${isSelected ? 'text-primary' : 'text-content/80'}`}>{d.getDate()}</span>
+                                {hasTrades && (
+                                    <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isWin ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.6)]' : isLoss ? 'bg-danger shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 'bg-muted-foreground'}`} />
+                                )}
+                            </div>
+                            
+                            {hasTrades && (
+                                <div className="mt-auto text-center flex-grow flex items-center justify-center animate-fade-in">
+                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg backdrop-blur-sm ${isWin ? 'bg-success/20 text-success' : isLoss ? 'bg-danger/20 text-danger' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
                                         {dayProfit >= 0 ? '+' : ''}{dayProfit.toFixed(0)}{defaultCurrency}
                                     </span>
                                 </div>
                             )}
+
+                            {/* Decorative modern hover effect indicator */}
+                            <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 rounded-t-full transition-all duration-300 group-hover:w-1/2 ${isWin ? 'bg-success/50' : isLoss ? 'bg-danger/50' : 'bg-primary/50'}`} />
                         </div>
                     );
                 })}
@@ -384,17 +413,32 @@ const CalendarView: React.FC<{
 
 
 const TradesPage: React.FC = () => {
-    const { trades, accounts, strategies, deleteTrade, t, language, getCurrencySymbol } = useApp();
+    const { trades, accounts, strategies, deleteTrade, t, language, getCurrencySymbol, focusedTradeId, focusTrade } = useApp();
     const [isFormOpen, setFormOpen] = useState(false);
     const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
     const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
+    const [lightboxImage, setLightboxImage] = useState<string | null>(null);
     
     const [filterAccountId, setFilterAccountId] = useState('');
     const [filterStrategyId, setFilterStrategyId] = useState('');
     const [filterAsset, setFilterAsset] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+
+    // Sync focusedTradeId on load
+    useEffect(() => {
+        if (focusedTradeId) {
+            const trade = trades.find(t => t.id === focusedTradeId);
+            if (trade) {
+                const tradeDate = new Date(trade.date);
+                setSelectedDate(tradeDate);
+                setCurrentDate(tradeDate);
+            }
+            // Optional: reset focusTrade after picking it up to avoid re-syncing if user changes date
+            // focusTrade(null);
+        }
+    }, [focusedTradeId, trades]);
 
     const filteredTrades = useMemo(() => {
         return trades.filter(trade => {
@@ -424,7 +468,6 @@ const TradesPage: React.FC = () => {
             <div className="flex justify-between items-center bg-muted/20 border border-border rounded-3xl p-6">
                 <div>
                     <h1 className="text-3xl font-black uppercase tracking-tight">{t('trades')}</h1>
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Transaction Ledger</p>
                 </div>
                 <button 
                     onClick={() => setShowFilters(!showFilters)}
@@ -459,9 +502,6 @@ const TradesPage: React.FC = () => {
                      {selectedDate ? (
                         <>
                             <div className="p-6 border-b border-border/50 flex justify-between items-center bg-muted/10">
-                                {/* ********************************************************************************************************** */}
-                                {/* Nota: El código debajo ya incluía los cambios de la turn anterior pero se ajustó strategyId */}
-                                {/* ********************************************************************************************************** */}
                                 <div>
                                     <h2 className="text-lg font-black uppercase tracking-tight">{selectedDate.toLocaleDateString(language, {day: 'numeric', month: 'long'})}</h2>
                                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">{tradesForSelectedDate.length} {t('trades')}</p>
@@ -478,8 +518,17 @@ const TradesPage: React.FC = () => {
                                 {tradesForSelectedDate.length > 0 ? tradesForSelectedDate.map(trade => {
                                     const account = accounts.find(a => a.id === trade.accountId);
                                     const currencySymbol = getCurrencySymbol(account?.currency);
+                                    const isFocused = trade.id === focusedTradeId;
+
                                     return (
-                                        <div key={trade.id} className="group relative p-4 bg-bkg rounded-2xl shadow-sm border border-border hover:border-primary/30 transition-all animate-slide-in-up">
+                                        <div 
+                                            key={trade.id} 
+                                            className={`group relative p-4 rounded-2xl shadow-sm border transition-all animate-slide-in-up ${
+                                                isFocused 
+                                                    ? 'bg-primary/5 border-primary ring-1 ring-primary/20' 
+                                                    : 'bg-bkg border-border hover:border-primary/30'
+                                            }`}
+                                        >
                                             <div className="flex justify-between items-start">
                                                 <div>
                                                     <p className="font-black text-base uppercase tracking-tight">{trade.asset} 
@@ -496,8 +545,14 @@ const TradesPage: React.FC = () => {
                                                 <p className={`font-black text-lg tracking-tighter ${trade.result >= 0 ? 'text-success' : 'text-danger'}`}>{trade.result >= 0 ? '+' : ''}{currencySymbol}{trade.result.toFixed(2)}</p>
                                             </div>
                                             {trade.imageUrl && (
-                                                <div className="mt-3 rounded-lg overflow-hidden border border-border">
-                                                    <img src={trade.imageUrl} alt="Proof" className="w-full h-24 object-cover" />
+                                                <div 
+                                                    className="mt-3 rounded-lg overflow-hidden border border-border cursor-zoom-in relative group/img"
+                                                    onClick={() => setLightboxImage(trade.imageUrl!)}
+                                                >
+                                                    <img src={trade.imageUrl} alt="Proof" className="w-full h-24 object-cover transition-transform duration-300 group-hover/img:scale-105" />
+                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <ZapIcon className="w-5 h-5 text-white" />
+                                                    </div>
                                                 </div>
                                             )}
                                             {trade.notes && <p className="text-[11px] mt-3 pt-3 border-t border-border/50 text-muted-foreground italic font-medium leading-relaxed">"{trade.notes}"</p>}
@@ -540,6 +595,25 @@ const TradesPage: React.FC = () => {
                          <button onClick={() => setTradeToDelete(null)} className="px-6 py-2.5 bg-muted rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-border transition-colors">{t('cancel')}</button>
                          <button onClick={confirmDeleteTrade} className="px-6 py-2.5 bg-danger text-bkg rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-danger/90 transition-all shadow-lg shadow-danger/20">{t('delete')}</button>
                     </div>
+                </div>
+            </Modal>
+
+            {/* Lightbox Modal - Increased width */}
+            <Modal isOpen={!!lightboxImage} onClose={() => setLightboxImage(null)} title={t('viewScreenshot')} maxWidth="max-w-5xl">
+                <div className="flex justify-center items-center overflow-hidden bg-black/5 rounded-2xl p-2 min-h-[400px]">
+                    <img 
+                        src={lightboxImage || ''} 
+                        alt="Screenshot Full View" 
+                        className="w-full h-auto max-h-[75vh] object-contain rounded-xl shadow-2xl animate-fade-in"
+                    />
+                </div>
+                <div className="flex justify-end mt-4">
+                    <button 
+                        onClick={() => setLightboxImage(null)} 
+                        className="px-6 py-2 bg-primary text-bkg rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary-focus transition-all shadow-lg shadow-primary/20"
+                    >
+                        {t('cancel')}
+                    </button>
                 </div>
             </Modal>
         </div>

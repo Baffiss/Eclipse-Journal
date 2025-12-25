@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Account, DrawdownType, Trade, ValueType, AccountStatus, AccountType, Currency } from '../types';
@@ -163,35 +162,35 @@ const AccountCard: React.FC<{ account: Account; onSelect: () => void }> = ({ acc
     };
 
     return (
-        <div onClick={onSelect} className="bg-muted border border-border rounded-xl p-5 cursor-pointer hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-lg flex flex-col justify-between animate-slide-in-up">
+        <div onClick={onSelect} className="bg-bkg border border-border rounded-2xl p-6 cursor-pointer hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-xl flex flex-col justify-between animate-slide-in-up group">
             <div>
-                 <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg">{account.name}</h3>
+                 <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-bold text-xl group-hover:text-primary transition-colors">{account.name}</h3>
                      <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${typeColors[account.accountType]}`}>{t(account.accountType.toLowerCase())}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${account.status === AccountStatus.ACTIVE ? 'bg-success/20 text-success' : 'bg-gray-500/20 text-gray-700 dark:text-gray-400'}`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${typeColors[account.accountType]}`}>{t(account.accountType.toLowerCase())}</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${account.status === AccountStatus.ACTIVE ? 'bg-success/20 text-success' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
                             {t(account.status.toLowerCase())}
                         </span>
                     </div>
                  </div>
-                <p className="text-3xl font-bold">{currencySymbol}{account.currentCapital.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <p className={`text-sm font-semibold ${profit >= 0 ? 'text-success' : 'text-danger'}`}>
+                <p className="text-3xl font-black tracking-tighter">{currencySymbol}{account.currentCapital.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className={`text-sm font-bold mt-1 ${profit >= 0 ? 'text-success' : 'text-danger'}`}>
                     {profit >= 0 ? '+' : ''}{currencySymbol}{profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
             </div>
             
-            <div className="mt-6 space-y-4">
+            <div className="mt-8 space-y-5">
                  <div>
-                    <div className="flex justify-between items-center text-xs mb-1">
-                        <span className="font-medium text-muted-foreground">{t('progressToTarget')}</span>
-                        <span className="font-semibold">{stats.profitProgress.toFixed(1)}%</span>
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+                        <span>{t('progressToTarget')}</span>
+                        <span className="text-content">{stats.profitProgress.toFixed(1)}%</span>
                     </div>
                     <ProgressBar value={stats.profitProgress} colorClass="bg-success" />
                 </div>
                 <div>
-                     <div className="flex justify-between items-center text-xs mb-1">
-                        <span className="font-medium text-muted-foreground">{t('drawdownLimit')}</span>
-                        <span className="font-semibold">{stats.drawdownProgress.toFixed(1)}%</span>
+                     <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+                        <span>{t('drawdownLimit')}</span>
+                        <span className="text-content">{stats.drawdownProgress.toFixed(1)}%</span>
                     </div>
                     <ProgressBar value={stats.drawdownProgress} colorClass="bg-danger" />
                 </div>
@@ -310,42 +309,42 @@ const AccountsPage: React.FC = () => {
 
     return (
         <div className="animate-fade-in">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">{t('accounts')}</h1>
-                <div className="flex gap-2">
+            <div className="flex justify-between items-center mb-10">
+                <h1 className="text-4xl font-black uppercase tracking-tight">{t('accounts')}</h1>
+                <div className="flex gap-3">
                     <button 
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`p-2 rounded-md transition-all duration-200 ${showFilters ? 'bg-primary text-bkg shadow-sm' : 'bg-muted text-muted-foreground hover:bg-border'}`}
+                        className={`p-3 rounded-2xl transition-all duration-200 ${showFilters ? 'bg-primary text-bkg shadow-lg shadow-primary/20' : 'bg-muted text-muted-foreground hover:bg-border'}`}
                         title={t('toggleFilters')}
                     >
                         <FilterIcon className="w-5 h-5" />
                     </button>
-                    <button onClick={() => setFormOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-primary text-bkg rounded-md hover:bg-primary-focus shadow-sm transition-shadow hover:shadow-md">
+                    <button onClick={() => setFormOpen(true)} className="flex items-center gap-2 px-5 py-3 bg-primary text-bkg rounded-2xl hover:bg-primary-focus shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0">
                         <PlusIcon className="w-5 h-5"/>
-                        <span>{t('newAccount')}</span>
+                        <span className="font-bold text-sm uppercase tracking-widest">{t('newAccount')}</span>
                     </button>
                 </div>
             </div>
 
             {showFilters && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 p-4 bg-muted/30 rounded-lg border border-border animate-fade-in">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 p-6 bg-muted/20 backdrop-blur-sm rounded-[2rem] border border-border animate-fade-in shadow-sm">
                     <div>
-                        <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">{t('status')}</label>
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 block">{t('status')}</label>
                         <select 
                             value={filterStatus} 
                             onChange={e => setFilterStatus(e.target.value)} 
-                            className="w-full p-2 bg-bkg border border-border rounded-md text-sm"
+                            className="w-full p-3 bg-bkg border border-border rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                         >
                             <option value="">{t('allStatuses')}</option>
                             {Object.values(AccountStatus).map(s => <option key={s} value={s}>{t(s.toLowerCase())}</option>)}
                         </select>
                     </div>
                     <div>
-                        <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">{t('accountType')}</label>
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 block">{t('accountType')}</label>
                         <select 
                             value={filterType} 
                             onChange={e => setFilterType(e.target.value)} 
-                            className="w-full p-2 bg-bkg border border-border rounded-md text-sm"
+                            className="w-full p-3 bg-bkg border border-border rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                         >
                             <option value="">{t('allTypes')}</option>
                             {Object.values(AccountType).map(type => <option key={type} value={type}>{t(type.toLowerCase())}</option>)}
@@ -355,25 +354,25 @@ const AccountsPage: React.FC = () => {
             )}
             
             {filteredAccounts.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {filteredAccounts.map(acc => (
                         <AccountCard key={acc.id} account={acc} onSelect={() => setSelectedAccount(acc)} />
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-16 border-2 border-dashed border-border rounded-lg mt-8">
-                    <h3 className="text-xl font-semibold">{accounts.length === 0 ? t('noAccountsYet') : t('noAccountsFound')}</h3>
+                <div className="text-center py-20 border-2 border-dashed border-border rounded-[3rem] mt-8 bg-muted/5">
+                    <h3 className="text-2xl font-black tracking-tight">{accounts.length === 0 ? t('noAccountsYet') : t('noAccountsFound')}</h3>
                     
                     {accounts.length === 0 ? (
                          <>
-                            <p className="text-muted-foreground mt-2">{t('createYourFirstAccount')}</p>
-                            <button onClick={() => setFormOpen(true)} className="mt-6 flex mx-auto items-center gap-2 px-4 py-2 bg-primary text-bkg rounded-md hover:bg-primary-focus">
+                            <p className="text-muted-foreground font-bold mt-2">{t('createYourFirstAccount')}</p>
+                            <button onClick={() => setFormOpen(true)} className="mt-8 flex mx-auto items-center gap-2 px-6 py-3 bg-primary text-bkg rounded-2xl hover:bg-primary-focus shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-xs">
                                 <PlusIcon className="w-5 h-5"/>
                                 <span>{t('createAccount')}</span>
                             </button>
                         </>
                     ) : (
-                        <button onClick={() => { setFilterStatus(''); setFilterType(''); }} className="mt-4 px-4 py-2 bg-muted hover:bg-border rounded-md transition-colors text-sm font-medium">
+                        <button onClick={() => { setFilterStatus(''); setFilterType(''); }} className="mt-6 px-6 py-3 bg-muted hover:bg-border rounded-2xl transition-all text-xs font-black uppercase tracking-widest">
                             {t('clearFilters')}
                         </button>
                     )}
