@@ -1,8 +1,9 @@
+
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Account, DrawdownType, Trade, ValueType, AccountStatus, AccountType, Currency } from '../types';
 import Modal from '../components/Modal';
-import { PlusIcon, EditIcon, TrashIcon, TargetIcon, TrendingDownIcon, InfoIcon, AlertTriangleIcon, FilterIcon } from '../components/Icons';
+import { PlusIcon, EditIcon, TrashIcon, TargetIcon, TrendingDownIcon, InfoIcon, AlertTriangleIcon, FilterIcon, ChevronLeftIcon } from '../components/Icons';
 import EquityChart from '../components/charts/EquityChart';
 import { calculateEquityCurve, calculateAccountStats } from '../services/analytics';
 
@@ -58,28 +59,28 @@ const AccountForm: React.FC<{
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={account ? t('editAccount') : t('createAccount')}>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="md:col-span-2">
-                        <label className="text-sm font-medium">{t('accountName')}</label>
-                        <input name="name" value={formData.name} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md mt-1" required />
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 block">{t('accountName')}</label>
+                        <input name="name" value={formData.name} onChange={handleChange} className="w-full p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all" placeholder="My Funded Account" required />
                     </div>
                     <div>
-                        <label className="text-sm font-medium">{t('initialCapital')}</label>
-                        <input type="number" name="initialCapital" value={formData.initialCapital} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md mt-1" required />
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 block">{t('initialCapital')}</label>
+                        <input type="number" name="initialCapital" value={formData.initialCapital} onChange={handleChange} className="w-full p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all" required />
                     </div>
                     <div>
-                        <label className="text-sm font-medium">{t('currency')}</label>
-                        <select name="currency" value={formData.currency} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md mt-1">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 block">{t('currency')}</label>
+                        <select name="currency" value={formData.currency} onChange={handleChange} className="w-full p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all">
                             {Object.values(Currency).map(c => <option key={c} value={c}>{t(c.toLowerCase())}</option>)}
                         </select>
                     </div>
                     
                     <div className="md:col-span-2">
-                        <label className="text-sm font-medium">{t('profitTarget')}</label>
-                        <div className="flex gap-2 mt-1">
-                            <input type="number" name="profitTarget" value={formData.profitTarget} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md" required />
-                            <select name="profitTargetType" value={formData.profitTargetType} onChange={handleChange} className="p-2 bg-muted border border-border rounded-md">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 block">{t('profitTarget')}</label>
+                        <div className="flex gap-3">
+                            <input type="number" name="profitTarget" value={formData.profitTarget} onChange={handleChange} className="flex-1 p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all" required />
+                            <select name="profitTargetType" value={formData.profitTargetType} onChange={handleChange} className="w-32 p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all">
                                 <option value={ValueType.PERCENTAGE}>{t('percentage')}</option>
                                 <option value={ValueType.FIXED}>{t('fixed')}</option>
                             </select>
@@ -87,20 +88,18 @@ const AccountForm: React.FC<{
                     </div>
 
                     <div className="md:col-span-2">
-                         <label className="text-sm font-medium">{t('drawdownType')}</label>
-                         <div className="flex gap-2 mt-1">
-                             <select name="drawdownType" value={formData.drawdownType} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md">
-                                <option value={DrawdownType.MAXIMUM}>{t('maximumDrawdown')}</option>
-                                <option value={DrawdownType.TRAILING}>{t('trailingDrawdown')}</option>
-                            </select>
-                        </div>
+                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 block">{t('drawdownType')}</label>
+                         <select name="drawdownType" value={formData.drawdownType} onChange={handleChange} className="w-full p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+                            <option value={DrawdownType.MAXIMUM}>{t('maximumDrawdown')}</option>
+                            <option value={DrawdownType.TRAILING}>{t('trailingDrawdown')}</option>
+                        </select>
                     </div>
 
                      <div className="md:col-span-2">
-                        <label className="text-sm font-medium">{t('drawdownValue')}</label>
-                        <div className="flex gap-2 mt-1">
-                            <input type="number" name="drawdownValue" value={formData.drawdownValue} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md" required />
-                             <select name="drawdownValueType" value={formData.drawdownValueType} onChange={handleChange} className="p-2 bg-muted border border-border rounded-md">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 block">{t('drawdownValue')}</label>
+                        <div className="flex gap-3">
+                            <input type="number" name="drawdownValue" value={formData.drawdownValue} onChange={handleChange} className="flex-1 p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all" required />
+                             <select name="drawdownValueType" value={formData.drawdownValueType} onChange={handleChange} className="w-32 p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all">
                                 <option value={ValueType.PERCENTAGE}>{t('percentage')}</option>
                                 <option value={ValueType.FIXED}>{t('fixed')}</option>
                             </select>
@@ -108,33 +107,26 @@ const AccountForm: React.FC<{
                     </div>
 
                     <div>
-                        <label className="text-sm font-medium">{t('status')}</label>
-                        <select name="status" value={formData.status} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md mt-1">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 block">{t('status')}</label>
+                        <select name="status" value={formData.status} onChange={handleChange} className="w-full p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all">
                             <option value={AccountStatus.ACTIVE}>{t('active')}</option>
                             <option value={AccountStatus.INACTIVE}>{t('inactive')}</option>
                         </select>
                     </div>
                      <div>
-                        <label className="text-sm font-medium">{t('accountType')}</label>
-                        <select name="accountType" value={formData.accountType} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md mt-1">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 block">{t('accountType')}</label>
+                        <select name="accountType" value={formData.accountType} onChange={handleChange} className="w-full p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all">
                             <option value={AccountType.EVAL}>{t('evaluation')}</option>
                              <option value={AccountType.DEMO}>{t('demo')}</option>
                             <option value={AccountType.REAL}>{t('real')}</option>
                              <option value={AccountType.PA}>{t('proprietary')}</option>
                         </select>
                     </div>
-                     <div className="md:col-span-2">
-                         <label className="text-sm font-medium">{t('strategies')}</label>
-                         <select name="strategyId" value={formData.strategyId || ''} onChange={handleChange} className="w-full p-2 bg-muted border border-border rounded-md mt-1">
-                            <option value="">{t('noStrategy')}</option>
-                            {strategies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
-                    </div>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-4">
-                    <button type="button" onClick={onClose} className="px-4 py-2 bg-muted rounded-md hover:bg-border">{t('cancel')}</button>
-                    <button type="submit" className="px-4 py-2 bg-primary text-bkg rounded-md hover:bg-primary-focus">{account ? t('update') : t('create')}</button>
+                <div className="flex justify-end gap-3 pt-6 border-t border-border/50">
+                    <button type="button" onClick={onClose} className="px-6 py-2.5 bg-muted rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-border transition-colors">{t('cancel')}</button>
+                    <button type="submit" className="px-6 py-2.5 bg-primary text-bkg rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary-focus transition-all shadow-lg shadow-primary/20">{account ? t('update') : t('create')}</button>
                 </div>
             </form>
         </Modal>
@@ -142,8 +134,11 @@ const AccountForm: React.FC<{
 };
 
 const ProgressBar: React.FC<{ value: number; colorClass: string; }> = ({ value, colorClass }) => (
-    <div className="w-full bg-muted rounded-full h-2.5">
-        <div className={`${colorClass} h-2.5 rounded-full transition-all duration-500 ease-out`} style={{ width: `${Math.max(0, Math.min(value, 100))}%` }}></div>
+    <div className="w-full bg-muted rounded-full h-2 shadow-inner">
+        <div 
+            className={`${colorClass} h-2 rounded-full transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-[0_0_10px_rgba(0,0,0,0.1)]`} 
+            style={{ width: `${Math.max(2, Math.min(value, 100))}%` }}
+        />
     </div>
 );
 
@@ -155,42 +150,47 @@ const AccountCard: React.FC<{ account: Account; onSelect: () => void }> = ({ acc
     const profit = stats.equity - account.initialCapital;
     
     const typeColors: Record<AccountType, string> = {
-        [AccountType.EVAL]: 'bg-yellow-500/20 text-yellow-800 dark:text-yellow-300',
-        [AccountType.DEMO]: 'bg-blue-500/20 text-blue-800 dark:text-blue-300',
-        [AccountType.REAL]: 'bg-green-500/20 text-green-800 dark:text-green-300',
-        [AccountType.PA]: 'bg-purple-500/20 text-purple-800 dark:text-purple-300',
+        [AccountType.EVAL]: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+        [AccountType.DEMO]: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
+        [AccountType.REAL]: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+        [AccountType.PA]: 'bg-violet-500/15 text-violet-700 dark:text-violet-300',
     };
 
     return (
-        <div onClick={onSelect} className="bg-bkg border border-border rounded-2xl p-6 cursor-pointer hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-xl flex flex-col justify-between animate-slide-in-up group">
-            <div>
-                 <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-bold text-xl group-hover:text-primary transition-colors">{account.name}</h3>
-                     <div className="flex items-center gap-2">
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${typeColors[account.accountType]}`}>{t(account.accountType.toLowerCase())}</span>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${account.status === AccountStatus.ACTIVE ? 'bg-success/20 text-success' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
-                            {t(account.status.toLowerCase())}
-                        </span>
+        <div 
+            onClick={onSelect} 
+            className="group bg-bkg border border-border rounded-[2.5rem] p-8 cursor-pointer hover:border-primary/40 transition-all duration-500 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.1)] flex flex-col justify-between animate-slide-in-up relative overflow-hidden"
+        >
+            <div className="absolute top-0 right-0 w-32 h-32 blur-[80px] opacity-0 group-hover:opacity-10 transition-opacity bg-primary rounded-full -mr-16 -mt-16" />
+            
+            <div className="relative z-10">
+                 <div className="flex justify-between items-start mb-6">
+                    <div className="flex flex-col">
+                        <h3 className="font-black text-2xl tracking-tight group-hover:text-primary transition-colors">{account.name}</h3>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">ID: {account.id.slice(0, 8)}</span>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-lg ${typeColors[account.accountType]}`}>{t(account.accountType.toLowerCase())}</span>
                     </div>
                  </div>
-                <p className="text-3xl font-black tracking-tighter">{currencySymbol}{account.currentCapital.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <p className={`text-sm font-bold mt-1 ${profit >= 0 ? 'text-success' : 'text-danger'}`}>
-                    {profit >= 0 ? '+' : ''}{currencySymbol}{profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
+                <p className="text-4xl font-black tracking-tighter leading-none mb-1">{currencySymbol}{account.currentCapital.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <div className={`inline-flex items-center gap-1.5 text-xs font-black px-2 py-0.5 rounded-md ${profit >= 0 ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
+                    {profit >= 0 ? <PlusIcon className="w-3 h-3" /> : ''}{currencySymbol}{Math.abs(profit).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </div>
             </div>
             
-            <div className="mt-8 space-y-5">
+            <div className="mt-10 space-y-6 relative z-10">
                  <div>
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+                    <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">
                         <span>{t('progressToTarget')}</span>
-                        <span className="text-content">{stats.profitProgress.toFixed(1)}%</span>
+                        <span className="text-success font-black">{stats.profitProgress.toFixed(1)}%</span>
                     </div>
                     <ProgressBar value={stats.profitProgress} colorClass="bg-success" />
                 </div>
                 <div>
-                     <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+                     <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">
                         <span>{t('drawdownLimit')}</span>
-                        <span className="text-content">{stats.drawdownProgress.toFixed(1)}%</span>
+                        <span className="text-danger font-black">{stats.drawdownProgress.toFixed(1)}%</span>
                     </div>
                     <ProgressBar value={stats.drawdownProgress} colorClass="bg-danger" />
                 </div>
@@ -223,34 +223,94 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
     }
 
     return (
-        <div className="animate-fade-in">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <button onClick={onBack} className="text-sm hover:underline mb-2">&larr; {t('backToAccounts')}</button>
-                    <h2 className="text-3xl font-bold">{account.name}</h2>
-                </div>
-                <div className="flex gap-2">
-                    <button onClick={() => setEditingAccount(account)} className="p-2 bg-muted rounded-md hover:bg-border"><EditIcon className="w-5 h-5"/></button>
-                    <button onClick={() => setShowDeleteConfirm(true)} className="p-2 bg-muted rounded-md hover:bg-border text-danger"><TrashIcon className="w-5 h-5"/></button>
+        <div className="animate-fade-in flex flex-col gap-10">
+            {/* Header Section */}
+            <div className="bg-muted/30 border border-border rounded-[3rem] p-8 lg:p-12 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 blur-[100px] opacity-10 bg-primary rounded-full -mr-32 -mt-32" />
+                
+                <div className="relative z-10">
+                    <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors mb-8">
+                        <ChevronLeftIcon className="w-4 h-4"/> {t('backToAccounts')}
+                    </button>
+                    
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <h2 className="text-5xl font-black tracking-tighter uppercase">{account.name}</h2>
+                                <span className="px-3 py-1 bg-primary text-bkg text-[9px] font-black uppercase tracking-widest rounded-full">{t(account.accountType.toLowerCase())}</span>
+                            </div>
+                            <p className="text-muted-foreground font-bold tracking-tight opacity-60 uppercase text-[10px]">{t('status')}: {t(account.status.toLowerCase())}</p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={() => setEditingAccount(account)} className="p-4 bg-bkg border border-border rounded-2xl hover:bg-muted transition-all shadow-sm">
+                                <EditIcon className="w-5 h-5"/>
+                            </button>
+                            <button onClick={() => setShowDeleteConfirm(true)} className="p-4 bg-danger/10 text-danger border border-danger/20 rounded-2xl hover:bg-danger hover:text-white transition-all shadow-sm">
+                                <TrashIcon className="w-5 h-5"/>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-muted p-4 rounded-lg"><p className="text-sm text-muted-foreground">{t('currentCapital')}</p><p className="text-2xl font-semibold">{currencySymbol}{account.currentCapital.toLocaleString(undefined, {minimumFractionDigits: 2})}</p></div>
-                <div className="bg-muted p-4 rounded-lg"><p className="text-sm text-muted-foreground">{t('netPL')}</p><p className={`text-2xl font-semibold ${profit >= 0 ? 'text-success' : 'text-danger'}`}>{profit >= 0 ? '+' : ''}{currencySymbol}{profit.toLocaleString(undefined, {minimumFractionDigits: 2})} ({profitPercent.toFixed(2)}%)</p></div>
-                <div className="bg-muted p-4 rounded-lg"><p className="text-sm text-muted-foreground">{t('profitTarget')}</p><p className="text-2xl font-semibold">{currencySymbol}{profitTargetValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</p></div>
-                <div className="bg-muted p-4 rounded-lg"><p className="text-sm text-muted-foreground">{t('drawdownValue')}</p><p className="text-2xl font-semibold">{account.drawdownValue}{account.drawdownValueType === ValueType.PERCENTAGE ? '%' : ` ${currencySymbol}`}</p></div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-bkg border border-border rounded-[2rem] p-6 shadow-sm">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">{t('currentCapital')}</p>
+                    <p className="text-3xl font-black tracking-tighter">{currencySymbol}{account.currentCapital.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                </div>
+                <div className="bg-bkg border border-border rounded-[2rem] p-6 shadow-sm">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">{t('netPL')}</p>
+                    <p className={`text-3xl font-black tracking-tighter ${profit >= 0 ? 'text-success' : 'text-danger'}`}>
+                        {profit >= 0 ? '+' : ''}{currencySymbol}{profit.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                    </p>
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${profit >= 0 ? 'text-success' : 'text-danger'} opacity-80`}>
+                        {profitPercent.toFixed(2)}% ROI
+                    </span>
+                </div>
+                <div className="bg-bkg border border-border rounded-[2rem] p-6 shadow-sm">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">{t('profitTarget')}</p>
+                    <p className="text-3xl font-black tracking-tighter">{currencySymbol}{profitTargetValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                </div>
+                <div className="bg-bkg border border-border rounded-[2rem] p-6 shadow-sm">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">{t('drawdownValue')}</p>
+                    <p className="text-3xl font-black tracking-tighter">
+                        {account.drawdownValue}{account.drawdownValueType === ValueType.PERCENTAGE ? '%' : ` ${currencySymbol}`}
+                    </p>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
+                        {t(account.drawdownType.toLowerCase())}
+                    </span>
+                </div>
             </div>
             
-            <div className="mb-6 h-96">
-                <h3 className="text-lg font-semibold mb-2">{t('equityCurve')}</h3>
-                <EquityChart data={equityCurve} currencySymbol={currencySymbol} account={account} />
+            {/* Chart Area */}
+            <div className="bg-muted/10 border border-border rounded-[3rem] p-8 min-h-[500px] flex flex-col">
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                        <TrendingDownIcon className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-xs font-black uppercase tracking-[0.3em]">{t('equityCurve')}</h3>
+                </div>
+                <div className="flex-1">
+                    <EquityChart data={equityCurve} currencySymbol={currencySymbol} account={account} />
+                </div>
             </div>
 
-            <div>
-                <h3 className="text-lg font-semibold mb-2">{t('recentTrades')}</h3>
-                <div className="bg-muted rounded-lg">
-                    {accountTrades.length > 0 ? accountTrades.slice(0, 10).map(trade => <TradeListItem key={trade.id} trade={trade} currencySymbol={currencySymbol}/>) : <p className="p-4 text-center text-muted-foreground">{t('noTradesYet')}</p>}
+            {/* History Table */}
+            <div className="bg-bkg border border-border rounded-[3.5rem] overflow-hidden shadow-sm">
+                <div className="px-10 py-8 border-b border-border bg-muted/20 flex justify-between items-center">
+                    <h3 className="text-xs font-black uppercase tracking-[0.3em]">{t('recentTrades')}</h3>
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{accountTrades.length} TOTAL</span>
+                </div>
+                <div className="divide-y divide-border">
+                    {accountTrades.length > 0 ? (
+                        accountTrades.slice(0, 10).map(trade => <TradeListItem key={trade.id} trade={trade} currencySymbol={currencySymbol}/>)
+                    ) : (
+                        <div className="py-20 text-center opacity-40">
+                            <TargetIcon className="w-12 h-12 mx-auto mb-4" />
+                            <p className="text-sm font-bold uppercase tracking-widest">{t('noTradesYet')}</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -258,14 +318,17 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
             
             {/* Delete Confirmation Modal */}
             <Modal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title={t('delete')}>
-                <div className="space-y-4 text-center">
-                     <div className="flex justify-center text-danger mb-2">
-                        <AlertTriangleIcon className="w-12 h-12" />
+                <div className="space-y-6 text-center">
+                    <div className="flex justify-center p-5 bg-danger/10 text-danger rounded-3xl w-fit mx-auto">
+                         <AlertTriangleIcon className="w-10 h-10" />
                     </div>
-                    <p>{t('deleteAccountConfirmation')}</p>
-                    <div className="flex gap-2 justify-center mt-6">
-                        <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 bg-muted rounded-md hover:bg-border">{t('cancel')}</button>
-                        <button onClick={confirmDelete} className="px-4 py-2 bg-danger text-bkg rounded-md hover:bg-danger/90">{t('delete')}</button>
+                    <div className="space-y-2">
+                        <h3 className="text-xl font-black uppercase tracking-tight">{t('areYouSure')}</h3>
+                        <p className="text-sm text-muted-foreground font-medium">{t('deleteAccountConfirmation')}</p>
+                    </div>
+                    <div className="flex gap-3 justify-center pt-2">
+                         <button onClick={() => setShowDeleteConfirm(false)} className="px-6 py-2.5 bg-muted rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-border transition-colors">{t('cancel')}</button>
+                         <button onClick={confirmDelete} className="px-6 py-2.5 bg-danger text-bkg rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-danger/90 transition-all shadow-lg shadow-danger/20">{t('delete')}</button>
                     </div>
                 </div>
             </Modal>
@@ -277,12 +340,21 @@ const TradeListItem: React.FC<{trade: Trade, currencySymbol: string}> = ({trade,
     const { t } = useApp();
     const isWin = trade.result > 0;
     return (
-        <div className="flex justify-between items-center p-3 border-b border-border last:border-b-0">
-             <div>
-                <p className="font-semibold">{trade.asset} <span className={`text-xs px-2 py-0.5 rounded-full ${trade.direction === 'Buy' ? 'bg-blue-500/20 text-blue-300' : 'bg-red-500/20 text-red-300'}`}>{trade.direction === 'Buy' ? t('buy') : t('sell')}</span></p>
-                <p className="text-sm text-muted-foreground">{new Date(trade.date).toLocaleString()}</p>
+        <div className="flex justify-between items-center px-10 py-6 hover:bg-muted/30 transition-colors">
+             <div className="flex items-center gap-6">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${trade.direction === 'Buy' ? 'bg-primary/10 text-primary' : 'bg-danger/10 text-danger'}`}>
+                    {trade.direction === 'Buy' ? 'B' : 'S'}
+                </div>
+                <div>
+                    <p className="font-black text-lg uppercase tracking-tight">{trade.asset}</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                        {new Date(trade.date).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                    </p>
+                </div>
             </div>
-             <p className={`font-semibold ${isWin ? 'text-success' : 'text-danger'}`}>{isWin ? '+' : ''}{currencySymbol}{trade.result.toFixed(2)}</p>
+             <p className={`text-xl font-black tracking-tighter ${isWin ? 'text-success' : 'text-danger'}`}>
+                {isWin ? '+' : ''}{currencySymbol}{trade.result.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </p>
         </div>
     )
 }
@@ -308,26 +380,27 @@ const AccountsPage: React.FC = () => {
     }
 
     return (
-        <div className="animate-fade-in">
-            <div className="flex justify-between items-center mb-10">
-                <h1 className="text-4xl font-black uppercase tracking-tight">{t('accounts')}</h1>
+        <div className="animate-fade-in flex flex-col gap-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div>
+                    <h1 className="text-5xl font-black tracking-tighter uppercase">{t('accounts')}</h1>
+                </div>
                 <div className="flex gap-3">
                     <button 
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`p-3 rounded-2xl transition-all duration-200 ${showFilters ? 'bg-primary text-bkg shadow-lg shadow-primary/20' : 'bg-muted text-muted-foreground hover:bg-border'}`}
-                        title={t('toggleFilters')}
+                        className={`p-4 rounded-2xl transition-all duration-300 ${showFilters ? 'bg-primary text-bkg shadow-lg shadow-primary/20' : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-primary'}`}
                     >
                         <FilterIcon className="w-5 h-5" />
                     </button>
-                    <button onClick={() => setFormOpen(true)} className="flex items-center gap-2 px-5 py-3 bg-primary text-bkg rounded-2xl hover:bg-primary-focus shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0">
-                        <PlusIcon className="w-5 h-5"/>
-                        <span className="font-bold text-sm uppercase tracking-widest">{t('newAccount')}</span>
+                    <button onClick={() => setFormOpen(true)} className="flex items-center gap-3 px-8 py-4 bg-primary text-bkg rounded-2xl hover:bg-primary-focus shadow-lg shadow-primary/20 transition-all hover:-translate-y-1 active:translate-y-0 group">
+                        <PlusIcon className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300"/>
+                        <span className="font-black text-xs uppercase tracking-[0.2em]">{t('newAccount')}</span>
                     </button>
                 </div>
             </div>
 
             {showFilters && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 p-6 bg-muted/20 backdrop-blur-sm rounded-[2rem] border border-border animate-fade-in shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-8 bg-muted/20 border border-border rounded-[2.5rem] animate-slide-in-up">
                     <div>
                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 block">{t('status')}</label>
                         <select 
@@ -354,25 +427,24 @@ const AccountsPage: React.FC = () => {
             )}
             
             {filteredAccounts.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {filteredAccounts.map(acc => (
                         <AccountCard key={acc.id} account={acc} onSelect={() => setSelectedAccount(acc)} />
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-20 border-2 border-dashed border-border rounded-[3rem] mt-8 bg-muted/5">
+                <div className="flex flex-col items-center justify-center py-32 bg-muted/10 border-2 border-dashed border-border rounded-[3rem] group hover:border-primary/30 transition-colors cursor-pointer" onClick={() => setFormOpen(true)}>
+                    <div className="p-6 bg-bkg rounded-full border border-border shadow-sm mb-6 group-hover:scale-110 transition-transform duration-500">
+                        <TargetIcon className="w-12 h-12 text-muted-foreground opacity-20" />
+                    </div>
                     <h3 className="text-2xl font-black tracking-tight">{accounts.length === 0 ? t('noAccountsYet') : t('noAccountsFound')}</h3>
                     
                     {accounts.length === 0 ? (
                          <>
                             <p className="text-muted-foreground font-bold mt-2">{t('createYourFirstAccount')}</p>
-                            <button onClick={() => setFormOpen(true)} className="mt-8 flex mx-auto items-center gap-2 px-6 py-3 bg-primary text-bkg rounded-2xl hover:bg-primary-focus shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-xs">
-                                <PlusIcon className="w-5 h-5"/>
-                                <span>{t('createAccount')}</span>
-                            </button>
                         </>
                     ) : (
-                        <button onClick={() => { setFilterStatus(''); setFilterType(''); }} className="mt-6 px-6 py-3 bg-muted hover:bg-border rounded-2xl transition-all text-xs font-black uppercase tracking-widest">
+                        <button onClick={() => { setFilterStatus(''); setFilterType(''); }} className="mt-8 px-8 py-3 bg-muted hover:bg-border rounded-2xl transition-all text-[10px] font-black uppercase tracking-widest">
                             {t('clearFilters')}
                         </button>
                     )}

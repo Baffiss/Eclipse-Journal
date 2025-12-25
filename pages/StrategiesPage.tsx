@@ -232,54 +232,51 @@ const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> =
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
-                {/* Left: Examples & Evidence */}
-                <div className="xl:col-span-2 space-y-8">
-                    <div className="bg-muted/5 border border-border rounded-[2.5rem] p-8">
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="p-3 bg-primary/10 text-primary rounded-2xl">
-                                <PieChartIcon className="w-5 h-5" />
-                            </div>
-                            <h3 className="text-xs font-black uppercase tracking-[0.3em]">{t('examples')}</h3>
+            {/* Content Section - Stacked vertically */}
+            <div className="flex flex-col gap-10">
+                {/* Section: Examples & Evidence */}
+                <div className="bg-muted/5 border border-border rounded-[2.5rem] p-8">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                            <LayoutGridIcon className="w-5 h-5" />
                         </div>
-                        
-                        {strategy.images && strategy.images.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {strategy.images.map((img, index) => (
-                                    <div 
-                                        key={index} 
-                                        onClick={() => setLightboxImage(img)}
-                                        className="cursor-zoom-in group relative aspect-video rounded-3xl overflow-hidden border border-border/50 shadow-lg"
-                                    >
-                                        <img src={img} alt={`Setup ${index + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                                            <span className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                                                <InfoIcon className="w-3 h-3" /> {t('viewScreenshot')}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="py-20 text-center border-2 border-dashed border-border rounded-3xl opacity-40">
-                                <UploadCloudIcon className="w-12 h-12 mx-auto mb-4" />
-                                <p className="text-sm font-bold uppercase tracking-widest">{t('noTradesYet')}</p>
-                            </div>
-                        )}
+                        <h3 className="text-xs font-black uppercase tracking-[0.3em]">{t('examples')}</h3>
                     </div>
+                    
+                    {strategy.images && strategy.images.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {strategy.images.map((img, index) => (
+                                <div 
+                                    key={index} 
+                                    onClick={() => setLightboxImage(img)}
+                                    className="cursor-zoom-in group relative aspect-video rounded-3xl overflow-hidden border border-border/50 shadow-lg"
+                                >
+                                    <img src={img} alt={`Setup ${index + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
+                                        <span className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                            <InfoIcon className="w-3 h-3" /> {t('viewScreenshot')}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="py-20 text-center border-2 border-dashed border-border rounded-3xl opacity-40">
+                            <UploadCloudIcon className="w-12 h-12 mx-auto mb-4" />
+                            <p className="text-sm font-bold uppercase tracking-widest">{t('noTradesYet')}</p>
+                        </div>
+                    )}
                 </div>
 
-                {/* Right: Hard Data Analytics */}
-                <div className="space-y-8">
-                    <div className="bg-muted/30 border border-border rounded-[2.5rem] p-8 sticky top-8">
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="p-3 bg-primary/10 text-primary rounded-2xl">
-                                <ActivityIcon className="w-5 h-5" />
-                            </div>
-                            <h3 className="text-xs font-black uppercase tracking-[0.3em]">{t('performanceAnalytics')}</h3>
+                {/* Section: Hard Data Analytics */}
+                <div className="bg-muted/30 border border-border rounded-[2.5rem] p-8 lg:p-10">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                            <ActivityIcon className="w-5 h-5" />
                         </div>
-                        <AnalyticsPage isComponent={true} defaultStrategyId={strategy.id} />
+                        <h3 className="text-xs font-black uppercase tracking-[0.3em]">{t('performanceAnalytics')}</h3>
                     </div>
+                    <AnalyticsPage isComponent={true} defaultStrategyId={strategy.id} />
                 </div>
             </div>
 
@@ -302,7 +299,7 @@ const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> =
                 </div>
             </Modal>
 
-            {/* Lightbox Modal - Large size matching Trades page */}
+            {/* Lightbox Modal */}
             <Modal isOpen={!!lightboxImage} onClose={() => setLightboxImage(null)} title={t('viewScreenshot')} maxWidth="max-w-5xl">
                 <div className="flex justify-center items-center overflow-hidden bg-black/5 rounded-2xl p-2 min-h-[400px]">
                     <img 
