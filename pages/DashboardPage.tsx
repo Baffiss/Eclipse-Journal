@@ -343,9 +343,9 @@ const DashboardPage: React.FC = () => {
                                 <h2 className="text-4xl font-black tracking-tighter">{stats.count}</h2>
                             </div>
                             <div className="flex gap-4 mt-4">
-                                <div className="flex-1 bg-primary/10 rounded-2xl p-3 border border-primary/30">
-                                    <p className="text-[9px] font-black uppercase text-primary mb-1 tracking-tighter">Longs</p>
-                                    <p className="text-lg font-black text-primary">{stats.longs}</p>
+                                <div className="flex-1 bg-success/10 rounded-2xl p-3 border border-success/30">
+                                    <p className="text-[9px] font-black uppercase text-success mb-1 tracking-tighter">Longs</p>
+                                    <p className="text-lg font-black text-success">{stats.longs}</p>
                                 </div>
                                 <div className="flex-1 bg-danger/10 rounded-2xl p-3 border border-danger/30">
                                     <p className="text-[9px] font-black uppercase text-danger mb-1 tracking-tighter">Shorts</p>
