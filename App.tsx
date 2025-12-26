@@ -7,7 +7,8 @@ import StrategiesPage from './pages/StrategiesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import MarketsPage from './pages/MarketsPage';
 import DashboardPage from './pages/DashboardPage';
-import { EclipseIcon, WalletIcon, TradesIcon, StrategiesIcon, BarChart3Icon, SunIcon, MoonIcon, SettingsIcon, TrashIcon, PanelLeftCloseIcon, DownloadIcon, UploadCloudIcon, ActivityIcon, AlertTriangleIcon, LayoutDashboardIcon } from './components/Icons';
+import ChatPage from './pages/ChatPage';
+import { EclipseIcon, WalletIcon, TradesIcon, StrategiesIcon, BarChart3Icon, SunIcon, MoonIcon, SettingsIcon, TrashIcon, PanelLeftCloseIcon, DownloadIcon, UploadCloudIcon, ActivityIcon, AlertTriangleIcon, LayoutDashboardIcon, MessageSquareIcon } from './components/Icons';
 import Modal from './components/Modal';
 import { exportData, importData } from './services/export';
 
@@ -230,6 +231,8 @@ const AppContent: React.FC = () => {
                 return <AnalyticsPage />;
             case 'markets':
                 return <MarketsPage />;
+            case 'chat':
+                return <ChatPage />;
             default:
                 return <DashboardPage />;
         }
@@ -242,6 +245,7 @@ const AppContent: React.FC = () => {
         { id: 'strategies', label: t('strategies'), icon: <StrategiesIcon /> },
         { id: 'analytics', label: t('analytics'), icon: <BarChart3Icon /> },
         { id: 'markets', label: t('markets'), icon: <ActivityIcon /> },
+        { id: 'chat', label: t('chat'), icon: <MessageSquareIcon /> },
     ], [t]);
 
     return (

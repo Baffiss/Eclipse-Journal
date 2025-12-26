@@ -27,7 +27,7 @@ const ChatPage: React.FC = () => {
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
-            textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+            textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 128) + 'px';
         }
     }, [input]);
 
@@ -47,9 +47,10 @@ const ChatPage: React.FC = () => {
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
 
+        const userMessageText = input.trim();
         const userMessage: Message = {
             id: crypto.randomUUID(),
-            text: input.trim(),
+            text: userMessageText,
             sender: 'user'
         };
 
@@ -71,22 +72,22 @@ const ChatPage: React.FC = () => {
                 parts: [{ text: m.text }]
             }));
 
-            const chat = ai.chats.create({
+            const result = await ai.models.generateContentStream({
                 model: 'gemini-3-flash-preview',
+                contents: [
+                    ...history,
+                    { role: 'user', parts: [{ text: userMessageText }] }
+                ],
                 config: {
-                    systemInstruction: "You are Eclipse AI, an expert trading assistant specialized in psychotrading (trading psychology). Your primary focus is to help traders master their emotions, discipline, and mental state. While you can discuss strategies and risk management, always emphasize the psychological aspects—such as controlling fear, greed, FOMO, and maintaining patience. Help users build a professional trader's mindset. Do not provide financial advice or trade signals. Be concise, professional, and supportive.",
+                    systemInstruction: "You are Eclipse AI, an expert trading assistant specialized in psychotrading (trading psychology). Your primary focus is to help traders master their emotions, discipline, and mental state. Always emphasize the psychological aspects—such as controlling fear, greed, FOMO, and maintaining patience. Help users build a professional trader's mindset. Do not provide financial advice. Be concise, professional, and supportive.",
                 },
-                history: history
             });
-
-            const result = await chat.sendMessageStream({ message: userMessage.text });
             
             const aiMessageId = crypto.randomUUID();
             setMessages(prev => [...prev, { id: aiMessageId, text: '', sender: 'ai' }]);
 
             let fullText = '';
             for await (const chunk of result) {
-                // Accessing the .text property of the chunk as per guidelines
                 const text = chunk.text;
                 if (text) {
                     fullText += text;
@@ -97,7 +98,7 @@ const ChatPage: React.FC = () => {
             console.error("Chat error:", error);
             setMessages(prev => [...prev, { 
                 id: crypto.randomUUID(), 
-                text: "Sorry, I encountered an error. Please try again.", 
+                text: "Sorry, I encountered an error. Please check your connection and try again.", 
                 sender: 'ai' 
             }]);
         } finally {
@@ -113,22 +114,32 @@ const ChatPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-theme(spacing.32))] md:h-full max-w-4xl mx-auto animate-fade-in">
-             <div className="flex justify-between items-center mb-4 p-4 border-b border-border">
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                    <EclipseIcon className="w-6 h-6 text-primary" />
-                    {t('chat')}
-                </h1>
+        <div className="flex flex-col h-full max-w-4xl mx-auto animate-fade-in relative">
+             <div className="flex justify-between items-center mb-4 p-4 border-b border-border bg-bkg/80 backdrop-blur-md sticky top-0 z-20">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                        <EclipseIcon className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-black uppercase tracking-tight leading-none">
+                            {t('chat')}
+                        </h1>
+                        <span className="text-[10px] font-bold text-success uppercase tracking-widest flex items-center gap-1 mt-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                            AI Online
+                        </span>
+                    </div>
+                </div>
                 <button 
                     onClick={() => setMessages([])} 
-                    className="p-2 text-muted-foreground hover:text-danger hover:bg-muted rounded-full transition-colors"
+                    className="p-3 text-muted-foreground hover:text-danger hover:bg-danger/10 rounded-xl transition-all"
                     title="Clear chat"
                 >
                     <TrashIcon className="w-5 h-5" />
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin">
                 {messages.map((msg) => (
                     <div 
                         key={msg.id} 
@@ -140,10 +151,10 @@ const ChatPage: React.FC = () => {
                             </div>
                         )}
                         <div 
-                            className={`max-w-[80%] p-3 rounded-2xl whitespace-pre-wrap ${
+                            className={`max-w-[85%] md:max-w-[75%] p-4 rounded-2xl whitespace-pre-wrap text-sm leading-relaxed shadow-sm ${
                                 msg.sender === 'user' 
-                                    ? 'bg-primary text-bkg rounded-br-none' 
-                                    : 'bg-muted text-content rounded-bl-none'
+                                    ? 'bg-primary text-bkg rounded-br-none font-bold' 
+                                    : 'bg-muted/50 border border-border text-content rounded-bl-none font-medium'
                             }`}
                         >
                             {msg.text}
@@ -151,39 +162,42 @@ const ChatPage: React.FC = () => {
                     </div>
                 ))}
                 {isLoading && (
-                    <div className="flex gap-3 justify-start">
+                    <div className="flex gap-3 justify-start animate-fade-in">
                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
                             <EclipseIcon className="w-5 h-5 text-primary" />
                         </div>
-                        <div className="bg-muted p-4 rounded-2xl rounded-bl-none flex gap-1 items-center">
-                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        <div className="bg-muted/50 border border-border p-4 rounded-2xl rounded-bl-none flex gap-1 items-center">
+                            <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                         </div>
                     </div>
                 )}
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-4 border-t border-border">
-                <div className="relative flex items-end gap-2 bg-muted rounded-xl p-2 border border-border focus-within:ring-1 focus-within:ring-primary">
+            <div className="p-4 mt-auto">
+                <div className="relative flex items-end gap-2 bg-muted/50 border border-border rounded-2xl p-2 focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-lg">
                     <textarea
                         ref={textareaRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder={t('askTheAI')}
-                        className="w-full bg-transparent border-none focus:ring-0 resize-none max-h-32 py-2 px-2"
+                        className="w-full bg-transparent border-none focus:ring-0 resize-none max-h-32 py-3 px-3 text-sm font-medium placeholder:text-muted-foreground/50"
                         rows={1}
                     />
                     <button 
                         onClick={handleSend}
                         disabled={!input.trim() || isLoading}
-                        className="p-2 bg-primary text-bkg rounded-lg hover:bg-primary-focus disabled:opacity-50 disabled:cursor-not-allowed mb-1 transition-colors"
+                        className="p-3 bg-primary text-bkg rounded-xl hover:bg-primary-focus disabled:opacity-50 disabled:cursor-not-allowed mb-1 transition-all shadow-md active:scale-95"
                     >
                         <SendIcon className="w-5 h-5" />
                     </button>
                 </div>
+                <p className="text-[10px] text-center text-muted-foreground/40 mt-3 font-bold uppercase tracking-widest">
+                    Powered by Gemini Pro • Focus on Psychology
+                </p>
             </div>
         </div>
     );

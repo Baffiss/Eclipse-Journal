@@ -122,7 +122,12 @@ const translations: Record<string, Record<string, string>> = {
         selectPreset: 'Apply Preset',
         noPresets: 'No presets saved.',
         save: 'Save',
-        viewScreenshot: 'View Screenshot'
+        viewScreenshot: 'View Screenshot',
+
+        // Chat
+        chat: 'AI Assistant',
+        aiWelcomeMessage: 'Hello! I am Eclipse AI, your trading psychology assistant. How are you feeling about your trading today?',
+        askTheAI: 'Ask the AI about your mindset, discipline, or fear...',
     },
     es: {
         accounts: 'Cuentas', trades: 'Operaciones', strategies: 'Estrategias', analytics: 'Analíticas', markets: 'Mercados', dashboard: 'Panel Principal',
@@ -242,11 +247,16 @@ const translations: Record<string, Record<string, string>> = {
         selectPreset: 'Aplicar Preset',
         noPresets: 'No hay presets guardados.',
         save: 'Guardar',
-        viewScreenshot: 'Ver Captura'
+        viewScreenshot: 'Ver Captura',
+
+        // Chat
+        chat: 'Asistente IA',
+        aiWelcomeMessage: '¡Hola! Soy Eclipse AI, tu asistente de psicología de trading. ¿Cómo te sientes respecto a tu trading hoy?',
+        askTheAI: 'Pregunta a la IA sobre tu mentalidad, disciplina o miedo...',
     },
 };
 
-export type ActivePage = 'dashboard' | 'accounts' | 'trades' | 'strategies' | 'analytics' | 'markets';
+export type ActivePage = 'dashboard' | 'accounts' | 'trades' | 'strategies' | 'analytics' | 'markets' | 'chat';
 
 export interface AppState {
     accounts: Account[];
