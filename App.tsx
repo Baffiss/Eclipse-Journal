@@ -7,8 +7,7 @@ import StrategiesPage from './pages/StrategiesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import MarketsPage from './pages/MarketsPage';
 import DashboardPage from './pages/DashboardPage';
-import ChatPage from './pages/ChatPage';
-import { EclipseIcon, WalletIcon, TradesIcon, StrategiesIcon, BarChart3Icon, SunIcon, MoonIcon, SettingsIcon, TrashIcon, PanelLeftCloseIcon, DownloadIcon, UploadCloudIcon, ActivityIcon, AlertTriangleIcon, LayoutDashboardIcon, MessageSquareIcon } from './components/Icons';
+import { EclipseIcon, WalletIcon, TradesIcon, StrategiesIcon, BarChart3Icon, SunIcon, MoonIcon, SettingsIcon, TrashIcon, PanelLeftCloseIcon, DownloadIcon, UploadCloudIcon, ActivityIcon, AlertTriangleIcon, LayoutDashboardIcon } from './components/Icons';
 import Modal from './components/Modal';
 import { exportData, importData } from './services/export';
 
@@ -231,8 +230,6 @@ const AppContent: React.FC = () => {
                 return <AnalyticsPage />;
             case 'markets':
                 return <MarketsPage />;
-            case 'chat':
-                return <ChatPage />;
             default:
                 return <DashboardPage />;
         }
@@ -245,7 +242,6 @@ const AppContent: React.FC = () => {
         { id: 'strategies', label: t('strategies'), icon: <StrategiesIcon /> },
         { id: 'analytics', label: t('analytics'), icon: <BarChart3Icon /> },
         { id: 'markets', label: t('markets'), icon: <ActivityIcon /> },
-        { id: 'chat', label: t('chat'), icon: <MessageSquareIcon /> },
     ], [t]);
 
     return (
@@ -305,7 +301,7 @@ const AppContent: React.FC = () => {
                                             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-bkg rounded-r-full" />
                                         )}
                                         
-                                        {React.cloneElement(item.icon, { className: `w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}` })}
+                                        {React.cloneElement(item.icon as React.ReactElement, { className: `w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}` })}
                                         {!isSidebarCollapsed && <span className="transition-opacity duration-300">{item.label}</span>}
                                         
                                         {/* Collapsed Tooltip (Simulated) */}
@@ -380,7 +376,7 @@ const AppContent: React.FC = () => {
                                 activePage === item.id ? 'text-primary scale-110' : 'text-muted-foreground'
                             }`}
                         >
-                            {React.cloneElement(item.icon, { className: "h-5 w-5" })}
+                            {React.cloneElement(item.icon as React.ReactElement, { className: "h-5 w-5" })}
                             <span className="text-[8px] font-black uppercase tracking-widest">{item.label.slice(0, 4)}</span>
                         </button>
                     ))}

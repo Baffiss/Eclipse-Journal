@@ -123,11 +123,6 @@ const translations: Record<string, Record<string, string>> = {
         noPresets: 'No presets saved.',
         save: 'Save',
         viewScreenshot: 'View Screenshot',
-
-        // Chat
-        chat: 'AI Assistant',
-        aiWelcomeMessage: 'Hello! I am Eclipse AI, your trading psychology assistant. How are you feeling about your trading today?',
-        askTheAI: 'Ask the AI about your mindset, discipline, or fear...',
     },
     es: {
         accounts: 'Cuentas', trades: 'Operaciones', strategies: 'Estrategias', analytics: 'Analíticas', markets: 'Mercados', dashboard: 'Panel Principal',
@@ -248,15 +243,10 @@ const translations: Record<string, Record<string, string>> = {
         noPresets: 'No hay presets guardados.',
         save: 'Guardar',
         viewScreenshot: 'Ver Captura',
-
-        // Chat
-        chat: 'Asistente IA',
-        aiWelcomeMessage: '¡Hola! Soy Eclipse AI, tu asistente de psicología de trading. ¿Cómo te sientes respecto a tu trading hoy?',
-        askTheAI: 'Pregunta a la IA sobre tu mentalidad, disciplina o miedo...',
     },
 };
 
-export type ActivePage = 'dashboard' | 'accounts' | 'trades' | 'strategies' | 'analytics' | 'markets' | 'chat';
+export type ActivePage = 'dashboard' | 'accounts' | 'trades' | 'strategies' | 'analytics' | 'markets';
 
 export interface AppState {
     accounts: Account[];
@@ -427,7 +417,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                         stopLossPips: parseFloat(String(trade.stopLossPips)) || 0,
                     }));
 
-                    const sanitizedAccounts = accounts.map((account: any) => {
+                    const sanitizedAccounts = sanitizedTrades.length > 0 ? accounts.map((account: any) => {
                         const initialCapital = parseFloat(String(account.initialCapital)) || 0;
                         const tradesForAccount = sanitizedTrades.filter((t: any) => t.accountId === account.id);
                         const totalProfit = tradesForAccount.reduce((sum: number, t: any) => sum + t.result, 0);
@@ -439,7 +429,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                             profitTarget: parseFloat(String(account.profitTarget)) || 0,
                             drawdownValue: parseFloat(String(account.drawdownValue)) || 0,
                         };
-                    });
+                    }) : accounts;
 
                     const finalState = {
                         ...initialState,
@@ -448,6 +438,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                         trades: sanitizedTrades,
                         strategies: strategies,
                         presets: presets,
+                        activePage: parsedState.activePage === 'chat' ? 'dashboard' : (parsedState.activePage || 'dashboard'),
                     };
 
                     dispatch({ type: 'SET_STATE', payload: finalState });
