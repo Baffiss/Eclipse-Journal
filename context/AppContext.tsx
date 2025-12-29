@@ -1,6 +1,6 @@
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useContext, useCallback } from 'react';
-import { Account, Trade, Strategy, Currency, TradePreset } from '../types';
+import { Account, Trade, Strategy, Currency, TradePreset, Withdrawal } from '../types';
 
 // Internationalization (i18n)
 const translations: Record<string, Record<string, string>> = {
@@ -123,6 +123,19 @@ const translations: Record<string, Record<string, string>> = {
         noPresets: 'No presets saved.',
         save: 'Save',
         viewScreenshot: 'View Screenshot',
+
+        // Withdrawals
+        withdraw: 'Withdraw',
+        withdrawAmount: 'Withdrawal Amount',
+        totalWithdrawn: 'Total Withdrawn',
+        insufficientFunds: 'Insufficient funds for this withdrawal.',
+        withdrawalLog: 'Withdrawal Log',
+        noWithdrawalsYet: 'No withdrawals recorded yet.',
+
+        // Chat
+        chat: 'Psychology Chat',
+        aiWelcomeMessage: 'Welcome to Eclipse AI. How can I help you master your trading mindset today?',
+        askTheAI: 'Ask about discipline, FOMO, fear, or any psychological hurdle...'
     },
     es: {
         accounts: 'Cuentas', trades: 'Operaciones', strategies: 'Estrategias', analytics: 'Analíticas', markets: 'Mercados', dashboard: 'Panel Principal',
@@ -166,7 +179,7 @@ const translations: Record<string, Record<string, string>> = {
         importError: 'El archivo seleccionado no es un archivo de respaldo válido o está dañado.',
 
         // Dashboard
-        goodMorning: 'Buenos Días',
+        goodMorning: 'Good Morning',
         goodAfternoon: 'Buenas Tardes',
         goodEvening: 'Buenas Noches',
         todaysPnL: "P&L de Hoy",
@@ -243,6 +256,19 @@ const translations: Record<string, Record<string, string>> = {
         noPresets: 'No hay presets guardados.',
         save: 'Guardar',
         viewScreenshot: 'Ver Captura',
+
+        // Withdrawals
+        withdraw: 'Retirar',
+        withdrawAmount: 'Monto del Retiro',
+        totalWithdrawn: 'Total Retirado',
+        insufficientFunds: 'Fondos insuficientes para este retiro.',
+        withdrawalLog: 'Registro de Retiros',
+        noWithdrawalsYet: 'Aún no hay retiros registrados.',
+
+        // Chat
+        chat: 'Chat de Psicología',
+        aiWelcomeMessage: 'Bienvenido a Eclipse AI. ¿Cómo puedo ayudarte a dominar tu mentalidad de trading hoy?',
+        askTheAI: 'Pregunta sobre disciplina, FOMO, miedo o cualquier obstáculo psicológico...'
     },
 };
 
@@ -251,6 +277,7 @@ export type ActivePage = 'dashboard' | 'accounts' | 'trades' | 'strategies' | 'a
 export interface AppState {
     accounts: Account[];
     trades: Trade[];
+    withdrawals: Withdrawal[];
     strategies: Strategy[];
     presets: TradePreset[];
     theme: 'light' | 'dark';
@@ -265,6 +292,7 @@ type Action =
     | { type: 'ADD_ACCOUNT'; payload: Account }
     | { type: 'UPDATE_ACCOUNT'; payload: Account }
     | { type: 'DELETE_ACCOUNT'; payload: string }
+    | { type: 'WITHDRAW_FUNDS'; payload: Withdrawal }
     | { type: 'ADD_TRADE'; payload: Trade }
     | { type: 'UPDATE_TRADE'; payload: { oldTrade: Trade; newTrade: Trade } }
     | { type: 'DELETE_TRADE'; payload: Trade }
@@ -285,6 +313,7 @@ type Action =
 const initialState: AppState = {
     accounts: [],
     trades: [],
+    withdrawals: [],
     strategies: [],
     presets: [],
     theme: 'light',
@@ -294,8 +323,6 @@ const initialState: AppState = {
     activePage: 'dashboard',
     focusedTradeId: null,
 };
-
-const AppContext = createContext<{ state: AppState; dispatch: Dispatch<Action> } | undefined>(undefined);
 
 const appReducer = (prevState: AppState, action: Action): AppState => {
     switch (action.type) {
@@ -307,8 +334,25 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
             return {
                 ...prevState,
                 accounts: prevState.accounts.filter(acc => acc.id !== action.payload),
-                trades: prevState.trades.filter(t => t.accountId !== action.payload)
+                trades: prevState.trades.filter(t => t.accountId !== action.payload),
+                withdrawals: prevState.withdrawals.filter(w => w.accountId !== action.payload)
             };
+        case 'WITHDRAW_FUNDS': {
+            const withdrawal = action.payload;
+            return {
+                ...prevState,
+                accounts: prevState.accounts.map(acc => 
+                    acc.id === withdrawal.accountId 
+                        ? { 
+                            ...acc, 
+                            totalWithdrawn: (acc.totalWithdrawn || 0) + withdrawal.amount,
+                            currentCapital: acc.currentCapital - withdrawal.amount
+                          } 
+                        : acc
+                ),
+                withdrawals: [...prevState.withdrawals, withdrawal]
+            };
+        }
         case 'ADD_TRADE': {
             const trade = action.payload;
             const result = parseFloat(String(trade.result)) || 0;
@@ -382,7 +426,7 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
         case 'SET_LANGUAGE':
             return { ...prevState, language: action.payload };
         case 'RESET_DATA':
-            return { ...prevState, accounts: [], trades: [], strategies: [], presets: [] };
+            return { ...prevState, accounts: [], trades: [], withdrawals: [], strategies: [], presets: [] };
         case 'SET_PAGE':
             return { ...prevState, activePage: action.payload };
         case 'FOCUS_TRADE':
@@ -393,6 +437,14 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
             return prevState;
     }
 };
+
+/**
+ * Fix: Define AppContext using createContext to fix "Cannot find name 'AppContext'" errors.
+ */
+const AppContext = createContext<{
+    state: AppState;
+    dispatch: Dispatch<Action>;
+} | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [state, dispatch] = useReducer(appReducer, initialState);
@@ -406,6 +458,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 if (parsedState && typeof parsedState === 'object') {
                     const accounts = Array.isArray(parsedState.accounts) ? parsedState.accounts : [];
                     const trades = Array.isArray(parsedState.trades) ? parsedState.trades : [];
+                    const withdrawals = Array.isArray(parsedState.withdrawals) ? parsedState.withdrawals : [];
                     const strategies = Array.isArray(parsedState.strategies) ? parsedState.strategies : [];
                     const presets = Array.isArray(parsedState.presets) ? parsedState.presets : [];
                     
@@ -417,25 +470,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                         stopLossPips: parseFloat(String(trade.stopLossPips)) || 0,
                     }));
 
-                    const sanitizedAccounts = sanitizedTrades.length > 0 ? accounts.map((account: any) => {
+                    const sanitizedAccounts = accounts.map((account: any) => {
                         const initialCapital = parseFloat(String(account.initialCapital)) || 0;
+                        const totalWithdrawn = parseFloat(String(account.totalWithdrawn)) || 0;
                         const tradesForAccount = sanitizedTrades.filter((t: any) => t.accountId === account.id);
                         const totalProfit = tradesForAccount.reduce((sum: number, t: any) => sum + t.result, 0);
                         
                         return {
                             ...account,
                             initialCapital,
-                            currentCapital: initialCapital + totalProfit,
+                            totalWithdrawn,
+                            currentCapital: initialCapital + totalProfit - totalWithdrawn,
                             profitTarget: parseFloat(String(account.profitTarget)) || 0,
                             drawdownValue: parseFloat(String(account.drawdownValue)) || 0,
                         };
-                    }) : accounts;
+                    });
 
                     const finalState = {
                         ...initialState,
                         ...parsedState,
                         accounts: sanitizedAccounts,
                         trades: sanitizedTrades,
+                        withdrawals: withdrawals,
                         strategies: strategies,
                         presets: presets,
                         activePage: parsedState.activePage === 'chat' ? 'dashboard' : (parsedState.activePage || 'dashboard'),
@@ -540,6 +596,7 @@ export const useApp = () => {
     const addAccount = useCallback((account: Account) => dispatch({ type: 'ADD_ACCOUNT', payload: account }), [dispatch]);
     const updateAccount = useCallback((account: Account) => dispatch({ type: 'UPDATE_ACCOUNT', payload: account }), [dispatch]);
     const deleteAccount = useCallback((accountId: string) => dispatch({ type: 'DELETE_ACCOUNT', payload: accountId }), [dispatch]);
+    const withdrawFunds = useCallback((withdrawal: Withdrawal) => dispatch({ type: 'WITHDRAW_FUNDS', payload: withdrawal }), [dispatch]);
     
     const addTrade = useCallback((trade: Trade) => dispatch({ type: 'ADD_TRADE', payload: trade }), [dispatch]);
     const updateTrade = useCallback((oldTrade: Trade, newTrade: Trade) => dispatch({ type: 'UPDATE_TRADE', payload: {oldTrade, newTrade}}), [dispatch]);
@@ -568,6 +625,7 @@ export const useApp = () => {
         addAccount,
         updateAccount,
         deleteAccount,
+        withdrawFunds,
         addTrade,
         updateTrade,
         deleteTrade,

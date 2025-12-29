@@ -173,13 +173,13 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
                     icon={<TargetIcon />} 
                     description={t('winRate_desc')}
                     extra={
-                        <div className="w-20 h-20">
+                        <div className="w-16 h-16">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
                                         data={winRatePieData}
-                                        innerRadius={24}
-                                        outerRadius={34}
+                                        innerRadius={18}
+                                        outerRadius={28}
                                         dataKey="value"
                                         stroke="none"
                                         cx="50%"
@@ -353,8 +353,8 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
                                     data={stats.assetPerformance.filter(a => a.profit > 0)} 
                                     dataKey="profit" 
                                     nameKey="asset" 
-                                    innerRadius={45} 
-                                    outerRadius={65} 
+                                    innerRadius={40} 
+                                    outerRadius={55} 
                                     paddingAngle={10}
                                     stroke="none"
                                     cx="50%"
@@ -365,7 +365,6 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
                                 <Tooltip 
                                     contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderRadius: '16px', border: '1px solid hsl(var(--border))', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
                                     itemStyle={{ color: 'hsl(var(--content))' }}
-                                    formatter={(value: number) => [`${currencySymbol}${value.toLocaleString()}`, 'Profit']}
                                 />
                             </PieChart>
                         </ResponsiveContainer>

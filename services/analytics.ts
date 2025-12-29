@@ -110,8 +110,8 @@ export const calculateAnalytics = (trades: Trade[], initialCapital: number): Ana
 export const calculateEquityCurve = (trades: Trade[], initialCapital: number, account?: Account | null): EquityDataPoint[] => {
     const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
-    let cumulativeEquity = initialCapital;
-    let highestEquity = initialCapital;
+    let cumulativeEquity = initialCapital - (account?.totalWithdrawn || 0);
+    let highestEquity = cumulativeEquity;
 
     const hasTrailingDrawdown = account && account.drawdownType === DrawdownType.TRAILING && account.drawdownValue > 0;
     
@@ -130,16 +130,19 @@ export const calculateEquityCurve = (trades: Trade[], initialCapital: number, ac
         initialPoint.trailingDrawdown = initialCapital - trailingDrawdownLimit;
     }
 
+    // Note: Equity curve usually represents the evolution of trades. 
+    // To keep it simple, we calculate equity as capital after trades.
+    let currentCapital = initialCapital;
     const curve = sortedTrades.map(trade => {
-        cumulativeEquity += trade.result;
+        currentCapital += trade.result;
         const dataPoint: EquityDataPoint = {
             date: trade.date,
-            equity: cumulativeEquity,
+            equity: currentCapital - (account?.totalWithdrawn || 0),
         };
 
         if (hasTrailingDrawdown) {
-            highestEquity = Math.max(highestEquity, cumulativeEquity);
-            dataPoint.trailingDrawdown = highestEquity - trailingDrawdownLimit;
+            highestEquity = Math.max(highestEquity, currentCapital);
+            dataPoint.trailingDrawdown = (highestEquity - (account?.totalWithdrawn || 0)) - trailingDrawdownLimit;
         }
 
         return dataPoint;
@@ -205,7 +208,8 @@ export const calculateAccountStats = (account: Account, trades: Trade[]) => {
         ? account.profitTarget
         : account.initialCapital * (account.profitTarget / 100);
 
-    const currentProfit = equity - account.initialCapital;
+    // Current profit should include what was already withdrawn to track progress correctly
+    const currentProfit = (equity - account.initialCapital);
     const profitProgress = profitTargetValue > 0 
         ? Math.max(0, Math.min((currentProfit / profitTargetValue) * 100, 100))
         : 0;
@@ -216,12 +220,16 @@ export const calculateAccountStats = (account: Account, trades: Trade[]) => {
         : account.initialCapital * (account.drawdownValue / 100);
 
     let currentDrawdownAmount = 0;
+    // For drawdown we look at the actual current balance vs peak or initial
+    const currentBalance = equity - (account.totalWithdrawn || 0);
+    const peakBalance = highWaterMark - (account.totalWithdrawn || 0);
+
     if (account.drawdownType === DrawdownType.TRAILING) {
         // Trailing: Distance from High Water Mark
-        currentDrawdownAmount = Math.max(0, highWaterMark - equity);
+        currentDrawdownAmount = Math.max(0, peakBalance - currentBalance);
     } else {
         // Maximum: Distance from Initial Capital (Static)
-        currentDrawdownAmount = Math.max(0, account.initialCapital - equity);
+        currentDrawdownAmount = Math.max(0, account.initialCapital - currentBalance);
     }
 
     const drawdownProgress = drawdownLimitValue > 0
@@ -229,8 +237,8 @@ export const calculateAccountStats = (account: Account, trades: Trade[]) => {
         : 0;
 
     return {
-        equity,
-        highWaterMark,
+        equity: currentBalance,
+        highWaterMark: peakBalance,
         profitTargetValue,
         drawdownLimitValue,
         profitProgress,

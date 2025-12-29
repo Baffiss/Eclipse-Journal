@@ -1,3 +1,4 @@
+
 export enum DrawdownType {
     MAXIMUM = 'Maximum',
     TRAILING = 'Trailing',
@@ -41,6 +42,14 @@ export interface Account {
     strategyId?: string;
     status: AccountStatus;
     accountType: AccountType;
+    totalWithdrawn: number;
+}
+
+export interface Withdrawal {
+    id: string;
+    accountId: string;
+    amount: number;
+    date: string; // ISO string
 }
 
 export enum TradeDirection {

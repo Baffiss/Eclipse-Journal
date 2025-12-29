@@ -310,14 +310,14 @@ const DashboardPage: React.FC = () => {
                                     <span className="text-danger flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-danger"/>{stats.losses} L</span>
                                 </div>
                             </div>
-                            <div className="w-32 h-32 relative flex-shrink-0">
+                            <div className="w-24 h-24 relative flex-shrink-0">
                                 {stats.count > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie
                                                 data={winRatePieData}
-                                                innerRadius={36}
-                                                outerRadius={46}
+                                                innerRadius={28}
+                                                outerRadius={38}
                                                 paddingAngle={5}
                                                 dataKey="value"
                                                 stroke="none"
