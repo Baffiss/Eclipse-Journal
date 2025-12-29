@@ -316,11 +316,13 @@ const DashboardPage: React.FC = () => {
                                         <PieChart>
                                             <Pie
                                                 data={winRatePieData}
-                                                innerRadius={38}
-                                                outerRadius={52}
+                                                innerRadius={36}
+                                                outerRadius={46}
                                                 paddingAngle={5}
                                                 dataKey="value"
                                                 stroke="none"
+                                                cx="50%"
+                                                cy="50%"
                                             >
                                                 {winRatePieData.map((entry, index) => (
                                                     <Cell key={`cell-${index}`} fill={entry.color} />

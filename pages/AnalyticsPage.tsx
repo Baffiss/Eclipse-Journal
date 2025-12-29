@@ -173,15 +173,17 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
                     icon={<TargetIcon />} 
                     description={t('winRate_desc')}
                     extra={
-                        <div className="w-24 h-24">
+                        <div className="w-20 h-20">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
                                         data={winRatePieData}
-                                        innerRadius={28}
-                                        outerRadius={40}
+                                        innerRadius={24}
+                                        outerRadius={34}
                                         dataKey="value"
                                         stroke="none"
+                                        cx="50%"
+                                        cy="50%"
                                     >
                                         {winRatePieData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.color} />
@@ -344,22 +346,26 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
                             ))}
                         </div>
                     </div>
-                    <div className="w-full md:w-48 h-48 relative">
+                    <div className="w-full md:w-44 h-44 relative">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie 
                                     data={stats.assetPerformance.filter(a => a.profit > 0)} 
                                     dataKey="profit" 
                                     nameKey="asset" 
-                                    innerRadius={55} 
-                                    outerRadius={75} 
+                                    innerRadius={45} 
+                                    outerRadius={65} 
                                     paddingAngle={10}
                                     stroke="none"
+                                    cx="50%"
+                                    cy="50%"
                                 >
                                     {stats.assetPerformance.map((_, i) => <Cell key={i} fill={PIE_CHART_COLORS[i % PIE_CHART_COLORS.length]} />)}
                                 </Pie>
                                 <Tooltip 
-                                    contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderRadius: '16px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                                    contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderRadius: '16px', border: '1px solid hsl(var(--border))', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                                    itemStyle={{ color: 'hsl(var(--content))' }}
+                                    formatter={(value: number) => [`${currencySymbol}${value.toLocaleString()}`, 'Profit']}
                                 />
                             </PieChart>
                         </ResponsiveContainer>
