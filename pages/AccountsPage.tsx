@@ -3,9 +3,24 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Account, DrawdownType, Trade, ValueType, AccountStatus, AccountType, Currency, Withdrawal } from '../types';
 import Modal from '../components/Modal';
-import { PlusIcon, EditIcon, TrashIcon, TargetIcon, TrendingDownIcon, InfoIcon, AlertTriangleIcon, FilterIcon, ChevronLeftIcon, BanknoteIcon, CalendarIcon } from '../components/Icons';
+import { PlusIcon, EditIcon, TrashIcon, TargetIcon, TrendingDownIcon, InfoIcon, AlertTriangleIcon, FilterIcon, ChevronLeftIcon, BanknoteIcon, CalendarIcon, XIcon } from '../components/Icons';
 import EquityChart from '../components/charts/EquityChart';
 import { calculateEquityCurve, calculateAccountStats } from '../services/analytics';
+
+const getLocalDateString = (d: Date): string => {
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const getCurrentTimeRounded = () => {
+    const now = new Date();
+    const h = now.getHours();
+    let m = now.getMinutes();
+    m = Math.floor(m / 5) * 5; 
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+};
 
 const AccountForm: React.FC<{
     isOpen: boolean;
@@ -141,8 +156,21 @@ const WithdrawForm: React.FC<{
 }> = ({ isOpen, onClose, account }) => {
     const { withdrawFunds, t, getCurrencySymbol } = useApp();
     const [amount, setAmount] = useState(0);
+    const [date, setDate] = useState(getLocalDateString(new Date()));
+    const [time, setTime] = useState(getCurrentTimeRounded());
     const [error, setError] = useState('');
     const currencySymbol = getCurrencySymbol(account.currency);
+
+    const timeOptions = useMemo(() => {
+        const options = [];
+        for (let h = 0; h < 24; h++) {
+            for (let m = 0; m < 60; m += 5) {
+                const tStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                options.push(tStr);
+            }
+        }
+        return options;
+    }, []);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -153,11 +181,16 @@ const WithdrawForm: React.FC<{
             return;
         }
 
+        const [hours, minutes] = time.split(':').map(Number);
+        const localDate = new Date(`${date}T00:00:00`);
+        localDate.setHours(hours);
+        localDate.setMinutes(minutes);
+
         const withdrawal: Withdrawal = {
             id: crypto.randomUUID(),
             accountId: account.id,
             amount,
-            date: new Date().toISOString(),
+            date: localDate.toISOString(),
         };
 
         withdrawFunds(withdrawal);
@@ -182,6 +215,28 @@ const WithdrawForm: React.FC<{
                         autoFocus
                     />
                     {error && <p className="text-danger text-[10px] font-black uppercase mt-2">{error}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 block">{t('date')}</label>
+                        <input 
+                            type="date" 
+                            value={date} 
+                            onChange={(e) => setDate(e.target.value)} 
+                            className="w-full p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all text-xs" 
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 block">{t('hour')}</label>
+                        <select 
+                            value={time} 
+                            onChange={(e) => setTime(e.target.value)} 
+                            className="w-full p-3 bg-muted border border-border rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all text-xs"
+                        >
+                            {timeOptions.map(tOption => <option key={tOption} value={tOption}>{tOption}</option>)}
+                        </select>
+                    </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6 border-t border-border/50">
@@ -228,14 +283,16 @@ const AccountCard: React.FC<{ account: Account; onSelect: () => void }> = ({ acc
             <div className="relative z-10">
                  <div className="flex justify-between items-start mb-6">
                     <div className="flex flex-col">
-                        <h3 className="font-black text-2xl tracking-tight group-hover:text-primary transition-colors">{account.name}</h3>
+                        <h3 className="font-black text-2xl tracking-tight group-hover:text-primary transition-colors truncate max-w-[140px] sm:max-w-none">{account.name}</h3>
                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">ID: {account.id.slice(0, 8)}</span>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                         <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-lg ${typeColors[account.accountType]}`}>{t(account.accountType.toLowerCase())}</span>
                     </div>
                  </div>
-                <p className="text-4xl font-black tracking-tighter leading-none mb-1">{currencySymbol}{account.currentCapital.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="text-3xl sm:text-4xl font-black tracking-tighter leading-none mb-1 break-all">
+                    {currencySymbol}{account.currentCapital.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </p>
                 <div className={`inline-flex items-center gap-1.5 text-xs font-black px-2 py-0.5 rounded-md ${profit >= 0 ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
                     {profit >= 0 ? <PlusIcon className="w-3 h-3" /> : ''}{currencySymbol}{Math.abs(profit).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </div>
@@ -263,7 +320,7 @@ const AccountCard: React.FC<{ account: Account; onSelect: () => void }> = ({ acc
 
 
 const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({ account, onBack }) => {
-    const { trades, withdrawals, deleteAccount, t, getCurrencySymbol } = useApp();
+    const { trades, withdrawals, deleteAccount, deleteWithdrawal, t, getCurrencySymbol } = useApp();
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
     const [withdrawalAccount, setWithdrawalAccount] = useState<Account | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -271,7 +328,10 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
 
     const accountTrades = useMemo(() => trades.filter(t => t.accountId === account.id).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [trades, account.id]);
     const accountWithdrawals = useMemo(() => withdrawals.filter(w => w.accountId === account.id).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [withdrawals, account.id]);
-    const equityCurve = useMemo(() => calculateEquityCurve(accountTrades, account.initialCapital, account), [accountTrades, account.initialCapital, account]);
+    
+    // Updated equity curve memo to correctly reflect withdrawal points in time
+    const equityCurve = useMemo(() => calculateEquityCurve(accountTrades, account.initialCapital, account, accountWithdrawals), [accountTrades, account.initialCapital, account, accountWithdrawals]);
+    
     const currencySymbol = getCurrencySymbol(account.currency);
 
     const profit = account.currentCapital + (account.totalWithdrawn || 0) - account.initialCapital;
@@ -280,6 +340,8 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
     const profitTargetValue = account.profitTargetType === ValueType.PERCENTAGE
         ? account.initialCapital * (1 + account.profitTarget / 100)
         : account.initialCapital + account.profitTarget;
+
+    const isWithdrawalEnabled = account.accountType === AccountType.REAL || account.accountType === AccountType.PA;
 
     const confirmDelete = () => {
         deleteAccount(account.id);
@@ -299,21 +361,23 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
                     </button>
                     
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <h2 className="text-5xl font-black tracking-tighter uppercase">{account.name}</h2>
+                        <div className="max-w-full overflow-hidden">
+                            <div className="flex flex-wrap items-center gap-3 mb-2">
+                                <h2 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase truncate">{account.name}</h2>
                                 <span className="px-3 py-1 bg-primary text-bkg text-[9px] font-black uppercase tracking-widest rounded-full">{t(account.accountType.toLowerCase())}</span>
                             </div>
                             <p className="text-muted-foreground font-bold tracking-tight opacity-60 uppercase text-[10px]">{t('status')}: {t(account.status.toLowerCase())}</p>
                         </div>
-                        <div className="flex gap-3">
-                            <button 
-                                onClick={() => setWithdrawalAccount(account)} 
-                                className="flex items-center gap-2 px-6 py-4 bg-primary text-bkg rounded-2xl hover:bg-primary-focus transition-all shadow-lg shadow-primary/20 group"
-                            >
-                                <BanknoteIcon className="w-5 h-5 group-hover:scale-110 transition-transform"/>
-                                <span className="font-black text-xs uppercase tracking-widest">{t('withdraw')}</span>
-                            </button>
+                        <div className="flex gap-3 flex-wrap">
+                            {isWithdrawalEnabled && (
+                                <button 
+                                    onClick={() => setWithdrawalAccount(account)} 
+                                    className="flex items-center gap-2 px-6 py-4 bg-primary text-bkg rounded-2xl hover:bg-primary-focus transition-all shadow-lg shadow-primary/20 group"
+                                >
+                                    <BanknoteIcon className="w-5 h-5 group-hover:scale-110 transition-transform"/>
+                                    <span className="font-black text-xs uppercase tracking-widest">{t('withdraw')}</span>
+                                </button>
+                            )}
                             <button onClick={() => setEditingAccount(account)} className="p-4 bg-bkg border border-border rounded-2xl hover:bg-muted transition-all shadow-sm">
                                 <EditIcon className="w-5 h-5"/>
                             </button>
@@ -325,35 +389,35 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
                 </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <div className="bg-bkg border border-border rounded-[2rem] p-6 shadow-sm">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">{t('currentCapital')}</p>
-                    <p className="text-3xl font-black tracking-tighter">{currencySymbol}{account.currentCapital.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+            {/* Stats Grid - Adjusted for long numbers */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
+                <div className="bg-bkg border border-border rounded-[2rem] p-5 sm:p-6 shadow-sm overflow-hidden">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 truncate">{t('currentCapital')}</p>
+                    <p className="text-xl xl:text-2xl font-black tracking-tighter break-all">{currencySymbol}{account.currentCapital.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                 </div>
-                <div className="bg-bkg border border-border rounded-[2rem] p-6 shadow-sm">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">{t('netPL')}</p>
-                    <p className={`text-3xl font-black tracking-tighter ${profit >= 0 ? 'text-success' : 'text-danger'}`}>
+                <div className="bg-bkg border border-border rounded-[2rem] p-5 sm:p-6 shadow-sm overflow-hidden">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 truncate">{t('netPL')}</p>
+                    <p className={`text-xl xl:text-2xl font-black tracking-tighter break-all ${profit >= 0 ? 'text-success' : 'text-danger'}`}>
                         {profit >= 0 ? '+' : ''}{currencySymbol}{profit.toLocaleString(undefined, {minimumFractionDigits: 2})}
                     </p>
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${profit >= 0 ? 'text-success' : 'text-danger'} opacity-80`}>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${profit >= 0 ? 'text-success' : 'text-danger'} opacity-80`}>
                         {profitPercent.toFixed(2)}% ROI
                     </span>
                 </div>
-                <div className="bg-bkg border border-border rounded-[2rem] p-6 shadow-sm">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">{t('totalWithdrawn')}</p>
-                    <p className="text-3xl font-black tracking-tighter text-primary">{currencySymbol}{(account.totalWithdrawn || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                <div className="bg-bkg border border-border rounded-[2rem] p-5 sm:p-6 shadow-sm overflow-hidden">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 truncate">{t('totalWithdrawn')}</p>
+                    <p className="text-xl xl:text-2xl font-black tracking-tighter text-primary break-all">{currencySymbol}{(account.totalWithdrawn || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                 </div>
-                <div className="bg-bkg border border-border rounded-[2rem] p-6 shadow-sm">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">{t('profitTarget')}</p>
-                    <p className="text-3xl font-black tracking-tighter">{currencySymbol}{profitTargetValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                <div className="bg-bkg border border-border rounded-[2rem] p-5 sm:p-6 shadow-sm overflow-hidden">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 truncate">{t('profitTarget')}</p>
+                    <p className="text-xl xl:text-2xl font-black tracking-tighter break-all">{currencySymbol}{profitTargetValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                 </div>
-                <div className="bg-bkg border border-border rounded-[2rem] p-6 shadow-sm">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">{t('drawdownValue')}</p>
-                    <p className="text-3xl font-black tracking-tighter">
+                <div className="bg-bkg border border-border rounded-[2rem] p-5 sm:p-6 shadow-sm overflow-hidden col-span-2 md:col-span-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 truncate">{t('drawdownValue')}</p>
+                    <p className="text-xl xl:text-2xl font-black tracking-tighter break-all">
                         {account.drawdownValue}{account.drawdownValueType === ValueType.PERCENTAGE ? '%' : ` ${currencySymbol}`}
                     </p>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
                         {t(account.drawdownType.toLowerCase())}
                     </span>
                 </div>
@@ -367,7 +431,7 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
                     </div>
                     <h3 className="text-xs font-black uppercase tracking-[0.3em]">{t('equityCurve')}</h3>
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-h-[350px]">
                     <EquityChart data={equityCurve} currencySymbol={currencySymbol} account={account} />
                 </div>
             </div>
@@ -405,7 +469,14 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
                         )
                     ) : (
                         accountWithdrawals.length > 0 ? (
-                            accountWithdrawals.map(withdrawal => <WithdrawalListItem key={withdrawal.id} withdrawal={withdrawal} currencySymbol={currencySymbol}/>)
+                            accountWithdrawals.map(withdrawal => (
+                                <WithdrawalListItem 
+                                    key={withdrawal.id} 
+                                    withdrawal={withdrawal} 
+                                    currencySymbol={currencySymbol}
+                                    onDelete={() => deleteWithdrawal(withdrawal)}
+                                />
+                            ))
                         ) : (
                             <div className="py-20 text-center opacity-40">
                                 <BanknoteIcon className="w-12 h-12 mx-auto mb-4" />
@@ -442,42 +513,50 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
 const TradeListItem: React.FC<{trade: Trade, currencySymbol: string}> = ({trade, currencySymbol}) => {
     const isWin = trade.result > 0;
     return (
-        <div className="flex justify-between items-center px-10 py-6 hover:bg-muted/30 transition-colors">
-             <div className="flex items-center gap-6">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${trade.direction === 'Buy' ? 'bg-primary/10 text-primary' : 'bg-danger/10 text-danger'}`}>
+        <div className="flex justify-between items-center px-6 sm:px-10 py-6 hover:bg-muted/30 transition-colors gap-4">
+             <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+                <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center font-black text-xs ${trade.direction === 'Buy' ? 'bg-primary/10 text-primary' : 'bg-danger/10 text-danger'}`}>
                     {trade.direction === 'Buy' ? 'B' : 'S'}
                 </div>
-                <div>
-                    <p className="font-black text-lg uppercase tracking-tight">{trade.asset}</p>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                <div className="min-w-0">
+                    <p className="font-black text-lg uppercase tracking-tight truncate">{trade.asset}</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 truncate">
                         {new Date(trade.date).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
                     </p>
                 </div>
             </div>
-             <p className={`text-xl font-black tracking-tighter ${isWin ? 'text-success' : 'text-danger'}`}>
+             <p className={`text-lg sm:text-xl font-black tracking-tighter whitespace-nowrap break-all ${isWin ? 'text-success' : 'text-danger'}`}>
                 {isWin ? '+' : ''}{currencySymbol}{trade.result.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </p>
         </div>
     )
 }
 
-const WithdrawalListItem: React.FC<{withdrawal: Withdrawal, currencySymbol: string}> = ({withdrawal, currencySymbol}) => {
+const WithdrawalListItem: React.FC<{withdrawal: Withdrawal, currencySymbol: string, onDelete: () => void}> = ({withdrawal, currencySymbol, onDelete}) => {
     return (
-        <div className="flex justify-between items-center px-10 py-6 hover:bg-muted/30 transition-colors">
-             <div className="flex items-center gap-6">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500">
+        <div className="group flex justify-between items-center px-6 sm:px-10 py-6 hover:bg-muted/30 transition-colors gap-4">
+             <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+                <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center bg-amber-500/10 text-amber-500">
                     <BanknoteIcon className="w-5 h-5" />
                 </div>
-                <div>
-                    <p className="font-black text-lg uppercase tracking-tight">Withdrawal</p>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                <div className="min-w-0">
+                    <p className="font-black text-lg uppercase tracking-tight truncate">Withdrawal</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 truncate">
                         {new Date(withdrawal.date).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
                     </p>
                 </div>
             </div>
-             <p className="text-xl font-black tracking-tighter text-amber-500">
-                -{currencySymbol}{withdrawal.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </p>
+            <div className="flex items-center gap-4 sm:gap-6 ml-auto">
+                <p className="text-lg sm:text-xl font-black tracking-tighter text-amber-500 whitespace-nowrap break-all">
+                    -{currencySymbol}{withdrawal.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </p>
+                <button 
+                    onClick={onDelete} 
+                    className="p-2 text-danger hover:bg-danger/10 rounded-lg sm:opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                >
+                    <TrashIcon className="w-4 h-4" />
+                </button>
+            </div>
         </div>
     )
 }
@@ -511,7 +590,7 @@ const AccountsPage: React.FC = () => {
         <div className="animate-fade-in flex flex-col gap-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <h1 className="text-5xl font-black tracking-tighter uppercase">{t('accounts')}</h1>
+                    <h1 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase">{t('accounts')}</h1>
                 </div>
                 <div className="flex gap-3">
                     <button 

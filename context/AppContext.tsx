@@ -293,6 +293,7 @@ type Action =
     | { type: 'UPDATE_ACCOUNT'; payload: Account }
     | { type: 'DELETE_ACCOUNT'; payload: string }
     | { type: 'WITHDRAW_FUNDS'; payload: Withdrawal }
+    | { type: 'DELETE_WITHDRAWAL'; payload: Withdrawal }
     | { type: 'ADD_TRADE'; payload: Trade }
     | { type: 'UPDATE_TRADE'; payload: { oldTrade: Trade; newTrade: Trade } }
     | { type: 'DELETE_TRADE'; payload: Trade }
@@ -351,6 +352,22 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
                         : acc
                 ),
                 withdrawals: [...prevState.withdrawals, withdrawal]
+            };
+        }
+        case 'DELETE_WITHDRAWAL': {
+            const withdrawal = action.payload;
+            return {
+                ...prevState,
+                accounts: prevState.accounts.map(acc => 
+                    acc.id === withdrawal.accountId 
+                        ? { 
+                            ...acc, 
+                            totalWithdrawn: Math.max(0, (acc.totalWithdrawn || 0) - withdrawal.amount),
+                            currentCapital: acc.currentCapital + withdrawal.amount
+                          } 
+                        : acc
+                ),
+                withdrawals: prevState.withdrawals.filter(w => w.id !== withdrawal.id)
             };
         }
         case 'ADD_TRADE': {
@@ -438,9 +455,6 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
     }
 };
 
-/**
- * Fix: Define AppContext using createContext to fix "Cannot find name 'AppContext'" errors.
- */
 const AppContext = createContext<{
     state: AppState;
     dispatch: Dispatch<Action>;
@@ -597,6 +611,7 @@ export const useApp = () => {
     const updateAccount = useCallback((account: Account) => dispatch({ type: 'UPDATE_ACCOUNT', payload: account }), [dispatch]);
     const deleteAccount = useCallback((accountId: string) => dispatch({ type: 'DELETE_ACCOUNT', payload: accountId }), [dispatch]);
     const withdrawFunds = useCallback((withdrawal: Withdrawal) => dispatch({ type: 'WITHDRAW_FUNDS', payload: withdrawal }), [dispatch]);
+    const deleteWithdrawal = useCallback((withdrawal: Withdrawal) => dispatch({ type: 'DELETE_WITHDRAWAL', payload: withdrawal }), [dispatch]);
     
     const addTrade = useCallback((trade: Trade) => dispatch({ type: 'ADD_TRADE', payload: trade }), [dispatch]);
     const updateTrade = useCallback((oldTrade: Trade, newTrade: Trade) => dispatch({ type: 'UPDATE_TRADE', payload: {oldTrade, newTrade}}), [dispatch]);
@@ -626,6 +641,7 @@ export const useApp = () => {
         updateAccount,
         deleteAccount,
         withdrawFunds,
+        deleteWithdrawal,
         addTrade,
         updateTrade,
         deleteTrade,

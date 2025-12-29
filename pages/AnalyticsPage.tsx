@@ -13,6 +13,7 @@ import {
     ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
     CartesianGrid, Tooltip, Cell, PieChart, Pie, AreaChart, Area
 } from 'recharts';
+import { AccountType } from '../types';
 
 const PIE_CHART_COLORS = ['#34d399', '#60a5fa', '#f87171', '#fbbf24', '#a78bfa', '#f472b6'];
 
@@ -76,7 +77,7 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
     defaultAccountId = '', 
     defaultStrategyId = '' 
 }) => {
-    const { trades, accounts, strategies, t, getCurrencySymbol, theme } = useApp();
+    const { trades, accounts, strategies, withdrawals, t, getCurrencySymbol, theme } = useApp();
     const [filterAccountId, setFilterAccountId] = useState(defaultAccountId);
     const [filterStrategyId, setFilterStrategyId] = useState(defaultStrategyId);
 
@@ -89,11 +90,37 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
         return trades.filter(t => 
             (filterAccountId ? t.accountId === filterAccountId : true) && 
             (filterStrategyId ? t.strategyId === filterStrategyId : true)
-        ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        ).sort((a, b) => new Date(a.date).getTime() - new Date(a.date).getTime());
     }, [trades, filterAccountId, filterStrategyId]);
 
     const stats = useMemo(() => calculateAnalytics(filteredTrades, initialCapital), [filteredTrades, initialCapital]);
-    const equityCurveData = useMemo(() => calculateEquityCurve(filteredTrades, initialCapital, activeAccount), [filteredTrades, initialCapital, activeAccount]);
+
+    // Lógica específica para Equity Curve: Solo cuentas Real y PA
+    const equityCurveData = useMemo(() => {
+        const validAccountTypes = [AccountType.REAL, AccountType.PA];
+        const validAccountIds = new Set(accounts.filter(a => validAccountTypes.includes(a.accountType)).map(a => a.id));
+
+        // Filtrar operaciones de cuentas válidas
+        const equityTrades = filteredTrades.filter(t => validAccountIds.has(t.accountId));
+        
+        // Filtrar retiros de cuentas válidas
+        const equityWithdrawals = withdrawals.filter(w => validAccountIds.has(w.accountId));
+
+        // Calcular capital inicial solo de cuentas válidas
+        let equityInitialCapital = 0;
+        if (filterAccountId) {
+            const acc = accounts.find(a => a.id === filterAccountId);
+            if (acc && validAccountTypes.includes(acc.accountType)) {
+                equityInitialCapital = acc.initialCapital;
+            }
+        } else {
+            equityInitialCapital = accounts
+                .filter(a => validAccountTypes.includes(a.accountType))
+                .reduce((sum, acc) => sum + acc.initialCapital, 0);
+        }
+
+        return calculateEquityCurve(equityTrades, equityInitialCapital, activeAccount, equityWithdrawals);
+    }, [filteredTrades, accounts, withdrawals, filterAccountId, activeAccount]);
 
     const totalProfitCurveData = useMemo(() => {
         let cumulative = 0;
@@ -225,24 +252,26 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
             </div>
 
             {/* Visualization Area */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                {/* Equity Curve */}
-                <div className="bg-muted/10 border border-border rounded-[3rem] p-8 lg:p-10 min-h-[480px] flex flex-col">
-                    <div className="flex justify-between items-center mb-8">
-                        <div>
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">Equity Curve</h3>
+            <div className={`grid grid-cols-1 ${isComponent ? '' : 'xl:grid-cols-2'} gap-8`}>
+                {/* Equity Curve - Hidden if isComponent (Strategies view) */}
+                {!isComponent && (
+                    <div className="bg-muted/10 border border-border rounded-[3rem] p-8 lg:p-10 min-h-[480px] flex flex-col">
+                        <div className="flex justify-between items-center mb-8">
+                            <div>
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">Equity Curve (Real/PA Only)</h3>
+                            </div>
+                            <div className="p-3 bg-muted/20 rounded-2xl border border-border">
+                                <ActivityIcon className="w-5 h-5 text-primary" />
+                            </div>
                         </div>
-                        <div className="p-3 bg-muted/20 rounded-2xl border border-border">
-                            <ActivityIcon className="w-5 h-5 text-primary" />
+                        <div className="flex-1">
+                            <EquityChart data={equityCurveData} currencySymbol={currencySymbol} account={activeAccount} />
                         </div>
                     </div>
-                    <div className="flex-1">
-                        <EquityChart data={equityCurveData} currencySymbol={currencySymbol} account={activeAccount} />
-                    </div>
-                </div>
+                )}
 
                 {/* Total Profit Curve */}
-                <div className="bg-muted/10 border border-border rounded-[3rem] p-8 lg:p-10 min-h-[480px] flex flex-col">
+                <div className={`bg-muted/10 border border-border rounded-[3rem] p-8 lg:p-10 min-h-[480px] flex flex-col ${isComponent ? 'xl:col-span-1' : ''}`}>
                     <div className="flex justify-between items-center mb-8">
                         <div>
                             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">Total Profit Curve</h3>
