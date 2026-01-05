@@ -1,3 +1,4 @@
+
 import { AppState } from '../context/AppContext';
 
 /**
@@ -12,6 +13,8 @@ export const exportData = (state: AppState) => {
         delete (backupState as Partial<AppState>).theme;
         delete (backupState as Partial<AppState>).colorTheme;
         delete (backupState as Partial<AppState>).customColor;
+        delete (backupState as Partial<AppState>).activePage;
+        delete (backupState as Partial<AppState>).focusedTradeId;
 
         const jsonString = JSON.stringify(backupState, null, 2);
         const blob = new Blob([jsonString], { type: 'application/json' });
@@ -32,6 +35,7 @@ export const exportData = (state: AppState) => {
 
 /**
  * Reads a JSON file selected by the user, parses it, and returns the application state.
+ * Includes defaults for newer modules (portfolios, holdings) to support older backups.
  * @param file The file selected by the user.
  * @returns A promise that resolves with the parsed AppState or rejects with an error.
  */
@@ -42,11 +46,24 @@ export const importData = (file: File): Promise<Omit<AppState, 'theme' | 'colorT
             try {
                 if (event.target?.result && typeof event.target.result === 'string') {
                     const parsed = JSON.parse(event.target.result);
-                    // Basic validation to ensure it looks like our state object
-                    if (Array.isArray(parsed.accounts) && Array.isArray(parsed.trades) && Array.isArray(parsed.strategies) && parsed.language) {
-                        resolve(parsed);
+                    
+                    // Basic validation of core structures
+                    const hasCoreData = Array.isArray(parsed.accounts) && Array.isArray(parsed.trades);
+                    
+                    if (hasCoreData) {
+                        // Ensure newer fields exist even if importing an old file
+                        const sanitizedResult = {
+                            ...parsed,
+                            portfolios: Array.isArray(parsed.portfolios) ? parsed.portfolios : [],
+                            holdings: Array.isArray(parsed.holdings) ? parsed.holdings : [],
+                            strategies: Array.isArray(parsed.strategies) ? parsed.strategies : [],
+                            presets: Array.isArray(parsed.presets) ? parsed.presets : [],
+                            withdrawals: Array.isArray(parsed.withdrawals) ? parsed.withdrawals : [],
+                            language: parsed.language || 'en'
+                        };
+                        resolve(sanitizedResult);
                     } else {
-                        reject(new Error('Invalid file format.'));
+                        reject(new Error('Invalid file format: Missing core account or trade data.'));
                     }
                 } else {
                      reject(new Error('Failed to read file.'));

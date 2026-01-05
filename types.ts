@@ -73,11 +73,18 @@ export interface Trade {
     hour?: number; // 0-23
 }
 
+export interface StrategyImage {
+    id: string;
+    url: string;
+    notes?: string;
+}
+
 export interface Strategy {
     id: string;
     name: string;
     description: string;
-    images?: string[]; // base64 data URLs
+    images?: StrategyImage[];
+    iconId?: string;
 }
 
 export interface TradePreset {
@@ -90,6 +97,29 @@ export interface TradePreset {
     stopLossPips: number;
 }
 
+export interface Portfolio {
+    id: string;
+    name: string;
+    iconId: string;
+    description?: string;
+}
+
+export type HoldingType = 'BUY' | 'SELL';
+export type AssetCategory = 'CRYPTO' | 'STOCK';
+
+export interface Holding {
+    id: string;
+    portfolioId: string;
+    asset: string;
+    category: AssetCategory;
+    quantity: number;
+    buyPrice: number;
+    currentPrice: number;
+    date: string;
+    type: HoldingType;
+    notes?: string;
+}
+
 export interface AnalyticsStats {
     totalTrades: number;
     winRate: number;
@@ -97,7 +127,7 @@ export interface AnalyticsStats {
     expectedValue: number;
     averageWin: number;
     averageLoss: number;
-    payoffRatio: number | null;
+    payoffRatio: null | number;
     maxDrawdown: number;
     sharpeRatio: number | null;
     totalProfit: number;

@@ -24,7 +24,7 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-bkg/90 backdrop-blur-md p-3 border border-border rounded-2xl shadow-2xl text-xs">
+                <div className="bg-bkg/95 backdrop-blur-md p-3 border border-border rounded-2xl shadow-2xl text-xs z-50 pointer-events-none">
                     <p className="font-black mb-2 uppercase tracking-widest text-muted-foreground">
                         {label === 'Initial' ? 'Account Start' : new Date(label).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
@@ -64,9 +64,9 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
     }
 
     return (
-        <div className="w-full h-full">
-            <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <div className="w-full h-full min-h-[300px] relative">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <AreaChart data={data} margin={{ top: 10, right: 50, left: 10, bottom: 10 }}>
                     <defs>
                         <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.15}/>
@@ -93,7 +93,13 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
                         axisLine={false}
                         domain={['auto', 'auto']}
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                    <Tooltip 
+                        content={<CustomTooltip />} 
+                        cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }} 
+                        allowEscapeViewBox={{ x: true, y: true }}
+                        isAnimationActive={false}
+                        trigger="axis"
+                    />
                     <Legend 
                         verticalAlign="top" 
                         align="right" 
@@ -111,7 +117,9 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
                         strokeWidth={3} 
                         fillOpacity={1} 
                         fill="url(#equityGradient)" 
-                        isAnimationActive={true}
+                        isAnimationActive={false}
+                        activeDot={{ r: 6, strokeWidth: 0, fill: 'hsl(var(--primary))' }}
+                        connectNulls
                     />
                     {hasTrailingDrawdown && (
                         <Area 
@@ -123,6 +131,7 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
                             strokeWidth={1.5} 
                             fill="none"
                             dot={false}
+                            isAnimationActive={false}
                         />
                     )}
                 </AreaChart>
