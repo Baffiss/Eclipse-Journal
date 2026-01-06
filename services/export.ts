@@ -1,4 +1,3 @@
-
 import { AppState } from '../context/AppContext';
 
 /**
@@ -35,7 +34,6 @@ export const exportData = (state: AppState) => {
 
 /**
  * Reads a JSON file selected by the user, parses it, and returns the application state.
- * Includes defaults for newer modules (portfolios, holdings) to support older backups.
  * @param file The file selected by the user.
  * @returns A promise that resolves with the parsed AppState or rejects with an error.
  */
@@ -51,11 +49,9 @@ export const importData = (file: File): Promise<Omit<AppState, 'theme' | 'colorT
                     const hasCoreData = Array.isArray(parsed.accounts) && Array.isArray(parsed.trades);
                     
                     if (hasCoreData) {
-                        // Ensure newer fields exist even if importing an old file
+                        // Ensure required fields exist even if importing an old file
                         const sanitizedResult = {
                             ...parsed,
-                            portfolios: Array.isArray(parsed.portfolios) ? parsed.portfolios : [],
-                            holdings: Array.isArray(parsed.holdings) ? parsed.holdings : [],
                             strategies: Array.isArray(parsed.strategies) ? parsed.strategies : [],
                             presets: Array.isArray(parsed.presets) ? parsed.presets : [],
                             withdrawals: Array.isArray(parsed.withdrawals) ? parsed.withdrawals : [],

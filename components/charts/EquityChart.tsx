@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
 import { EquityDataPoint, Account, ValueType, DrawdownType } from '../../types';
@@ -65,8 +64,8 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
 
     return (
         <div className="w-full h-full min-h-[300px] relative">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                <AreaChart data={data} margin={{ top: 10, right: 50, left: 10, bottom: 10 }}>
+            <ResponsiveContainer width="100%" height="100%" debounce={1}>
+                <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 10 }}>
                     <defs>
                         <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.15}/>
@@ -96,16 +95,14 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
                     <Tooltip 
                         content={<CustomTooltip />} 
                         cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }} 
-                        allowEscapeViewBox={{ x: true, y: true }}
                         isAnimationActive={false}
-                        trigger="axis"
                     />
                     <Legend 
                         verticalAlign="top" 
                         align="right" 
                         height={36} 
                         iconType="circle"
-                        wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em' }} 
+                        wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }} 
                     />
                     {profitTargetLine}
                     {maxDrawdownLine}

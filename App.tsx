@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import AccountsPage from './pages/AccountsPage';
@@ -7,7 +6,6 @@ import StrategiesPage from './pages/StrategiesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import MarketsPage from './pages/MarketsPage';
 import DashboardPage from './pages/DashboardPage';
-import SpotPortfolioPage from './pages/SpotPortfolioPage';
 import { 
     EclipseIcon, 
     WalletIcon, 
@@ -23,8 +21,7 @@ import {
     UploadCloudIcon, 
     ActivityIcon, 
     AlertTriangleIcon, 
-    LayoutDashboardIcon,
-    BriefcaseIcon
+    LayoutDashboardIcon
 } from './components/Icons';
 import Modal from './components/Modal';
 import { exportData, importData } from './services/export';
@@ -258,8 +255,6 @@ const AppContent: React.FC = () => {
                 return <AccountsPage />;
             case 'trades':
                 return <TradesPage />;
-            case 'portfolio':
-                return <SpotPortfolioPage />;
             case 'strategies':
                 return <StrategiesPage />;
             case 'analytics':
@@ -278,7 +273,6 @@ const AppContent: React.FC = () => {
         { id: 'strategies', label: t('strategies'), icon: <StrategiesIcon /> },
         { id: 'analytics', label: t('analytics'), icon: <BarChart3Icon /> },
         { id: 'markets', label: t('markets'), icon: <ActivityIcon /> },
-        { id: 'portfolio', label: t('portfolio'), icon: <BriefcaseIcon /> },
     ], [t]);
 
     const isHorizontal = sidebarPosition === 'top' || sidebarPosition === 'bottom';

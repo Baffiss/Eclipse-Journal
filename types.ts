@@ -1,4 +1,3 @@
-
 export enum DrawdownType {
     MAXIMUM = 'Maximum',
     TRAILING = 'Trailing',
@@ -97,29 +96,6 @@ export interface TradePreset {
     stopLossPips: number;
 }
 
-export interface Portfolio {
-    id: string;
-    name: string;
-    iconId: string;
-    description?: string;
-}
-
-export type HoldingType = 'BUY' | 'SELL';
-export type AssetCategory = 'CRYPTO' | 'STOCK';
-
-export interface Holding {
-    id: string;
-    portfolioId: string;
-    asset: string;
-    category: AssetCategory;
-    quantity: number;
-    buyPrice: number;
-    currentPrice: number;
-    date: string;
-    type: HoldingType;
-    notes?: string;
-}
-
 export interface AnalyticsStats {
     totalTrades: number;
     winRate: number;
@@ -145,4 +121,27 @@ export interface EquityDataPoint {
     date: string;
     equity: number;
     trailingDrawdown?: number;
+}
+
+// Fix: Added missing types for Spot Portfolio functionality
+export type HoldingType = 'BUY' | 'SELL';
+export type AssetCategory = 'CRYPTO' | 'STOCK' | 'FOREX';
+
+export interface Holding {
+    id: string;
+    portfolioId: string;
+    asset: string;
+    category: AssetCategory;
+    quantity: number;
+    buyPrice: number;
+    currentPrice: number;
+    date: string; // ISO string
+    type: HoldingType;
+}
+
+export interface Portfolio {
+    id: string;
+    name: string;
+    iconId: string;
+    description: string;
 }

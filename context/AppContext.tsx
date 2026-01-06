@@ -1,5 +1,4 @@
-
-import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useContext, useCallback, useState } from 'react';
+import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useContext, useCallback } from 'react';
 import { Account, Trade, Strategy, Currency, TradePreset, Withdrawal, AccountStatus, Holding, Portfolio } from '../types';
 
 const translations: Record<string, Record<string, string>> = {
@@ -10,7 +9,6 @@ const translations: Record<string, Record<string, string>> = {
     analytics: `Analytics`,
     markets: `Markets`,
     dashboard: `Dashboard`,
-    portfolio: `Spot Portfolio`,
     settings: `Settings`,
     lightMode: `Light Mode`,
     darkMode: `Dark Mode`,
@@ -199,32 +197,15 @@ const translations: Record<string, Record<string, string>> = {
     annualPnL: `Annual P&L`,
     imageNotesPlaceholder: `Add some thoughts about this chart setup...`,
     noActiveAccounts: `No active accounts found. Create or activate an account to register trades.`,
-    holdings: `Holdings`,
-    totalPortfolioValue: `Total Portfolio Value`,
-    totalHoldingProfit: `Total P&L`,
-    addAsset: `Add Asset`,
-    editAsset: `Edit Asset`,
-    assetName: `Asset Name`,
-    quantity: `Quantity`,
-    buyPrice: `Buy Price`,
-    currentPrice: `Current Price`,
-    noHoldingsYet: `No assets in your portfolio yet.`,
-    createYourFirstHolding: `Add your first spot holding to track its performance.`,
-    allocation: `Asset Allocation`,
+    // Fix: Added missing translations for Spot Portfolio feature
+    portfolio: `Portfolio`,
     newPortfolio: `New Portfolio`,
     editPortfolio: `Edit Portfolio`,
     portfolioName: `Portfolio Name`,
-    noPortfoliosYet: `No portfolios yet`,
-    createYourFirstPortfolio: `Create your first portfolio to organize your assets.`,
-    allPortfolios: `All Portfolios`,
-    backToPortfolios: `All Portfolios`,
-    deletePortfolioConfirmation: `Are you sure? This will delete the portfolio and all associated holdings.`,
-    crypto: `Crypto`,
-    stock: `Stock`,
-    stocks: `Stocks`,
-    assetCategory: `Asset Category`,
-    manualSymbol: `Manual Symbol`,
-    searchCrypto: `Search Crypto`,
+    searchCrypto: `Search Crypto Assets`,
+    noPortfoliosYet: `No Portfolios Yet`,
+    createYourFirstPortfolio: `Create your first spot portfolio to track long-term holdings.`,
+    backToPortfolios: `Back to Portfolios`,
   },
   es: {
     accounts: `Cuentas`,
@@ -233,7 +214,6 @@ const translations: Record<string, Record<string, string>> = {
     analytics: `Analíticas`,
     markets: `Mercados`,
     dashboard: `Panel Principal`,
-    portfolio: `Cartera Spot`,
     settings: `Configuración`,
     lightMode: `Modo Claro`,
     darkMode: `Modo Oscuro`,
@@ -422,32 +402,15 @@ const translations: Record<string, Record<string, string>> = {
     annualPnL: `P&L Anual`,
     imageNotesPlaceholder: `Añade tus observaciones sobre este gráfico...`,
     noActiveAccounts: `No hay cuentas activas. Crea o activa una cuenta para registrar operaciones.`,
-    holdings: `Activos`,
-    totalPortfolioValue: `Valor Total de Cartera`,
-    totalHoldingProfit: `G/P Total`,
-    addAsset: `Añadir Activo`,
-    editAsset: `Editar Activo`,
-    assetName: `Nombre del Activo`,
-    quantity: `Cantidad`,
-    buyPrice: `Precio Compra`,
-    currentPrice: `Precio Actual`,
-    noHoldingsYet: `Aún no tienes activos en tu cartera.`,
-    createYourFirstHolding: `Añade tu primer activo spot para rastrear su rendimiento.`,
-    allocation: `Distribución de Activos`,
+    // Fix: Added missing translations for Spot Portfolio feature
+    portfolio: `Portafolio`,
     newPortfolio: `Nuevo Portafolio`,
     editPortfolio: `Editar Portafolio`,
     portfolioName: `Nombre del Portafolio`,
-    noPortfoliosYet: `Aún no hay portafolios`,
-    createYourFirstPortfolio: `Crea tu primer portafolio para organizar tus activos.`,
-    allPortfolios: `Todos los Portafolios`,
-    backToPortfolios: `Todos los Portafolios`,
-    deletePortfolioConfirmation: `¿Estás seguro? Esto eliminará el portafolio y todos sus activos asociados.`,
-    crypto: `Cripto`,
-    stock: `Acción`,
-    stocks: `Acciones`,
-    assetCategory: `Categoría de Activo`,
-    manualSymbol: `Símbolo Manual`,
-    searchCrypto: `Buscar Cripto`,
+    searchCrypto: `Buscar Criptoactivos`,
+    noPortfoliosYet: `Sin Portafolios`,
+    createYourFirstPortfolio: `Crea tu primer portafolio spot para rastrear inversiones a largo plazo.`,
+    backToPortfolios: `Volver a Portafolios`,
   }
 };
 
@@ -460,8 +423,9 @@ export interface AppState {
   withdrawals: Withdrawal[];
   strategies: Strategy[];
   presets: TradePreset[];
-  holdings: Holding[];
+  // Fix: Added portfolios and holdings to AppState
   portfolios: Portfolio[];
+  holdings: Holding[];
   theme: 'light' | 'dark';
   colorTheme: string;
   sidebarPosition: SidebarPosition;
@@ -485,12 +449,13 @@ type Action =
   | { type: 'DELETE_STRATEGY'; payload: string }
   | { type: 'ADD_PRESET'; payload: TradePreset }
   | { type: 'DELETE_PRESET'; payload: string }
-  | { type: 'ADD_HOLDING'; payload: Holding }
-  | { type: 'UPDATE_HOLDING'; payload: Holding }
-  | { type: 'DELETE_HOLDING'; payload: string }
+  // Fix: Added Portfolio and Holding actions
   | { type: 'ADD_PORTFOLIO'; payload: Portfolio }
   | { type: 'UPDATE_PORTFOLIO'; payload: Portfolio }
   | { type: 'DELETE_PORTFOLIO'; payload: string }
+  | { type: 'ADD_HOLDING'; payload: Holding }
+  | { type: 'UPDATE_HOLDING'; payload: Holding }
+  | { type: 'DELETE_HOLDING'; payload: string }
   | { type: 'TOGGLE_THEME' }
   | { type: 'SET_COLOR_THEME'; payload: string }
   | { type: 'SET_SIDEBAR_POSITION'; payload: SidebarPosition }
@@ -507,8 +472,9 @@ const initialState: AppState = {
   withdrawals: [],
   strategies: [],
   presets: [],
-  holdings: [],
+  // Fix: Initialized portfolios and holdings
   portfolios: [],
+  holdings: [],
   theme: 'dark',
   colorTheme: 'zinc',
   sidebarPosition: 'left',
@@ -623,22 +589,23 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
       return { ...prevState, presets: [...prevState.presets, action.payload] };
     case 'DELETE_PRESET':
       return { ...prevState, presets: prevState.presets.filter(p => p.id !== action.payload) };
-    case 'ADD_HOLDING':
-        return { ...prevState, holdings: [...prevState.holdings, action.payload] };
-    case 'UPDATE_HOLDING':
-        return { ...prevState, holdings: prevState.holdings.map(h => h.id === action.payload.id ? action.payload : h) };
-    case 'DELETE_HOLDING':
-        return { ...prevState, holdings: prevState.holdings.filter(h => h.id !== action.payload) };
+    // Fix: Implemented Portfolio and Holding reducers
     case 'ADD_PORTFOLIO':
-        return { ...prevState, portfolios: [...prevState.portfolios, action.payload] };
+      return { ...prevState, portfolios: [...prevState.portfolios, action.payload] };
     case 'UPDATE_PORTFOLIO':
-        return { ...prevState, portfolios: prevState.portfolios.map(p => p.id === action.payload.id ? action.payload : p) };
+      return { ...prevState, portfolios: prevState.portfolios.map(p => p.id === action.payload.id ? action.payload : p) };
     case 'DELETE_PORTFOLIO':
-        return {
-          ...prevState,
-          portfolios: prevState.portfolios.filter(p => p.id !== action.payload),
-          holdings: prevState.holdings.filter(h => h.portfolioId !== action.payload)
-        };
+      return {
+        ...prevState,
+        portfolios: prevState.portfolios.filter(p => p.id !== action.payload),
+        holdings: prevState.holdings.filter(h => h.portfolioId !== action.payload)
+      };
+    case 'ADD_HOLDING':
+      return { ...prevState, holdings: [...prevState.holdings, action.payload] };
+    case 'UPDATE_HOLDING':
+      return { ...prevState, holdings: prevState.holdings.map(h => h.id === action.payload.id ? action.payload : h) };
+    case 'DELETE_HOLDING':
+      return { ...prevState, holdings: prevState.holdings.filter(h => h.id !== action.payload) };
     case 'TOGGLE_THEME':
       return { ...prevState, theme: prevState.theme === 'light' ? 'dark' : 'light' };
     case 'SET_COLOR_THEME':
@@ -650,7 +617,7 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
     case 'SET_LANGUAGE':
       return { ...prevState, language: action.payload };
     case 'RESET_DATA':
-      return { ...prevState, accounts: [], trades: [], withdrawals: [], strategies: [], presets: [], holdings: [], portfolios: [] };
+      return { ...prevState, accounts: [], trades: [], withdrawals: [], strategies: [], presets: [], portfolios: [], holdings: [] };
     case 'SET_PAGE':
       return { ...prevState, activePage: action.payload };
     case 'FOCUS_TRADE':
@@ -681,8 +648,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           const withdrawals = Array.isArray(parsedState.withdrawals) ? parsedState.withdrawals : [];
           const strategies = Array.isArray(parsedState.strategies) ? parsedState.strategies : [];
           const presets = Array.isArray(parsedState.presets) ? parsedState.presets : [];
-          const holdings = Array.isArray(parsedState.holdings) ? parsedState.holdings : [];
+          // Fix: Sanitize portfolios and holdings from local storage
           const portfolios = Array.isArray(parsedState.portfolios) ? parsedState.portfolios : [];
+          const holdings = Array.isArray(parsedState.holdings) ? parsedState.holdings : [];
 
           const sanitizedTrades = trades.map((trade: any) => ({
             ...trade,
@@ -692,31 +660,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             stopLossPips: parseFloat(String(trade.stopLossPips)) || 0,
           }));
 
-          const sanitizedStrategies = strategies.map((s: any) => {
-            const images = Array.isArray(s.images) ? s.images.map((img: any) => {
-                if (typeof img === 'string') {
-                    return { id: crypto.randomUUID(), url: img, notes: '' };
-                }
-                return img;
-            }) : [];
-            return { ...s, images };
-          });
+          const sanitizedStrategies = sanitizedStrategiesFromParsed(strategies);
 
-          const sanitizedAccounts = accounts.map((account: any) => {
-            const initialCapital = parseFloat(String(account.initialCapital)) || 0;
-            const totalWithdrawn = parseFloat(String(account.totalWithdrawn)) || 0;
-            const tradesForAccount = sanitizedTrades.filter((t: any) => t.accountId === account.id);
-            const totalProfit = tradesForAccount.reduce((sum: number, t: any) => sum + t.result, 0);
-
-            return {
-              ...account,
-              initialCapital,
-              totalWithdrawn,
-              currentCapital: initialCapital + totalProfit - totalWithdrawn,
-              profitTarget: parseFloat(String(account.profitTarget)) || 0,
-              drawdownValue: parseFloat(String(account.drawdownValue)) || 0,
-            };
-          });
+          const sanitizedAccounts = sanitizedAccountsFromParsed(accounts, sanitizedTrades);
 
           const finalState = {
             ...initialState,
@@ -726,8 +672,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             withdrawals: withdrawals,
             strategies: sanitizedStrategies,
             presets: presets,
-            holdings: holdings,
+            // Fix: Include portfolios and holdings in hydrated state
             portfolios: portfolios,
+            holdings: holdings,
             activePage: (parsedState.activePage === 'chat') ? 'dashboard' : (parsedState.activePage || 'dashboard'),
           };
           dispatch({ type: 'SET_STATE', payload: finalState });
@@ -737,6 +684,36 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.error('Failed to load or sanitize state from localStorage', error);
     }
   }, []);
+
+  function sanitizedStrategiesFromParsed(strategies: any[]) {
+    return strategies.map((s: any) => {
+      const images = Array.isArray(s.images) ? s.images.map((img: any) => {
+        if (typeof img === 'string') {
+          return { id: crypto.randomUUID(), url: img, notes: '' };
+        }
+        return img;
+      }) : [];
+      return { ...s, images };
+    });
+  }
+
+  function sanitizedAccountsFromParsed(accounts: any[], sanitizedTrades: any[]) {
+    return accounts.map((account: any) => {
+      const initialCapital = parseFloat(String(account.initialCapital)) || 0;
+      const totalWithdrawn = parseFloat(String(account.totalWithdrawn)) || 0;
+      const tradesForAccount = sanitizedTrades.filter((t: any) => t.accountId === account.id);
+      const totalProfit = tradesForAccount.reduce((sum: number, t: any) => sum + t.result, 0);
+
+      return {
+        ...account,
+        initialCapital,
+        totalWithdrawn,
+        currentCapital: initialCapital + totalProfit - totalWithdrawn,
+        profitTarget: parseFloat(String(account.profitTarget)) || 0,
+        drawdownValue: parseFloat(String(account.drawdownValue)) || 0,
+      };
+    });
+  }
 
   useEffect(() => {
     try {
@@ -835,12 +812,14 @@ export const useApp = () => {
   const deleteStrategy = useCallback((strategyId: string) => dispatch({ type: 'DELETE_STRATEGY', payload: strategyId }), [dispatch]);
   const addPreset = useCallback((preset: TradePreset) => dispatch({ type: 'ADD_PRESET', payload: preset }), [dispatch]);
   const deletePreset = useCallback((presetId: string) => dispatch({ type: 'DELETE_PRESET', payload: presetId }), [dispatch]);
-  const addHolding = useCallback((holding: Holding) => dispatch({ type: 'ADD_HOLDING', payload: holding }), [dispatch]);
-  const updateHolding = useCallback((holding: Holding) => dispatch({ type: 'UPDATE_HOLDING', payload: holding }), [dispatch]);
-  const deleteHolding = useCallback((id: string) => dispatch({ type: 'DELETE_HOLDING', payload: id }), [dispatch]);
+
+  // Fix: Exposed Portfolio and Holding methods in useApp hook
   const addPortfolio = useCallback((portfolio: Portfolio) => dispatch({ type: 'ADD_PORTFOLIO', payload: portfolio }), [dispatch]);
   const updatePortfolio = useCallback((portfolio: Portfolio) => dispatch({ type: 'UPDATE_PORTFOLIO', payload: portfolio }), [dispatch]);
   const deletePortfolio = useCallback((id: string) => dispatch({ type: 'DELETE_PORTFOLIO', payload: id }), [dispatch]);
+  const addHolding = useCallback((holding: Holding) => dispatch({ type: 'ADD_HOLDING', payload: holding }), [dispatch]);
+  const updateHolding = useCallback((holding: Holding) => dispatch({ type: 'UPDATE_HOLDING', payload: holding }), [dispatch]);
+  const deleteHolding = useCallback((id: string) => dispatch({ type: 'DELETE_HOLDING', payload: id }), [dispatch]);
 
   return {
     state,
@@ -869,11 +848,12 @@ export const useApp = () => {
     deleteStrategy,
     addPreset,
     deletePreset,
-    addHolding,
-    updateHolding,
-    deleteHolding,
+    // Fix: Returned missing portfolio/holding methods
     addPortfolio,
     updatePortfolio,
-    deletePortfolio
+    deletePortfolio,
+    addHolding,
+    updateHolding,
+    deleteHolding
   };
 };
