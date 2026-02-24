@@ -1,4 +1,5 @@
 import { AppState } from '../context/AppContext';
+import * as XLSX from 'xlsx';
 
 /**
  * Triggers a browser download of the entire application state as a JSON file.
@@ -29,6 +30,58 @@ export const exportData = (state: AppState) => {
     } catch (error) {
         console.error("Failed to export data", error);
         alert("An error occurred while exporting your data.");
+    }
+};
+
+/**
+ * Exports trade data to an Excel file with specific headers.
+ * @param state The current application state.
+ */
+export const exportToExcel = (state: AppState) => {
+    try {
+        const { trades, accounts, strategies } = state;
+
+        const data = trades.map(trade => {
+            const account = accounts.find(a => a.id === trade.accountId);
+            const strategy = strategies.find(s => s.id === trade.strategyId);
+            
+            const tradeDate = new Date(trade.date);
+            
+            return {
+                'Account': account?.name || 'Unknown',
+                'Account equity': account?.currentCapital || 0,
+                'Strategy': strategy?.name || 'None',
+                'Date': tradeDate.toLocaleDateString(),
+                'Hour': trade.hour !== undefined ? `${trade.hour}:00` : '',
+                'Asset': trade.asset,
+                'Direction': trade.direction,
+                'Lot size': trade.lotSize,
+                'Pips_to_TP': trade.takeProfitPips,
+                'Pips_to_SL': trade.stopLossPips,
+                'P&L': trade.result,
+                'Notes': trade.notes || ''
+            };
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Trades");
+
+        // Generate buffer and trigger download
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const date = new Date().toISOString().split('T')[0];
+        link.download = `eclipse-journal-trades-${date}.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error("Failed to export to Excel", error);
+        alert("An error occurred while exporting to Excel.");
     }
 };
 

@@ -24,7 +24,7 @@ import {
     LayoutDashboardIcon
 } from './components/Icons';
 import Modal from './components/Modal';
-import { exportData, importData } from './services/export';
+import { exportData, exportToExcel, importData } from './services/export';
 import { SidebarPosition } from './context/AppContext';
 
 const THEMES = [
@@ -74,6 +74,10 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
 
     const handleExport = () => {
         exportData(state);
+    };
+
+    const handleExportExcel = () => {
+        exportToExcel(state);
     };
 
     const handleImportClick = () => {
@@ -196,6 +200,16 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
                             >
                                 <UploadCloudIcon className={`w-4 h-4 text-primary`} />
                                 <span>{t('exportData')}</span>
+                            </button>
+                        </div>
+                        <div className={`flex justify-between items-center bg-muted/30 p-3 rounded-2xl`}>
+                            <p className={`text-[10px] font-bold text-muted-foreground uppercase leading-tight`}>{t('exportExcelDescription')}</p>
+                            <button
+                                onClick={handleExportExcel}
+                                className={`flex items-center gap-2 px-4 py-2 bg-bkg border border-border rounded-xl hover:bg-muted text-[10px] font-black uppercase tracking-widest transition-all`}
+                            >
+                                <BarChart3Icon className={`w-4 h-4 text-primary`} />
+                                <span>{t('exportExcel')}</span>
                             </button>
                         </div>
                          <div className={`flex justify-between items-center bg-muted/30 p-3 rounded-2xl`}>

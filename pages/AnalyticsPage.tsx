@@ -228,7 +228,7 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
                 <CartesianGrid strokeDasharray="3 3" stroke={`hsl(var(--border))`} vertical={false} />
                 <XAxis dataKey="date" tickFormatter={(str) => str === 'Initial' ? 'Start' : new Date(str).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} dy={10} />
                 <YAxis stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} tickFormatter={(v) => `${v < 0 ? '-' : ''}${currencySymbol}${Math.abs(v) >= 1000 ? (Math.abs(v)/1000).toFixed(0) + 'k' : Math.abs(v)}`} />
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderRadius: '16px', border: '1px solid hsl(var(--border))', fontSize: '12px', fontWeight: 'bold' }} formatter={(value: number) => [`${currencySymbol}${value.toLocaleString()}`, 'Profit']} isAnimationActive={false} trigger="axis" />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderRadius: '16px', border: '1px solid hsl(var(--border))', fontSize: '12px', fontWeight: 'bold' }} formatter={(value: number) => [`${currencySymbol}${value.toLocaleString()}`, 'Profit']} isAnimationActive={false} />
                 <Area type="monotone" dataKey="profit" stroke={`hsl(var(--success))`} fill={`url(#colorProfit)`} strokeWidth={3} isAnimationActive={false} activeDot={{ r: 6, strokeWidth: 0, fill: 'hsl(var(--success))' }} connectNulls />
               </AreaChart>
             </ResponsiveContainer>
