@@ -54,11 +54,13 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
     const { state, dispatch, t, colorTheme, setColorTheme, sidebarPosition, setSidebarPosition, resetData, language, setLanguage } = useApp();
     const importInputRef = useRef<HTMLInputElement>(null);
     
-    const [confirmAction, setConfirmAction] = useState<{ type: 'reset' | 'import', file?: File } | null>(null);
+    const [confirmAction, setConfirmAction] = useState<{ type: 'reset' | 'import', file?: File, data?: any } | null>(null);
+    const [activeMenu, setActiveMenu] = useState<'main' | 'import' | 'export'>('main');
 
     useEffect(() => {
         if (!isOpen) {
             setConfirmAction(null);
+            setActiveMenu('main');
         }
     }, [isOpen]);
 
@@ -72,7 +74,7 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
         onClose();
     };
 
-    const handleExport = () => {
+    const handleExportJSON = () => {
         exportData(state);
     };
 
@@ -80,11 +82,11 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
         exportToExcel(state);
     };
 
-    const handleImportClick = () => {
+    const handleImportJSONClick = () => {
         importInputRef.current?.click();
     };
 
-    const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImportJSONFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         setConfirmAction({ type: 'import', file });
@@ -122,8 +124,8 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
             return (
                 <div className={`space-y-4 animate-fade-in`}>
                     <div className={`flex flex-col items-center text-center p-4 bg-muted/50 rounded-lg border border-border`}>
-                        <AlertTriangleIcon className={`w-12 h-12 text-danger mb-3`} />
-                        <h3 className={`text-lg font-bold text-danger mb-2`}>
+                        {isReset ? <AlertTriangleIcon className={`w-12 h-12 text-danger mb-3`} /> : <UploadCloudIcon className={`w-12 h-12 text-primary mb-3`} />}
+                        <h3 className={`text-lg font-bold ${isReset ? 'text-danger' : 'text-primary'} mb-2`}>
                             {isReset ? t('deleteAllDataButton') : t('importData')}
                         </h3>
                         <p className={`text-sm text-muted-foreground mb-4`}>
@@ -138,7 +140,7 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
                             </button>
                             <button 
                                 onClick={isReset ? confirmResetData : confirmImportData} 
-                                className={`px-4 py-2 bg-danger text-bkg rounded-md hover:bg-danger/90 transition-colors shadow-sm`}
+                                className={`px-4 py-2 ${isReset ? 'bg-danger' : 'bg-primary'} text-bkg rounded-md hover:opacity-90 transition-colors shadow-sm`}
                             >
                                 {isReset ? t('delete') : t('update')}
                             </button>
@@ -191,45 +193,49 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
 
                 <div className={`border-t border-border pt-4`}>
                     <h3 className={`text-xs font-black uppercase tracking-widest text-muted-foreground mb-3`}>{t('importExport')}</h3>
-                    <div className={`space-y-3`}>
-                        <div className={`flex justify-between items-center bg-muted/30 p-3 rounded-2xl`}>
-                            <p className={`text-[10px] font-bold text-muted-foreground uppercase leading-tight`}>{t('exportDescription')}</p>
+                    
+                    {activeMenu === 'main' && (
+                        <div className="grid grid-cols-2 gap-4 animate-fade-in">
+                            <input type="file" ref={importInputRef} onChange={handleImportJSONFile} accept=".json" className="hidden" />
                             <button
-                                onClick={handleExport}
-                                className={`flex items-center gap-2 px-4 py-2 bg-bkg border border-border rounded-xl hover:bg-muted text-[10px] font-black uppercase tracking-widest transition-all`}
+                                onClick={handleImportJSONClick}
+                                className={`flex flex-col items-center justify-center gap-3 p-6 bg-muted/30 border border-border rounded-[2rem] hover:border-primary/50 transition-all group`}
                             >
-                                <UploadCloudIcon className={`w-4 h-4 text-primary`} />
-                                <span>{t('exportData')}</span>
+                                <DownloadIcon className={`w-8 h-8 text-primary group-hover:scale-110 transition-transform`} />
+                                <span className={`text-xs font-black uppercase tracking-widest`}>{t('import')}</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveMenu('export')}
+                                className={`flex flex-col items-center justify-center gap-3 p-6 bg-muted/30 border border-border rounded-[2rem] hover:border-primary/50 transition-all group`}
+                            >
+                                <UploadCloudIcon className={`w-8 h-8 text-primary group-hover:scale-110 transition-transform`} />
+                                <span className={`text-xs font-black uppercase tracking-widest`}>{t('export')}</span>
                             </button>
                         </div>
-                        <div className={`flex justify-between items-center bg-muted/30 p-3 rounded-2xl`}>
-                            <p className={`text-[10px] font-bold text-muted-foreground uppercase leading-tight`}>{t('exportExcelDescription')}</p>
-                            <button
-                                onClick={handleExportExcel}
-                                className={`flex items-center gap-2 px-4 py-2 bg-bkg border border-border rounded-xl hover:bg-muted text-[10px] font-black uppercase tracking-widest transition-all`}
-                            >
-                                <BarChart3Icon className={`w-4 h-4 text-primary`} />
-                                <span>{t('exportExcel')}</span>
-                            </button>
+                    )}
+
+                    {activeMenu === 'export' && (
+                        <div className="space-y-3 animate-slide-in-up">
+                            <div className="flex items-center justify-between mb-2">
+                                <button onClick={() => setActiveMenu('main')} className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">← {t('back')}</button>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('exportOptions')}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={handleExportJSON}
+                                    className={`flex items-center justify-center gap-2 px-4 py-3 bg-bkg border border-border rounded-xl hover:bg-muted text-[10px] font-black uppercase tracking-widest transition-all`}
+                                >
+                                    <span>JSON</span>
+                                </button>
+                                <button
+                                    onClick={handleExportExcel}
+                                    className={`flex items-center justify-center gap-2 px-4 py-3 bg-bkg border border-border rounded-xl hover:bg-muted text-[10px] font-black uppercase tracking-widest transition-all`}
+                                >
+                                    <span>EXCEL</span>
+                                </button>
+                            </div>
                         </div>
-                         <div className={`flex justify-between items-center bg-muted/30 p-3 rounded-2xl`}>
-                            <p className={`text-[10px] font-bold text-muted-foreground uppercase leading-tight`}>{t('importDescription')}</p>
-                            <input
-                                type="file"
-                                ref={importInputRef}
-                                onChange={handleImportFile}
-                                accept=".json"
-                                className={`hidden`}
-                            />
-                            <button
-                                onClick={handleImportClick}
-                                className={`flex items-center gap-2 px-4 py-2 bg-bkg border border-border rounded-xl hover:bg-muted text-[10px] font-black uppercase tracking-widest transition-all`}
-                            >
-                                <DownloadIcon className={`w-4 h-4 text-primary`} />
-                                <span>{t('importData')}</span>
-                            </button>
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 <div className={`border-t border-border pt-4`}>

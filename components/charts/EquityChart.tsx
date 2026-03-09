@@ -95,7 +95,6 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
                     <Tooltip 
                         content={<CustomTooltip />} 
                         cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }} 
-                        isAnimationActive={false}
                     />
                     <Legend 
                         verticalAlign="top" 
@@ -114,7 +113,6 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
                         strokeWidth={3} 
                         fillOpacity={1} 
                         fill="url(#equityGradient)" 
-                        isAnimationActive={false}
                         activeDot={{ r: 6, strokeWidth: 0, fill: 'hsl(var(--primary))' }}
                         connectNulls
                     />
@@ -128,7 +126,6 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
                             strokeWidth={1.5} 
                             fill="none"
                             dot={false}
-                            isAnimationActive={false}
                         />
                     )}
                 </AreaChart>

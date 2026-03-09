@@ -34,6 +34,24 @@ export const exportData = (state: AppState) => {
 };
 
 /**
+ * Expected headers for Excel import/export.
+ */
+export const EXCEL_HEADERS = [
+    'Account',
+    'Account equity',
+    'Strategy',
+    'Date',
+    'Hour',
+    'Asset',
+    'Direction',
+    'Lot size',
+    'Pips_to_TP',
+    'Pips_to_SL',
+    'P&L',
+    'Notes'
+];
+
+/**
  * Exports trade data to an Excel file with specific headers.
  * @param state The current application state.
  */
@@ -48,18 +66,18 @@ export const exportToExcel = (state: AppState) => {
             const tradeDate = new Date(trade.date);
             
             return {
-                'Account': account?.name || 'Unknown',
-                'Account equity': account?.currentCapital || 0,
-                'Strategy': strategy?.name || 'None',
-                'Date': tradeDate.toLocaleDateString(),
-                'Hour': trade.hour !== undefined ? `${trade.hour}:00` : '',
-                'Asset': trade.asset,
-                'Direction': trade.direction,
-                'Lot size': trade.lotSize,
-                'Pips_to_TP': trade.takeProfitPips,
-                'Pips_to_SL': trade.stopLossPips,
-                'P&L': trade.result,
-                'Notes': trade.notes || ''
+                [EXCEL_HEADERS[0]]: account?.name || 'Unknown',
+                [EXCEL_HEADERS[1]]: account?.currentCapital || 0,
+                [EXCEL_HEADERS[2]]: strategy?.name || 'None',
+                [EXCEL_HEADERS[3]]: tradeDate.toLocaleDateString(),
+                [EXCEL_HEADERS[4]]: trade.hour !== undefined ? `${trade.hour}:00` : '',
+                [EXCEL_HEADERS[5]]: trade.asset,
+                [EXCEL_HEADERS[6]]: trade.direction,
+                [EXCEL_HEADERS[7]]: trade.lotSize,
+                [EXCEL_HEADERS[8]]: trade.takeProfitPips,
+                [EXCEL_HEADERS[9]]: trade.stopLossPips,
+                [EXCEL_HEADERS[10]]: trade.result,
+                [EXCEL_HEADERS[11]]: trade.notes || ''
             };
         });
 

@@ -352,7 +352,7 @@ const TradesPage: React.FC = () => {
   const [isFormOpen, setFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [filterAccountId, setFilterAccountId] = useState('');
