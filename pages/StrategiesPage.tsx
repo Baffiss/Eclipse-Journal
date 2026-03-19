@@ -193,12 +193,12 @@ const StrategyForm: React.FC<{ isOpen: boolean; onClose: () => void; strategy?: 
             <div className="lg:col-span-1 space-y-6">
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 block">{t('strategyName')}</label>
-                  <input name="name" value={formData.name} onChange={handleChange} placeholder="e.g. Break of Structure" className="w-full p-4 bg-muted border border-border rounded-2xl font-black outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase" required />
+                  <input name="name" value={formData.name} onChange={handleChange} placeholder={t('egStrategy')} className="w-full p-4 bg-muted border border-border rounded-2xl font-black outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase" required />
                 </div>
                 
                 {/* Icon Selection */}
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block">Strategy Identity (Icon)</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 block">{t('strategyIdentity')}</label>
                   <div className="grid grid-cols-4 gap-2 bg-muted/40 p-3 rounded-2xl border border-border">
                     {Object.entries(StrategyIcons).map(([id, Icon]) => (
                       <button
@@ -220,7 +220,7 @@ const StrategyForm: React.FC<{ isOpen: boolean; onClose: () => void; strategy?: 
 
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 block">{t('description')}</label>
-                  <textarea name="description" value={formData.description} onChange={handleChange} placeholder="What is the logic behind this strategy?" className="w-full p-4 bg-muted border border-border rounded-2xl h-[280px] text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"></textarea>
+                  <textarea name="description" value={formData.description} onChange={handleChange} placeholder={t('strategyLogic')} className="w-full p-4 bg-muted border border-border rounded-2xl h-[280px] text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"></textarea>
                 </div>
             </div>
 
@@ -345,7 +345,7 @@ const StrategyCard: React.FC<{ strategy: Strategy; onSelect: () => void }> = ({ 
             <p className={`text-xl font-black tracking-tighter ${stats.winRate >= 50 ? 'text-success' : 'text-content'}`}>{stats.winRate.toFixed(0)}%</p>
           </div>
           <div className="text-center">
-            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">P. Factor</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t('pFactor')}</p>
             <p className="text-xl font-black tracking-tighter">{stats.profitFactor?.toFixed(2) || '0.00'}</p>
           </div>
         </div>
@@ -535,7 +535,7 @@ const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> =
                 ) : (
                     <div className="h-full flex flex-col items-center justify-center opacity-30 text-center py-10">
                         <EditIcon className="w-8 h-8 mb-3" />
-                        <p className="text-[10px] font-black uppercase tracking-widest leading-loose">No Observations<br/>Recorded For This Setup</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest leading-loose" dangerouslySetInnerHTML={{ __html: t('noObservations') }}></p>
                     </div>
                 )}
             </div>
@@ -565,7 +565,7 @@ const StrategiesPage: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-muted/10 border border-border/50 rounded-[3rem] p-8">
         <div>
           <h1 className="text-5xl font-black tracking-tighter uppercase leading-none">{t('strategies')}</h1>
-          <p className="text-muted-foreground font-black text-[10px] uppercase tracking-[0.2em] mt-3 opacity-60">Systematic Edge Repository</p>
+          <p className="text-muted-foreground font-black text-[10px] uppercase tracking-[0.2em] mt-3 opacity-60">{t('systematicEdgeRepository')}</p>
         </div>
         <button 
           onClick={() => setFormOpen(true)} 

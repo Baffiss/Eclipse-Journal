@@ -251,6 +251,15 @@ const SettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
                         </button>
                     </div>
                 </div>
+
+                <div className={`border-t border-border pt-4 mt-4 text-center`}>
+                    <p className={`text-[10px] font-bold text-muted-foreground uppercase leading-tight mb-1`}>
+                        {t('feedbackText')}
+                    </p>
+                    <a href="mailto:eclipse.journal@hotmail.com" className={`text-xs font-black text-primary hover:underline tracking-widest`}>
+                        eclipse.journal@hotmail.com
+                    </a>
+                </div>
             </div>
         );
     };
@@ -363,7 +372,7 @@ const AppContent: React.FC = () => {
                 <nav className={navContainerClasses}>
                     {isVertical && (
                         <div className={`text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-4 px-3 transition-opacity duration-300 ${isSidebarCollapsed ? `opacity-0` : `opacity-100`}`}>
-                            Menu
+                            {t('menu')}
                         </div>
                     )}
                     <ul className={`${isVertical ? 'space-y-1.5' : 'flex gap-1 sm:gap-2 md:gap-4 justify-center items-center w-full overflow-hidden'}`}>
@@ -407,7 +416,7 @@ const AppContent: React.FC = () => {
                 <div className={`${isVertical ? 'w-full pt-6 border-t space-y-2' : 'flex gap-2'} border-border/20 transition-all duration-700`}>
                     {isVertical && (
                         <div className={`text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-2 px-3 transition-opacity duration-300 ${isSidebarCollapsed ? `opacity-0` : `opacity-100`}`}>
-                            System
+                            {t('system')}
                         </div>
                     )}
                      <button

@@ -249,7 +249,7 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
                 )}
               </div>
               {!trade && formData.accountIds.length === 0 && (
-                <p className="text-[10px] text-danger mt-2 pl-1">Please select at least one account.</p>
+                <p className="text-[10px] text-danger mt-2 pl-1">{t('selectAtLeastOneAccount')}</p>
               )}
             </div>
             <div className="relative">
@@ -272,7 +272,7 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
             </div>
             <div className="md:col-span-2">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1 block">{t('asset')}</label>
-              <input name="asset" value={formData.asset} onChange={handleChange} className="w-full p-2.5 bg-muted border border-border rounded-xl mt-1 font-black uppercase text-xs outline-none focus:ring-2 focus:ring-primary/20 transition-all" required placeholder="e.g. NAS100" />
+              <input name="asset" value={formData.asset} onChange={handleChange} className="w-full p-2.5 bg-muted border border-border rounded-xl mt-1 font-black uppercase text-xs outline-none focus:ring-2 focus:ring-primary/20 transition-all" required placeholder={t('egAsset')} />
             </div>
             <div className="relative">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1 block">{t('direction')}</label>
@@ -302,7 +302,7 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
               <input type="number" step="0.01" name="result" value={formData.result} onChange={handleChange} className="w-full p-3 bg-muted border border-border rounded-xl mt-1 text-2xl font-black outline-none focus:ring-2 focus:ring-primary/20 transition-all" required />
             </div>
           </div>
-          <div><label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1 block">{t('notes')}</label><textarea name="notes" value={formData.notes} onChange={handleChange} placeholder="Psychology, context..." className="w-full p-4 bg-muted border border-border rounded-xl mt-1 min-h-[100px] text-xs font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"></textarea></div>
+          <div><label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1 block">{t('notes')}</label><textarea name="notes" value={formData.notes} onChange={handleChange} placeholder={t('psychologyContext')} className="w-full p-4 bg-muted border border-border rounded-xl mt-1 min-h-[100px] text-xs font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"></textarea></div>
           {formData.imageUrl ? (<div className="relative group"><img src={formData.imageUrl} alt="Trade screenshot" className="max-h-64 w-full object-cover rounded-2xl border border-border" /><button type="button" onClick={() => setFormData(p => ({ ...p, imageUrl: '' }))} className="absolute top-3 right-3 bg-black/50 p-2 rounded-full text-white hover:bg-danger transition-colors"><XIcon className="w-4 h-4" /></button></div>) : (<div><label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1 block">{t('uploadScreenshot')}</label><div className="mt-1 flex justify-center px-6 pt-8 pb-8 border-2 border-border border-dashed rounded-[2rem] bg-muted/30"><div className="space-y-2 text-center"><UploadCloudIcon className="mx-auto h-12 w-12 text-muted-foreground opacity-30" /><div className="flex text-xs text-muted-foreground"><label htmlFor="file-upload" className="relative cursor-pointer font-black text-primary hover:underline uppercase tracking-widest text-[10px]"><span>{t('uploadScreenshot')}</span><input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleImageUpload} accept="image/*" /></label></div></div></div></div>)}
           <div className="flex justify-end gap-3 pt-6 border-t border-border/50"><button type="button" onClick={onClose} className="px-8 py-3 bg-muted rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-border transition-colors">{t('cancel')}</button><button type="submit" className="px-8 py-3 bg-primary text-bkg rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary-focus shadow-lg shadow-primary/20 transition-all">{trade ? t('update') : t('registerTrade')}</button></div>
         </form>
