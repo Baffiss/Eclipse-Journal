@@ -122,26 +122,3 @@ export interface EquityDataPoint {
     equity: number;
     trailingDrawdown?: number;
 }
-
-// Fix: Added missing types for Spot Portfolio functionality
-export type HoldingType = 'BUY' | 'SELL';
-export type AssetCategory = 'CRYPTO' | 'STOCK' | 'FOREX';
-
-export interface Holding {
-    id: string;
-    portfolioId: string;
-    asset: string;
-    category: AssetCategory;
-    quantity: number;
-    buyPrice: number;
-    currentPrice: number;
-    date: string; // ISO string
-    type: HoldingType;
-}
-
-export interface Portfolio {
-    id: string;
-    name: string;
-    iconId: string;
-    description: string;
-}

@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useContext, useCallback } from 'react';
-import { Account, Trade, Strategy, Currency, TradePreset, Withdrawal, AccountStatus, Holding, Portfolio } from '../types';
+import { Account, Trade, Strategy, Currency, TradePreset, Withdrawal, AccountStatus } from '../types';
 
 const translations: Record<string, Record<string, string>> = {
   en: {
@@ -203,15 +203,55 @@ const translations: Record<string, Record<string, string>> = {
     annualPnL: `Annual P&L`,
     imageNotesPlaceholder: `Add some thoughts about this chart setup...`,
     noActiveAccounts: `No active accounts found. Create or activate an account to register trades.`,
-    // Fix: Added missing translations for Spot Portfolio feature
-    portfolio: `Portfolio`,
-    newPortfolio: `New Portfolio`,
-    editPortfolio: `Edit Portfolio`,
-    portfolioName: `Portfolio Name`,
-    searchCrypto: `Search Crypto Assets`,
-    noPortfoliosYet: `No Portfolios Yet`,
-    createYourFirstPortfolio: `Create your first spot portfolio to track long-term holdings.`,
-    backToPortfolios: `Back to Portfolios`,
+    discipline: `Discipline`,
+    consistency: `Consistency`,
+    disciplineRules: `Discipline Rules`,
+    dailyDiscipline: `Daily Discipline`,
+    addRule: `Add Rule`,
+    editRule: `Edit Rule`,
+    deleteRule: `Delete Rule`,
+    ruleText: `Rule Description`,
+    category: `Category`,
+    existingRules: `Existing Rules`,
+    risk: `Risk`,
+    strategy: `Strategy`,
+    psychology: `Psychology`,
+    routine: `Routine`,
+    adherence: `Adherence`,
+    emotionalState: `Emotional State`,
+    calm: `Calm`,
+    anxious: `Anxious`,
+    greedy: `Greedy`,
+    fearful: `Fearful`,
+    neutral: `Neutral`,
+    noRulesYet: `No rules yet.`,
+    createYourFirstRule: `Create your first discipline rule to start tracking.`,
+    disciplineStats: `Discipline Stats`,
+    adherenceRate: `Adherence Rate`,
+    streak: `Streak`,
+    days: `Days`,
+    rulesMet: `Rules Met`,
+    history: `History`,
+    automatedRules: `Automated Rules`,
+    maxLossPerDay: `Max Loss Per Day`,
+    maxTradesPerDay: `Max Trades Per Day`,
+    dailyProfitTarget: `Daily Profit Target`,
+    maxConsecutiveLosses: `Max Consecutive Losses`,
+    stopAfterProfitTarget: `Stop After Profit Target`,
+    globalRules: `Global Rules`,
+    accountRules: `Account Rules`,
+    strategyRules: `Strategy Rules`,
+    disciplinePanel: `Discipline Panel`,
+    ruleViolationDetected: `Rule Violation Detected`,
+    stopTradingRecommended: `Stop trading recommended.`,
+    disciplineScore: `Discipline Score`,
+    noHistoryYet: `No history recorded yet.`,
+    perfectDiscipline: `Perfect Discipline`,
+    notesPlaceholder: `Add some notes about your day...`,
+    violations: `Violations`,
+    ruleBroken: `Rule Broken`,
+    daysWithViolations: `Days with Violations`,
+    perfectDays: `Perfect Days`,
   },
   es: {
     accounts: `Cuentas`,
@@ -414,19 +454,59 @@ const translations: Record<string, Record<string, string>> = {
     annualPnL: `P&L Anual`,
     imageNotesPlaceholder: `Añade tus observaciones sobre este gráfico...`,
     noActiveAccounts: `No hay cuentas activas. Crea o activa una cuenta para registrar operaciones.`,
-    // Fix: Added missing translations for Spot Portfolio feature
-    portfolio: `Portafolio`,
-    newPortfolio: `Nuevo Portafolio`,
-    editPortfolio: `Editar Portafolio`,
-    portfolioName: `Nombre del Portafolio`,
-    searchCrypto: `Buscar Criptoactivos`,
-    noPortfoliosYet: `Sin Portafolios`,
-    createYourFirstPortfolio: `Crea tu primer portafolio spot para rastrear inversiones a largo plazo.`,
-    backToPortfolios: `Volver a Portafolios`,
+    discipline: `Disciplina`,
+    consistency: `Consistencia`,
+    disciplineRules: `Reglas de Disciplina`,
+    dailyDiscipline: `Disciplina Diaria`,
+    addRule: `Añadir Regla`,
+    editRule: `Editar Regla`,
+    deleteRule: `Eliminar Regla`,
+    ruleText: `Descripción de la Regla`,
+    category: `Categoría`,
+    existingRules: `Reglas Existentes`,
+    risk: `Riesgo`,
+    strategy: `Estrategia`,
+    psychology: `Psicología`,
+    routine: `Rutina`,
+    adherence: `Adherencia`,
+    emotionalState: `Estado Emocional`,
+    calm: `Calma`,
+    anxious: `Ansioso`,
+    greedy: `Codicioso`,
+    fearful: `Temeroso`,
+    neutral: `Neutral`,
+    noRulesYet: `No hay reglas aún.`,
+    createYourFirstRule: `Crea tu primera regla de disciplina para empezar a rastrear.`,
+    disciplineStats: `Estadísticas de Disciplina`,
+    adherenceRate: `Tasa de Adherencia`,
+    streak: `Racha`,
+    days: `Días`,
+    rulesMet: `Reglas Cumplidas`,
+    history: `Historial`,
+    automatedRules: `Reglas Automáticas`,
+    maxLossPerDay: `Pérdida Máxima Diaria`,
+    maxTradesPerDay: `Trades Máximos Diarios`,
+    dailyProfitTarget: `Objetivo de Ganancia Diaria`,
+    maxConsecutiveLosses: `Pérdidas Consecutivas Máximas`,
+    stopAfterProfitTarget: `Parar después del Objetivo de Ganancia`,
+    globalRules: `Reglas Globales`,
+    accountRules: `Reglas de Cuenta`,
+    strategyRules: `Reglas de Estrategia`,
+    disciplinePanel: `Panel de Disciplina`,
+    ruleViolationDetected: `Violación de Regla Detectada`,
+    stopTradingRecommended: `Se recomienda dejar de operar.`,
+    disciplineScore: `Puntaje de Disciplina`,
+    noHistoryYet: `Aún no hay historial registrado.`,
+    perfectDiscipline: `Disciplina Perfecta`,
+    notesPlaceholder: `Añade algunas notas sobre tu día...`,
+    violations: `Violaciones`,
+    ruleBroken: `Regla Rota`,
+    daysWithViolations: `Días con Violaciones`,
+    perfectDays: `Días Perfectos`,
   }
 };
 
-export type ActivePage = `dashboard` | `accounts` | `trades` | `strategies` | `analytics` | `markets` | `portfolio`;
+export type ActivePage = `dashboard` | `accounts` | `trades` | `strategies` | `analytics` | `markets`;
 export type SidebarPosition = 'left' | 'right' | 'top' | 'bottom';
 
 export interface AppState {
@@ -435,9 +515,6 @@ export interface AppState {
   withdrawals: Withdrawal[];
   strategies: Strategy[];
   presets: TradePreset[];
-  // Fix: Added portfolios and holdings to AppState
-  portfolios: Portfolio[];
-  holdings: Holding[];
   theme: 'light' | 'dark';
   colorTheme: string;
   sidebarPosition: SidebarPosition;
@@ -461,13 +538,6 @@ type Action =
   | { type: 'DELETE_STRATEGY'; payload: string }
   | { type: 'ADD_PRESET'; payload: TradePreset }
   | { type: 'DELETE_PRESET'; payload: string }
-  // Fix: Added Portfolio and Holding actions
-  | { type: 'ADD_PORTFOLIO'; payload: Portfolio }
-  | { type: 'UPDATE_PORTFOLIO'; payload: Portfolio }
-  | { type: 'DELETE_PORTFOLIO'; payload: string }
-  | { type: 'ADD_HOLDING'; payload: Holding }
-  | { type: 'UPDATE_HOLDING'; payload: Holding }
-  | { type: 'DELETE_HOLDING'; payload: string }
   | { type: 'TOGGLE_THEME' }
   | { type: 'SET_COLOR_THEME'; payload: string }
   | { type: 'SET_SIDEBAR_POSITION'; payload: SidebarPosition }
@@ -484,9 +554,6 @@ const initialState: AppState = {
   withdrawals: [],
   strategies: [],
   presets: [],
-  // Fix: Initialized portfolios and holdings
-  portfolios: [],
-  holdings: [],
   theme: 'dark',
   colorTheme: 'zinc',
   sidebarPosition: 'left',
@@ -601,23 +668,6 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
       return { ...prevState, presets: [...prevState.presets, action.payload] };
     case 'DELETE_PRESET':
       return { ...prevState, presets: prevState.presets.filter(p => p.id !== action.payload) };
-    // Fix: Implemented Portfolio and Holding reducers
-    case 'ADD_PORTFOLIO':
-      return { ...prevState, portfolios: [...prevState.portfolios, action.payload] };
-    case 'UPDATE_PORTFOLIO':
-      return { ...prevState, portfolios: prevState.portfolios.map(p => p.id === action.payload.id ? action.payload : p) };
-    case 'DELETE_PORTFOLIO':
-      return {
-        ...prevState,
-        portfolios: prevState.portfolios.filter(p => p.id !== action.payload),
-        holdings: prevState.holdings.filter(h => h.portfolioId !== action.payload)
-      };
-    case 'ADD_HOLDING':
-      return { ...prevState, holdings: [...prevState.holdings, action.payload] };
-    case 'UPDATE_HOLDING':
-      return { ...prevState, holdings: prevState.holdings.map(h => h.id === action.payload.id ? action.payload : h) };
-    case 'DELETE_HOLDING':
-      return { ...prevState, holdings: prevState.holdings.filter(h => h.id !== action.payload) };
     case 'TOGGLE_THEME':
       return { ...prevState, theme: prevState.theme === 'light' ? 'dark' : 'light' };
     case 'SET_COLOR_THEME':
@@ -629,7 +679,7 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
     case 'SET_LANGUAGE':
       return { ...prevState, language: action.payload };
     case 'RESET_DATA':
-      return { ...prevState, accounts: [], trades: [], withdrawals: [], strategies: [], presets: [], portfolios: [], holdings: [] };
+      return { ...prevState, accounts: [], trades: [], withdrawals: [], strategies: [], presets: [] };
     case 'SET_PAGE':
       return { ...prevState, activePage: action.payload };
     case 'FOCUS_TRADE':
@@ -660,9 +710,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           const withdrawals = Array.isArray(parsedState.withdrawals) ? parsedState.withdrawals : [];
           const strategies = Array.isArray(parsedState.strategies) ? parsedState.strategies : [];
           const presets = Array.isArray(parsedState.presets) ? parsedState.presets : [];
-          // Fix: Sanitize portfolios and holdings from local storage
-          const portfolios = Array.isArray(parsedState.portfolios) ? parsedState.portfolios : [];
-          const holdings = Array.isArray(parsedState.holdings) ? parsedState.holdings : [];
 
           const sanitizedTrades = trades.map((trade: any) => ({
             ...trade,
@@ -672,21 +719,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             stopLossPips: parseFloat(String(trade.stopLossPips)) || 0,
           }));
 
+          const sanitizedWithdrawals = withdrawals.map((w: any) => ({
+            ...w,
+            amount: parseFloat(String(w.amount)) || 0,
+          }));
+
+          const sanitizedPresets = presets.map((p: any) => ({
+            ...p,
+            lotSize: parseFloat(String(p.lotSize)) || 0,
+            takeProfitPips: parseFloat(String(p.takeProfitPips)) || 0,
+            stopLossPips: parseFloat(String(p.stopLossPips)) || 0,
+          }));
+
           const sanitizedStrategies = sanitizedStrategiesFromParsed(strategies);
 
-          const sanitizedAccounts = sanitizedAccountsFromParsed(accounts, sanitizedTrades);
+          const sanitizedAccounts = sanitizedAccountsFromParsed(accounts, sanitizedTrades, sanitizedWithdrawals);
 
           const finalState = {
             ...initialState,
             ...parsedState,
             accounts: sanitizedAccounts,
             trades: sanitizedTrades,
-            withdrawals: withdrawals,
+            withdrawals: sanitizedWithdrawals,
             strategies: sanitizedStrategies,
-            presets: presets,
-            // Fix: Include portfolios and holdings in hydrated state
-            portfolios: portfolios,
-            holdings: holdings,
+            presets: sanitizedPresets,
             activePage: (parsedState.activePage === 'chat') ? 'dashboard' : (parsedState.activePage || 'dashboard'),
           };
           dispatch({ type: 'SET_STATE', payload: finalState });
@@ -709,10 +765,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
   }
 
-  function sanitizedAccountsFromParsed(accounts: any[], sanitizedTrades: any[]) {
+  function sanitizedAccountsFromParsed(accounts: any[], sanitizedTrades: any[], sanitizedWithdrawals: any[]) {
     return accounts.map((account: any) => {
       const initialCapital = parseFloat(String(account.initialCapital)) || 0;
-      const totalWithdrawn = parseFloat(String(account.totalWithdrawn)) || 0;
+      const withdrawalsForAccount = sanitizedWithdrawals.filter((w: any) => w.accountId === account.id);
+      const totalWithdrawn = withdrawalsForAccount.reduce((sum: number, w: any) => sum + w.amount, 0);
       const tradesForAccount = sanitizedTrades.filter((t: any) => t.accountId === account.id);
       const totalProfit = tradesForAccount.reduce((sum: number, t: any) => sum + t.result, 0);
 
@@ -725,6 +782,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         drawdownValue: parseFloat(String(account.drawdownValue)) || 0,
       };
     });
+  }
+
+  function sanitizedAutomatedRulesFromParsed(rules: any) {
+    if (!rules) return { global: {}, accounts: {}, strategies: {} };
+    
+    const sanitizedGlobal = { ...rules.global };
+    if (sanitizedGlobal.maxLossPerDay !== undefined) sanitizedGlobal.maxLossPerDay = parseFloat(String(sanitizedGlobal.maxLossPerDay)) || 0;
+    if (sanitizedGlobal.maxTradesPerDay !== undefined) sanitizedGlobal.maxTradesPerDay = parseInt(String(sanitizedGlobal.maxTradesPerDay)) || 0;
+    if (sanitizedGlobal.dailyProfitTarget !== undefined) sanitizedGlobal.dailyProfitTarget = parseFloat(String(sanitizedGlobal.dailyProfitTarget)) || 0;
+    if (sanitizedGlobal.maxConsecutiveLosses !== undefined) sanitizedGlobal.maxConsecutiveLosses = parseInt(String(sanitizedGlobal.maxConsecutiveLosses)) || 0;
+
+    const sanitizedAccounts: any = {};
+    if (rules.accounts) {
+      Object.entries(rules.accounts).forEach(([id, accRules]: [string, any]) => {
+        sanitizedAccounts[id] = { ...accRules };
+        if (accRules.maxTradesPerDay !== undefined) sanitizedAccounts[id].maxTradesPerDay = parseInt(String(accRules.maxTradesPerDay)) || 0;
+        if (accRules.maxLossPerDay !== undefined) sanitizedAccounts[id].maxLossPerDay = parseFloat(String(accRules.maxLossPerDay)) || 0;
+      });
+    }
+
+    const sanitizedStrategies: any = {};
+    if (rules.strategies) {
+      Object.entries(rules.strategies).forEach(([id, stratRules]: [string, any]) => {
+        sanitizedStrategies[id] = { ...stratRules };
+        if (stratRules.maxTradesPerDay !== undefined) sanitizedStrategies[id].maxTradesPerDay = parseInt(String(stratRules.maxTradesPerDay)) || 0;
+      });
+    }
+
+    return {
+      global: sanitizedGlobal,
+      accounts: sanitizedAccounts,
+      strategies: sanitizedStrategies
+    };
   }
 
   useEffect(() => {
@@ -825,14 +915,6 @@ export const useApp = () => {
   const addPreset = useCallback((preset: TradePreset) => dispatch({ type: 'ADD_PRESET', payload: preset }), [dispatch]);
   const deletePreset = useCallback((presetId: string) => dispatch({ type: 'DELETE_PRESET', payload: presetId }), [dispatch]);
 
-  // Fix: Exposed Portfolio and Holding methods in useApp hook
-  const addPortfolio = useCallback((portfolio: Portfolio) => dispatch({ type: 'ADD_PORTFOLIO', payload: portfolio }), [dispatch]);
-  const updatePortfolio = useCallback((portfolio: Portfolio) => dispatch({ type: 'UPDATE_PORTFOLIO', payload: portfolio }), [dispatch]);
-  const deletePortfolio = useCallback((id: string) => dispatch({ type: 'DELETE_PORTFOLIO', payload: id }), [dispatch]);
-  const addHolding = useCallback((holding: Holding) => dispatch({ type: 'ADD_HOLDING', payload: holding }), [dispatch]);
-  const updateHolding = useCallback((holding: Holding) => dispatch({ type: 'UPDATE_HOLDING', payload: holding }), [dispatch]);
-  const deleteHolding = useCallback((id: string) => dispatch({ type: 'DELETE_HOLDING', payload: id }), [dispatch]);
-
   return {
     state,
     dispatch,
@@ -860,12 +942,5 @@ export const useApp = () => {
     deleteStrategy,
     addPreset,
     deletePreset,
-    // Fix: Returned missing portfolio/holding methods
-    addPortfolio,
-    updatePortfolio,
-    deletePortfolio,
-    addHolding,
-    updateHolding,
-    deleteHolding
   };
 };

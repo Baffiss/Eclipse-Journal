@@ -314,7 +314,7 @@ const AppContent: React.FC = () => {
 
     const navContainerClasses = useMemo(() => {
         if (isVertical) return `flex-grow w-full space-y-1 transition-all duration-700`;
-        return `flex items-center gap-1 overflow-x-auto no-scrollbar transition-all duration-700`;
+        return `flex items-center justify-center flex-1 w-full transition-all duration-700 overflow-hidden`;
     }, [isVertical]);
 
     const navItemClasses = (isActive: boolean) => {
@@ -326,7 +326,7 @@ const AppContent: React.FC = () => {
         if (isVertical) {
             return `${base} ${activeStyles} gap-4 px-4 py-3 w-full ${isSidebarCollapsed ? `justify-center px-0` : ``}`;
         }
-        return `${base} ${activeStyles} gap-2 px-4 py-2.5`;
+        return `${base} ${activeStyles} px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 whitespace-nowrap flex-shrink-0`;
     };
 
     return (
@@ -366,7 +366,7 @@ const AppContent: React.FC = () => {
                             Menu
                         </div>
                     )}
-                    <ul className={`${isVertical ? 'space-y-1.5' : 'flex gap-2'}`}>
+                    <ul className={`${isVertical ? 'space-y-1.5' : 'flex gap-1 sm:gap-2 md:gap-4 justify-center items-center w-full overflow-hidden'}`}>
                         {navItems.map(item => {
                             const isActive = activePage === item.id;
                             return (
@@ -382,12 +382,18 @@ const AppContent: React.FC = () => {
                                         {isActive && sidebarPosition === 'right' && !isSidebarCollapsed && (
                                             <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-bkg rounded-l-full animate-fade-in`} />
                                         )}
+                                        {isActive && sidebarPosition === 'top' && (
+                                            <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-1/2 bg-bkg rounded-t-full animate-fade-in`} />
+                                        )}
+                                        {isActive && sidebarPosition === 'bottom' && (
+                                            <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-1 w-1/2 bg-bkg rounded-b-full animate-fade-in`} />
+                                        )}
                                         
                                         {React.cloneElement(item.icon as React.ReactElement, { className: `w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? `scale-110` : `group-hover:scale-110`}` })}
-                                        {(isVertical ? !isSidebarCollapsed : true) && <span className={`transition-opacity duration-300`}>{item.label}</span>}
+                                        {isVertical && !isSidebarCollapsed && <span className={`transition-opacity duration-300`}>{item.label}</span>}
                                         
-                                        {isVertical && isSidebarCollapsed && (
-                                            <div className={`absolute ${sidebarPosition === 'left' ? 'left-full ml-4' : 'right-full mr-4'} px-3 py-1.5 bg-content text-bkg rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap text-[10px] font-black tracking-widest z-50`}>
+                                        {(isVertical && isSidebarCollapsed || isHorizontal) && (
+                                            <div className={`absolute ${isVertical ? (sidebarPosition === 'left' ? 'left-full ml-4' : 'right-full mr-4') : (sidebarPosition === 'top' ? 'top-full mt-2' : 'bottom-full mb-2')} px-3 py-1.5 bg-content text-bkg rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap text-[10px] font-black tracking-widest z-50`}>
                                                 {item.label}
                                             </div>
                                         )}

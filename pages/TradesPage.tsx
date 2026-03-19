@@ -97,7 +97,7 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
   const getInitialFormData = () => {
     const tradeDate = trade ? new Date(trade.date) : (selectedDate || new Date());
     return {
-      accountId: trade?.accountId || activeAccounts[0]?.id || '',
+      accountIds: trade ? [trade.accountId] : (activeAccounts[0] ? [activeAccounts[0].id] : []),
       strategyId: trade?.strategyId || '',
       date: getLocalDateString(tradeDate),
       time: trade ? new Date(trade.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : getCurrentTime(),
@@ -167,6 +167,10 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!trade && formData.accountIds.length === 0) {
+      alert(t('noActiveAccounts') || "Please select at least one account.");
+      return;
+    }
     const [hours, minutes] = formData.time.split(':').map(Number);
     const localDate = new Date(`${formData.date}T00:00:00`);
     localDate.setHours(hours); localDate.setMinutes(minutes || 0);
@@ -179,11 +183,13 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
       hour: hours, 
       date: localDate.toISOString() 
     };
-    const { time, ...finalTradeData } = tradeData as any;
+    const { time, accountIds, ...finalTradeData } = tradeData as any;
     if (trade) { 
-      updateTrade(trade, { ...trade, ...finalTradeData }); 
+      updateTrade(trade, { ...trade, ...finalTradeData, accountId: accountIds[0] }); 
     } else { 
-      addTrade({ id: crypto.randomUUID(), ...finalTradeData }); 
+      accountIds.forEach((accId: string) => {
+        addTrade({ id: crypto.randomUUID(), ...finalTradeData, accountId: accId }); 
+      });
     }
     onClose();
   };
@@ -208,17 +214,43 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
         )}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="relative">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1 block">{t('selectAccount')}</label>
-              <div className="relative mt-1">
-                <select name="accountId" value={formData.accountId} onChange={handleChange} className="w-full p-2.5 bg-muted border border-border rounded-xl font-black uppercase text-xs appearance-none cursor-pointer outline-none focus:ring-2 focus:ring-primary/20 transition-all" required>
-                  {!trade 
-                    ? activeAccounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)
-                    : accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)
-                  }
-                </select>
-                <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <div className="md:col-span-2 relative">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1 block mb-2">{t('selectAccount')}</label>
+              <div className="flex flex-wrap gap-2">
+                {!trade ? (
+                  activeAccounts.map(acc => (
+                    <button
+                      key={acc.id}
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          accountIds: prev.accountIds.includes(acc.id)
+                            ? prev.accountIds.filter((id: string) => id !== acc.id)
+                            : [...prev.accountIds, acc.id]
+                        }));
+                      }}
+                      className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all border ${
+                        formData.accountIds.includes(acc.id)
+                          ? 'bg-primary text-bkg border-primary shadow-md shadow-primary/20'
+                          : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                      }`}
+                    >
+                      {acc.name}
+                    </button>
+                  ))
+                ) : (
+                  <div className="relative w-full md:w-1/2">
+                    <select name="accountIds" value={formData.accountIds[0] || ''} onChange={(e) => setFormData(prev => ({ ...prev, accountIds: [e.target.value] }))} className="w-full p-2.5 bg-muted border border-border rounded-xl font-black uppercase text-xs appearance-none cursor-pointer outline-none focus:ring-2 focus:ring-primary/20 transition-all" required>
+                      {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
+                    </select>
+                    <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  </div>
+                )}
               </div>
+              {!trade && formData.accountIds.length === 0 && (
+                <p className="text-[10px] text-danger mt-2 pl-1">Please select at least one account.</p>
+              )}
             </div>
             <div className="relative">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1 block">{t('strategies')}</label>
