@@ -101,7 +101,7 @@ const StockHeatmap = memo(({ theme, locale }: { theme: string, locale: string })
 });
 
 const WatchlistWidget = memo(({ theme, locale }: { theme: string, locale: string }) => {
-    const { t } = useAppContext();
+    const { t } = useApp();
     const [symbols, setSymbols] = useState<string[]>([]);
     const [isEditing, setIsEditing] = useState(false);
     const [newSymbol, setNewSymbol] = useState('');

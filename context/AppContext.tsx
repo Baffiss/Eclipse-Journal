@@ -259,7 +259,6 @@ const translations: Record<string, Record<string, string>> = {
     availableDD: `Available DD`,
     distanceToTarget: `Distance to Target`,
     equityCurveActive: `Equity Curve (Active Only)`,
-    totalProfitCurve: `Total Profit Curve`,
     cumulativeResultProgression: `Cumulative Result Progression`,
     dailyFlux: `Daily Flux`,
     profitLossDistribution: `Profit/Loss distribution per day.`,
@@ -280,7 +279,6 @@ const translations: Record<string, Record<string, string>> = {
     egStrategy: `e.g. Break of Structure`,
     strategyLogic: `What is the logic behind this strategy?`,
     editWatchlist: `Edit Watchlist`,
-    watchlist: `Watchlist`,
   },
   es: {
     accounts: `Cuentas`,
@@ -539,7 +537,6 @@ const translations: Record<string, Record<string, string>> = {
     availableDD: `DD Disponible`,
     distanceToTarget: `Distancia al Objetivo`,
     equityCurveActive: `Curva de Capital (Solo Activas)`,
-    totalProfitCurve: `Curva de Beneficio Total`,
     cumulativeResultProgression: `Progresión de Resultado Acumulado`,
     dailyFlux: `Flujo Diario`,
     profitLossDistribution: `Distribución de Ganancias/Pérdidas por día.`,
@@ -560,7 +557,6 @@ const translations: Record<string, Record<string, string>> = {
     egStrategy: `ej. Quiebre de Estructura`,
     strategyLogic: `¿Cuál es la lógica detrás de esta estrategia?`,
     editWatchlist: `Editar Lista de Seguimiento`,
-    watchlist: `Lista de Seguimiento`,
   }
 };
 
