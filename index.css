@@ -1,7 +1,28 @@
-/* index.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-bkg: hsl(var(--bkg));
+  --color-content: hsl(var(--content));
+  --color-primary: hsl(var(--primary));
+  --color-primary-focus: hsl(var(--primary-focus));
+  --color-border: hsl(var(--border));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-success: hsl(var(--success));
+  --color-danger: hsl(var(--danger));
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes slide-in-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes slide-out-down { from { transform: translateY(0); opacity: 1; } to { transform: translateY(20px); opacity: 0; } }
+
+  --animate-fade-in: fade-in 0.3s ease-out forwards;
+  --animate-fade-out: fade-out 0.3s ease-in forwards;
+  --animate-slide-in-up: slide-in-up 0.4s ease-out forwards;
+  --animate-slide-out-down: slide-out-down 0.3s ease-in forwards;
+}
 
 :root {
   --bkg: 220 15% 96%;
@@ -21,4 +42,50 @@
   --muted: 240 3.7% 11.9%;
   --success: 160 55% 55%;
   --danger: 0 74.2% 70.2%;
+}
+
+.theme-zinc { --primary: 240 5.9% 10%; --primary-focus: 240 5.9% 20%; }
+.dark.theme-zinc { --primary: 0 0% 98%; --primary-focus: 0 0% 88%; }
+.theme-slate { --primary: 215 25% 35%; --primary-focus: 215 25% 45%; }
+.dark.theme-slate { --primary: 215 16% 57%; --primary-focus: 215 16% 67%; }
+.theme-stone { --primary: 24 10% 35%; --primary-focus: 24 10% 45%; }
+.dark.theme-stone { --primary: 24 5% 74%; --primary-focus: 24 5% 84%; }
+.theme-red { --primary: 0 72% 40%; --primary-focus: 0 72% 50%; }
+.dark.theme-red { --primary: 0 84% 65%; --primary-focus: 0 84% 75%; }
+.theme-rose { --primary: 350 89% 45%; --primary-focus: 350 89% 55%; }
+.dark.theme-rose { --primary: 350 89% 65%; --primary-focus: 350 89% 75%; }
+.theme-orange { --primary: 24.6 95% 40%; --primary-focus: 24.6 95% 50%; }
+.dark.theme-orange { --primary: 24.6 95% 60%; --primary-focus: 24.6 95% 70%; }
+.theme-amber { --primary: 38 92% 40%; --primary-focus: 38 92% 50%; }
+.dark.theme-amber { --primary: 38 92% 60%; --primary-focus: 38 92% 70%; }
+.theme-yellow { --primary: 45 93% 40%; --primary-focus: 45 93% 50%; }
+.dark.theme-yellow { --primary: 45 93% 65%; --primary-focus: 45 93% 75%; }
+.theme-lime { --primary: 84 81% 35%; --primary-focus: 84 81% 45%; }
+.dark.theme-lime { --primary: 84 81% 60%; --primary-focus: 84 81% 70%; }
+.theme-green { --primary: 142.1 76.2% 25.3%; --primary-focus: 142.1 76.2% 35.3%; }
+.dark.theme-green { --primary: 142.1 76.2% 55%; --primary-focus: 142.1 76.2% 65%; }
+.theme-emerald { --primary: 160 84% 30%; --primary-focus: 160 84% 40%; }
+.dark.theme-emerald { --primary: 160 84% 55%; --primary-focus: 160 84% 65%; }
+.theme-teal { --primary: 173 80% 30%; --primary-focus: 173 80% 40%; }
+.dark.theme-teal { --primary: 173 80% 55%; --primary-focus: 173 80% 65%; }
+.theme-cyan { --primary: 188 86% 35%; --primary-focus: 188 86% 45%; }
+.dark.theme-cyan { --primary: 188 86% 55%; --primary-focus: 188 86% 65%; }
+.theme-sky { --primary: 199 89% 40%; --primary-focus: 199 89% 50%; }
+.dark.theme-sky { --primary: 199 89% 60%; --primary-focus: 199 89% 70%; }
+.theme-blue { --primary: 221.2 83.2% 40.3%; --primary-focus: 221.2 83.2% 50.3%; }
+.dark.theme-blue { --primary: 221.2 83.2% 60%; --primary-focus: 221.2 83.2% 70%; }
+.theme-indigo { --primary: 226 71% 40%; --primary-focus: 226 71% 50%; }
+.dark.theme-indigo { --primary: 226 71% 60%; --primary-focus: 226 71% 70%; }
+.theme-violet { --primary: 262.1 83.3% 45.8%; --primary-focus: 262.1 83.3% 55.8%; }
+.dark.theme-violet { --primary: 262.1 83.3% 65%; --primary-focus: 262.1 83.3% 75%; }
+.theme-purple { --primary: 270 67% 45%; --primary-focus: 270 67% 55%; }
+.dark.theme-purple { --primary: 270 67% 65%; --primary-focus: 270 67% 75%; }
+.theme-fuchsia { --primary: 292 84% 45%; --primary-focus: 292 84% 55%; }
+.dark.theme-fuchsia { --primary: 292 84% 65%; --primary-focus: 292 84% 75%; }
+.theme-pink { --primary: 330 81% 45%; --primary-focus: 330 81% 55%; }
+.dark.theme-pink { --primary: 330 81% 65%; --primary-focus: 330 81% 75%; }
+
+@media print {
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .no-print { display: none !important; }
 }
