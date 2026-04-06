@@ -1,5 +1,5 @@
-import React from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, Legend } from 'recharts';
 import { EquityDataPoint, Account, ValueType, DrawdownType } from '../../types';
 import { useApp } from '../../context/AppContext';
 
@@ -9,8 +9,43 @@ interface EquityChartProps {
     account?: Account | null;
 }
 
+/**
+ * EquityChart Component
+ * 
+ * Refactored to use ResizeObserver instead of Recharts' ResponsiveContainer.
+ * This fixes a common bug where charts render blank in conditional views or 
+ * flex containers because ResponsiveContainer fails to measure the stable 
+ * size on mount.
+ */
 const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', account }) => {
     const { theme } = useApp();
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    
+    // Use ResizeObserver to track the actual container size
+    useEffect(() => {
+        if (!containerRef.current) return;
+
+        const resizeObserver = new ResizeObserver((entries) => {
+            if (!entries || entries.length === 0) return;
+            
+            // Get dimensions from the first entry
+            const { width, height } = entries[0].contentRect;
+            
+            // Only update state if dimensions actually changed to prevent loops
+            setDimensions(prev => {
+                if (prev.width === width && prev.height === height) return prev;
+                return { width, height };
+            });
+        });
+
+        resizeObserver.observe(containerRef.current);
+
+        return () => {
+            resizeObserver.disconnect();
+        };
+    }, []);
+
     const axisColor = theme === 'dark' ? '#52525B' : '#A1A1AA';
     const gridColor = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
 
@@ -43,29 +78,43 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
         return null;
     };
     
-    let profitTargetLine, maxDrawdownLine;
-    const hasTrailingDrawdown = account?.drawdownType === DrawdownType.TRAILING;
-    
-    if (account) {
-        if (account.profitTarget > 0) {
-            const value = account.profitTargetType === ValueType.FIXED
-                ? account.initialCapital + account.profitTarget
-                : account.initialCapital * (1 + account.profitTarget / 100);
-            profitTargetLine = <ReferenceLine y={value} stroke="hsl(var(--success))" strokeDasharray="4 4" strokeWidth={1} />;
-        }
+    // Memoize reference lines and drawdown type to optimize performance
+    const { profitTargetLine, maxDrawdownLine, hasTrailingDrawdown } = useMemo(() => {
+        let profitTargetLine, maxDrawdownLine;
+        const hasTrailingDrawdown = account?.drawdownType === DrawdownType.TRAILING;
+        
+        if (account) {
+            if (account.profitTarget > 0) {
+                const value = account.profitTargetType === ValueType.FIXED
+                    ? account.initialCapital + account.profitTarget
+                    : account.initialCapital * (1 + account.profitTarget / 100);
+                profitTargetLine = <ReferenceLine y={value} stroke="hsl(var(--success))" strokeDasharray="4 4" strokeWidth={1} />;
+            }
 
-        if (!hasTrailingDrawdown && account.drawdownValue > 0) {
-            const value = account.drawdownValueType === ValueType.FIXED
-                ? account.initialCapital - account.drawdownValue
-                : account.initialCapital * (1 - account.drawdownValue / 100);
-            maxDrawdownLine = <ReferenceLine y={value} stroke="hsl(var(--danger))" strokeDasharray="4 4" strokeWidth={1} />;
+            if (!hasTrailingDrawdown && account.drawdownValue > 0) {
+                const value = account.drawdownValueType === ValueType.FIXED
+                    ? account.initialCapital - account.drawdownValue
+                    : account.initialCapital * (1 - account.drawdownValue / 100);
+                maxDrawdownLine = <ReferenceLine y={value} stroke="hsl(var(--danger))" strokeDasharray="4 4" strokeWidth={1} />;
+            }
         }
-    }
+        return { profitTargetLine, maxDrawdownLine, hasTrailingDrawdown };
+    }, [account]);
 
     return (
-        <div className="w-full h-full min-h-[300px] relative">
-            <ResponsiveContainer width="100%" height="100%" debounce={1}>
-                <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 10 }}>
+        <div 
+            ref={containerRef} 
+            className="w-full h-full min-h-[300px] min-w-0 relative flex items-center justify-center overflow-hidden"
+            id="equity-chart-container"
+        >
+            {/* Only render the chart when valid dimensions are available */}
+            {dimensions.width > 0 && dimensions.height > 0 ? (
+                <AreaChart 
+                    width={dimensions.width} 
+                    height={dimensions.height} 
+                    data={data} 
+                    margin={{ top: 10, right: 10, left: -20, bottom: 10 }}
+                >
                     <defs>
                         <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.15}/>
@@ -129,7 +178,13 @@ const EquityChart: React.FC<EquityChartProps> = ({ data, currencySymbol = '$', a
                         />
                     )}
                 </AreaChart>
-            </ResponsiveContainer>
+            ) : (
+                /* Fallback UI while measuring dimensions */
+                <div className="flex flex-col items-center justify-center gap-3 opacity-20 animate-pulse">
+                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <p className="text-[10px] font-black uppercase tracking-widest">Initializing Chart...</p>
+                </div>
+            )}
         </div>
     );
 };

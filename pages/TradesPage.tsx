@@ -21,7 +21,8 @@ import {
   BarChart3Icon,
   CameraIcon,
   ChevronDownIcon,
-  TargetIcon
+  TargetIcon,
+  SettingsIcon
 } from '../components/Icons';
 
 const fileToBase64 = (file: File): Promise<string> => {
@@ -87,10 +88,141 @@ const WinLossPie: React.FC<{ wins: number; losses: number; size?: number; fontSi
   );
 };
 
+const ManagePresetsModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  const { presets, deletePreset, updatePreset, addPreset, t } = useApp();
+  const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<TradePreset | null>(null);
+
+  const handleAddBlank = () => {
+    const newPreset: TradePreset = {
+      id: crypto.randomUUID(),
+      name: t('newPreset'),
+      asset: '',
+      lotSize: 0,
+      takeProfitPips: 0,
+      stopLossPips: 0
+    };
+    addPreset(newPreset);
+    handleEdit(newPreset);
+  };
+
+  const handleEdit = (preset: TradePreset) => {
+    setEditingPresetId(preset.id);
+    setEditFormData({ ...preset });
+  };
+
+  const handleSave = () => {
+    if (editFormData) {
+      updatePreset(editFormData);
+      setEditingPresetId(null);
+      setEditFormData(null);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={t('managePresets')}>
+      <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin">
+        <div className="flex justify-end">
+          <button 
+            onClick={handleAddBlank}
+            className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all"
+          >
+            <PlusIcon className="w-4 h-4" />
+            {t('newPreset')}
+          </button>
+        </div>
+        {presets.length === 0 ? (
+          <div className="text-center py-12 opacity-40">
+            <ZapIcon className="w-12 h-12 mx-auto mb-4" />
+            <p className="text-xs font-black uppercase tracking-widest">{t('noPresets')}</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {presets.map(preset => (
+              <div key={preset.id} className="p-4 bg-muted/30 border border-border rounded-2xl transition-all hover:border-primary/30">
+                {editingPresetId === preset.id ? (
+                  <div className="space-y-4 animate-fade-in">
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1 block">{t('presetName')}</label>
+                      <input
+                        className="w-full p-2.5 bg-bkg border border-border rounded-xl text-xs font-black uppercase outline-none focus:ring-2 focus:ring-primary/20"
+                        value={editFormData?.name || ''}
+                        onChange={e => setEditFormData(prev => prev ? { ...prev, name: e.target.value } : null)}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1 block">{t('asset')}</label>
+                        <input
+                          className="w-full p-2.5 bg-bkg border border-border rounded-xl text-xs font-black uppercase outline-none focus:ring-2 focus:ring-primary/20"
+                          value={editFormData?.asset || ''}
+                          onChange={e => setEditFormData(prev => prev ? { ...prev, asset: e.target.value.toUpperCase() } : null)}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1 block">{t('lotSize')}</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="w-full p-2.5 bg-bkg border border-border rounded-xl text-xs font-black outline-none focus:ring-2 focus:ring-primary/20"
+                          value={editFormData?.lotSize || 0}
+                          onChange={e => setEditFormData(prev => prev ? { ...prev, lotSize: Number(e.target.value) } : null)}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-success mb-1 block">{t('takeProfitPips')}</label>
+                        <input
+                          type="number"
+                          className="w-full p-2.5 bg-bkg border border-border rounded-xl text-xs font-black outline-none focus:ring-2 focus:ring-primary/20"
+                          value={editFormData?.takeProfitPips || 0}
+                          onChange={e => setEditFormData(prev => prev ? { ...prev, takeProfitPips: Number(e.target.value) } : null)}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-danger mb-1 block">{t('stopLossPips')}</label>
+                        <input
+                          type="number"
+                          className="w-full p-2.5 bg-bkg border border-border rounded-xl text-xs font-black outline-none focus:ring-2 focus:ring-primary/20"
+                          value={editFormData?.stopLossPips || 0}
+                          onChange={e => setEditFormData(prev => prev ? { ...prev, stopLossPips: Number(e.target.value) } : null)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button onClick={() => setEditingPresetId(null)} className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted rounded-xl transition-all">{t('cancel')}</button>
+                      <button onClick={handleSave} className="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-primary text-bkg rounded-xl shadow-lg shadow-primary/20 hover:bg-primary-focus transition-all">{t('save')}</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center">
+                    <div className="min-w-0">
+                      <p className="font-black text-xs uppercase tracking-tight truncate">{preset.name}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+                        {preset.asset} • {preset.lotSize} lots • {preset.takeProfitPips}TP/{preset.stopLossPips}SL
+                      </p>
+                    </div>
+                    <div className="flex gap-1 ml-4">
+                      <button onClick={() => handleEdit(preset)} className="p-2 hover:bg-primary/10 hover:text-primary rounded-xl transition-all"><EditIcon className="w-4 h-4" /></button>
+                      <button onClick={() => deletePreset(preset.id)} className="p-2 hover:bg-danger/10 hover:text-danger rounded-xl transition-all"><TrashIcon className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+};
+
 const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade | null; selectedDate?: Date | null }> = ({ isOpen, onClose, trade, selectedDate }) => {
   const { accounts, strategies, presets, addTrade, updateTrade, addPreset, t, language } = useApp();
   const [showSavePreset, setShowSavePreset] = useState(false);
   const [newPresetName, setNewPresetName] = useState('');
+  const [isPresetsModalOpen, setIsPresetsModalOpen] = useState(false);
 
   const activeAccounts = useMemo(() => accounts.filter(acc => acc.status === AccountStatus.ACTIVE), [accounts]);
   
@@ -208,8 +340,16 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
                 </select>
                 <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
-              {presets.length > 0 && (<div className="flex items-center text-primary px-1"><ZapIcon className="w-4 h-4" /></div>)}
+              <button 
+                type="button"
+                onClick={() => setIsPresetsModalOpen(true)}
+                className="p-2.5 bg-muted border border-border rounded-xl hover:bg-border transition-all text-muted-foreground hover:text-content"
+                title={t('managePresets')}
+              >
+                <SettingsIcon className="w-4 h-4" />
+              </button>
             </div>
+            <ManagePresetsModal isOpen={isPresetsModalOpen} onClose={() => setIsPresetsModalOpen(false)} />
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-5">

@@ -244,9 +244,37 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
           </div>
           <div className={`flex-1`}><ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}><BarChart data={stats.dailyDistribution} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke={`hsl(var(--border))`} vertical={false} opacity={0.5} /><XAxis dataKey="day" stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} /><YAxis stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} tickFormatter={(v) => `${v < 0 ? '-' : ''}${currencySymbol}${Math.abs(v)}`} /><Tooltip cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '20px', padding: '12px' }} itemStyle={{ color: 'hsl(var(--content))', fontWeight: 'black', fontSize: '12px' }} labelStyle={{ display: 'none' }} formatter={(value: number) => [`${value >= 0 ? '+' : ''}${currencySymbol}${value.toLocaleString()}`, 'Net P/L']} /><Bar dataKey="profit" radius={[8, 8, 0, 0]}>{stats.dailyDistribution.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.profit >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />))}</Bar></BarChart></ResponsiveContainer></div>
         </div>
-        <div className={`bg-muted/20 border border-border rounded-[3rem] p-10 flex flex-col md:flex-row gap-8 items-center xl:col-span-1 min-h-[400px]`}>
-          <div className={`flex-1`}><h3 className={`text-[11px] font-black uppercase tracking-[0.3em] text-primary mb-2`}>{t('alphaDominance')}</h3><p className={`text-muted-foreground font-black text-[10px] uppercase tracking-widest mb-8`}>{t('topPerformingAssets')}</p><div className={`space-y-4`}>{stats.assetPerformance.slice(0, 3).map((asset, i) => (<div key={asset.asset} className={`flex justify-between items-center p-4 bg-bkg border border-border rounded-2xl shadow-sm`}><div className={`flex items-center gap-3`}><div className={`w-2.5 h-2.5 rounded-full`} style={{ backgroundColor: PIE_CHART_COLORS[i] }} /><span className={`text-sm font-black uppercase tracking-tight`}>{asset.asset}</span></div><span className={`text-sm font-black ${asset.profit >= 0 ? 'text-success' : 'text-danger'}`}>{asset.profit >= 0 ? '+' : ''}{currencySymbol}{asset.profit.toLocaleString()}</span></div>))}</div></div>
-          <div className={`w-full md:w-44 h-44 relative`}><ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}><PieChart><Pie data={stats.assetPerformance.filter(a => a.profit > 0)} dataKey="profit" nameKey="asset" innerRadius={40} outerRadius={55} paddingAngle={10} stroke="none" cx="50%" cy="50%">{stats.assetPerformance.map((_, i) => <Cell key={i} fill={PIE_CHART_COLORS[i % PIE_CHART_COLORS.length]} />)}</Pie><Tooltip contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderRadius: '16px', border: '1px solid hsl(var(--border))', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', fontWeight: 'bold' }} itemStyle={{ color: 'hsl(var(--content))' }} /></PieChart></ResponsiveContainer><div className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none`}><PieChartIcon className={`w-5 h-5 text-muted-foreground/50 mb-1`} /></div></div>
+        <div className={`bg-muted/20 border border-border rounded-[3rem] p-8 lg:p-10 flex flex-col gap-8 xl:col-span-1 min-h-[400px]`}>
+          <div className={`flex-1 min-w-0 w-full`}>
+            <h3 className={`text-[11px] font-black uppercase tracking-[0.3em] text-primary mb-2`}>{t('alphaDominance')}</h3>
+            <p className={`text-muted-foreground font-black text-[10px] uppercase tracking-widest mb-8`}>{t('topPerformingAssets')}</p>
+            <div className={`space-y-3`}>
+              {stats.assetPerformance.slice(0, 3).map((asset, i) => (
+                <div key={asset.asset} className={`grid grid-cols-[auto_1fr_auto] items-center p-4 bg-bkg/50 border border-border rounded-2xl shadow-sm gap-4 transition-all hover:bg-bkg`}>
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0`} style={{ backgroundColor: PIE_CHART_COLORS[i] }} />
+                  <span className={`text-sm font-black uppercase tracking-tight truncate`}>{asset.asset}</span>
+                  <div className={`text-right font-mono text-sm font-bold tabular-nums whitespace-nowrap flex-shrink-0 min-w-[100px] ${asset.profit >= 0 ? 'text-success' : 'text-danger'}`}>
+                    {asset.profit >= 0 ? '+' : '-'}{currencySymbol}{Math.abs(asset.profit).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className={`w-full flex justify-center`}>
+            <div className={`w-44 h-44 relative flex-shrink-0`}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <PieChart>
+                  <Pie data={stats.assetPerformance.filter(a => a.profit > 0)} dataKey="profit" nameKey="asset" innerRadius={40} outerRadius={55} paddingAngle={10} stroke="none" cx="50%" cy="50%">
+                    {stats.assetPerformance.map((_, i) => <Cell key={i} fill={PIE_CHART_COLORS[i % PIE_CHART_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderRadius: '16px', border: '1px solid hsl(var(--border))', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', fontWeight: 'bold' }} itemStyle={{ color: 'hsl(var(--content))' }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none`}>
+                <PieChartIcon className={`w-5 h-5 text-muted-foreground/50 mb-1`} />
+              </div>
+            </div>
+          </div>
         </div>
         <div className={`space-y-6 xl:col-span-1 min-h-[400px]`}><div className={`group bg-success/10 border border-success/30 rounded-[2.5rem] p-8 hover:bg-success/15 transition-all duration-300`}><div className={`flex justify-between items-center mb-6`}><div className={`p-3 bg-success/20 text-success rounded-2xl border border-success/30`}><ArrowUpRightIcon className={`w-6 h-6`} /></div><span className={`text-[10px] font-black uppercase tracking-[0.3em] text-success`}>{t('peakExecution')}</span></div><div className={`flex justify-between items-end`}><div><h4 className={`text-3xl font-black tracking-tighter uppercase mb-1`}>{stats.maxWin?.asset}</h4><p className={`text-xs font-black text-muted-foreground uppercase tracking-widest`}>{new Date(stats.maxWin?.date || '').toLocaleDateString()}</p></div><div className={`text-right`}><p className={`text-2xl font-black ${stats.maxWin && stats.maxWin.result >= 0 ? 'text-success' : 'text-danger'}`}>{stats.maxWin && stats.maxWin.result >= 0 ? '+' : ''}{currencySymbol}{stats.maxWin?.result.toLocaleString()}</p></div></div></div><div className={`group bg-danger/10 border border-danger/30 rounded-[2.5rem] p-8 hover:bg-danger/15 transition-all duration-300`}><div className={`flex justify-between items-center mb-6`}><div className={`p-3 bg-danger/20 text-danger rounded-2xl border border-danger/30`}><ArrowDownRightIcon className={`w-6 h-6`} /></div><span className={`text-[10px] font-black uppercase tracking-[0.3em] text-danger`}>{t('bottomOut')}</span></div><div className={`flex justify-between items-end`}><div><h4 className={`text-3xl font-black tracking-tighter uppercase mb-1`}>{stats.maxLoss?.asset}</h4><p className={`text-xs font-black text-muted-foreground uppercase tracking-widest`}>{new Date(stats.maxLoss?.date || '').toLocaleDateString()}</p></div><div className={`text-right`}><p className={`text-2xl font-black text-danger`}>{currencySymbol}{stats.maxLoss?.result.toLocaleString()}</p></div></div></div></div>
       </div>

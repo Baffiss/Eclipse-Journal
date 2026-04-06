@@ -178,6 +178,12 @@ const translations: Record<string, Record<string, string>> = {
     selectPreset: `Apply Preset`,
     noPresets: `No presets saved.`,
     save: `Save`,
+    managePresets: `Manage Presets`,
+    deletePreset: `Delete Preset`,
+    updatePreset: `Update Preset`,
+    presetUpdated: `Preset updated successfully`,
+    presetDeleted: `Preset deleted successfully`,
+    newPreset: `New Preset`,
     viewScreenshot: `View Screenshot`,
     withdraw: `Withdraw`,
     withdrawAmount: `Withdrawal Amount`,
@@ -456,6 +462,12 @@ const translations: Record<string, Record<string, string>> = {
     selectPreset: `Aplicar Preset`,
     noPresets: `No hay presets guardados.`,
     save: `Guardar`,
+    managePresets: `Gestionar Presets`,
+    deletePreset: `Eliminar Preset`,
+    updatePreset: `Actualizar Preset`,
+    presetUpdated: `Preset actualizado con éxito`,
+    presetDeleted: `Preset eliminado con éxito`,
+    newPreset: `Nuevo Preset`,
     viewScreenshot: `Ver Captura`,
     withdraw: `Retirar`,
     withdrawAmount: `Monto del Retiro`,
@@ -591,6 +603,7 @@ type Action =
   | { type: 'UPDATE_STRATEGY'; payload: Strategy }
   | { type: 'DELETE_STRATEGY'; payload: string }
   | { type: 'ADD_PRESET'; payload: TradePreset }
+  | { type: 'UPDATE_PRESET'; payload: TradePreset }
   | { type: 'DELETE_PRESET'; payload: string }
   | { type: 'TOGGLE_THEME' }
   | { type: 'SET_COLOR_THEME'; payload: string }
@@ -720,6 +733,8 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
       };
     case 'ADD_PRESET':
       return { ...prevState, presets: [...prevState.presets, action.payload] };
+    case 'UPDATE_PRESET':
+      return { ...prevState, presets: prevState.presets.map(p => p.id === action.payload.id ? action.payload : p) };
     case 'DELETE_PRESET':
       return { ...prevState, presets: prevState.presets.filter(p => p.id !== action.payload) };
     case 'TOGGLE_THEME':
@@ -967,6 +982,7 @@ export const useApp = () => {
   const updateStrategy = useCallback((strategy: Strategy) => dispatch({ type: 'UPDATE_STRATEGY', payload: strategy }), [dispatch]);
   const deleteStrategy = useCallback((strategyId: string) => dispatch({ type: 'DELETE_STRATEGY', payload: strategyId }), [dispatch]);
   const addPreset = useCallback((preset: TradePreset) => dispatch({ type: 'ADD_PRESET', payload: preset }), [dispatch]);
+  const updatePreset = useCallback((preset: TradePreset) => dispatch({ type: 'UPDATE_PRESET', payload: preset }), [dispatch]);
   const deletePreset = useCallback((presetId: string) => dispatch({ type: 'DELETE_PRESET', payload: presetId }), [dispatch]);
 
   return {
@@ -995,6 +1011,7 @@ export const useApp = () => {
     updateStrategy,
     deleteStrategy,
     addPreset,
+    updatePreset,
     deletePreset,
   };
 };
