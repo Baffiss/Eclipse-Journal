@@ -588,6 +588,8 @@ export interface AppState {
   language: 'en' | 'es';
   activePage: ActivePage;
   focusedTradeId: string | null;
+  selectedAccountId: string | null;
+  selectedStrategyId: string | null;
 }
 
 type Action =
@@ -612,6 +614,8 @@ type Action =
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'es' }
   | { type: 'RESET_DATA' }
   | { type: 'SET_PAGE'; payload: ActivePage }
+  | { type: 'SELECT_ACCOUNT'; payload: string | null }
+  | { type: 'SELECT_STRATEGY'; payload: string | null }
   | { type: 'FOCUS_TRADE'; payload: string | null }
   | { type: 'SET_STATE'; payload: AppState };
 
@@ -628,6 +632,8 @@ const initialState: AppState = {
   language: 'en',
   activePage: 'dashboard',
   focusedTradeId: null,
+  selectedAccountId: null,
+  selectedStrategyId: null,
 };
 
 const appReducer = (prevState: AppState, action: Action): AppState => {
@@ -750,7 +756,11 @@ const appReducer = (prevState: AppState, action: Action): AppState => {
     case 'RESET_DATA':
       return { ...prevState, accounts: [], trades: [], withdrawals: [], strategies: [], presets: [] };
     case 'SET_PAGE':
-      return { ...prevState, activePage: action.payload };
+      return { ...prevState, activePage: action.payload, selectedAccountId: null, selectedStrategyId: null };
+    case 'SELECT_ACCOUNT':
+      return { ...prevState, selectedAccountId: action.payload };
+    case 'SELECT_STRATEGY':
+      return { ...prevState, selectedStrategyId: action.payload };
     case 'FOCUS_TRADE':
       return { ...prevState, focusedTradeId: action.payload };
     case 'SET_STATE':
@@ -969,6 +979,8 @@ export const useApp = () => {
   const setLanguage = useCallback((lang: 'en' | 'es') => dispatch({ type: 'SET_LANGUAGE', payload: lang }), [dispatch]);
   const resetData = useCallback(() => dispatch({ type: 'RESET_DATA' }), [dispatch]);
   const setPage = useCallback((page: ActivePage) => dispatch({ type: 'SET_PAGE', payload: page }), [dispatch]);
+  const setSelectedAccount = useCallback((id: string | null) => dispatch({ type: 'SELECT_ACCOUNT', payload: id }), [dispatch]);
+  const setSelectedStrategy = useCallback((id: string | null) => dispatch({ type: 'SELECT_STRATEGY', payload: id }), [dispatch]);
   const focusTrade = useCallback((tradeId: string | null) => dispatch({ type: 'FOCUS_TRADE', payload: tradeId }), [dispatch]);
   const addAccount = useCallback((account: Account) => dispatch({ type: 'ADD_ACCOUNT', payload: account }), [dispatch]);
   const updateAccount = useCallback((account: Account) => dispatch({ type: 'UPDATE_ACCOUNT', payload: account }), [dispatch]);
@@ -998,6 +1010,8 @@ export const useApp = () => {
     setLanguage,
     resetData,
     setPage,
+    setSelectedAccount,
+    setSelectedStrategy,
     focusTrade,
     addAccount,
     updateAccount,

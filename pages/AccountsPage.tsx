@@ -251,7 +251,54 @@ const AccountDetailView: React.FC<{ account: Account; onBack: () => void }> = ({
   const confirmDelete = () => { deleteAccount(account.id); setShowDeleteConfirm(false); onBack(); }
   return (
     <div className={`animate-slide-in-up flex flex-col gap-10`}>
-      <div className={`bg-muted/30 border border-border rounded-[3rem] p-8 lg:p-12 relative overflow-hidden shadow-2xl backdrop-blur-md`}><div className={`absolute top-0 right-0 w-64 h-64 blur-[100px] opacity-10 bg-primary rounded-full -mr-32 -mt-32`} /><div className={`relative z-10`}><button onClick={onBack} className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors mb-8`}><ChevronLeftIcon className={`w-4 h-4`} /> {t('backToAccounts')}</button><div className={`flex flex-col md:flex-row justify-between items-start md:items-end gap-6`}><div className={`max-w-full overflow-hidden`}><div className={`flex flex-wrap items-center gap-3 mb-2`}><h2 className={`text-4xl sm:text-5xl font-black tracking-tighter uppercase truncate`}>{account.name}</h2><span className={`px-3 py-1 bg-primary text-bkg text-[9px] font-black uppercase tracking-widest rounded-full`}>{t(account.accountType.toLowerCase())}</span></div><p className={`text-muted-foreground font-bold tracking-tight opacity-60 uppercase text-[10px]`}>{t('status')}: {t(account.status.toLowerCase())}</p></div><div className={`flex gap-3 flex-wrap`}>{isWithdrawalEnabled && (<button onClick={() => setWithdrawalAccount(account)} className={`flex items-center gap-2 px-6 py-4 bg-primary text-bkg rounded-2xl hover:bg-primary-focus transition-all shadow-lg shadow-primary/20 group`}><BanknoteIcon className={`w-5 h-5 group-hover:scale-110 transition-transform`} /><span className={`font-black text-xs uppercase tracking-widest`}>{t('withdraw')}</span></button>)}<button onClick={() => setEditingAccount(account)} className={`p-4 bg-bkg border border-border rounded-2xl hover:bg-muted transition-all shadow-sm`} title={t('edit')}><EditIcon className={`w-5 h-5`} /></button><button onClick={() => setShowDeleteConfirm(true)} className={`p-4 bg-danger/10 text-danger border border-danger/20 rounded-2xl hover:bg-danger hover:text-white transition-all shadow-sm`} title={t('delete')}><TrashIcon className={`w-5 h-5`} /></button></div></div></div></div>
+      <div className={`bg-muted/30 border border-border rounded-[3rem] p-8 lg:p-12 relative overflow-hidden shadow-2xl backdrop-blur-md`}>
+        <div className={`absolute top-0 right-0 w-64 h-64 blur-[100px] opacity-10 bg-primary rounded-full -mr-32 -mt-32`} />
+        <div className={`relative z-10`}>
+          <button 
+            onClick={onBack} 
+            className={`p-3 bg-muted/60 border border-border rounded-2xl text-muted-foreground hover:text-primary transition-all mb-8 shadow-sm`} 
+            title={t('backToAccounts')}
+          >
+            <ChevronLeftIcon className={`w-5 h-5`} />
+          </button>
+          
+          <div className={`flex flex-col items-center text-center gap-10`}>
+            <div className={`max-w-full w-full flex flex-col items-center`}>
+              <div className={`flex flex-col items-center gap-5 mb-4`}>
+                <h2 className={`text-5xl sm:text-7xl font-black tracking-tighter uppercase leading-none truncate max-w-full px-4`}>{account.name}</h2>
+                <span className={`px-4 py-1.5 bg-primary text-bkg text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-xl shadow-primary/20`}>{t(account.accountType.toLowerCase())}</span>
+              </div>
+              <p className={`text-muted-foreground font-black tracking-[0.3em] opacity-40 uppercase text-[10px] mt-2`}>{t('status')}: {t(account.status.toLowerCase())}</p>
+            </div>
+            
+            <div className={`flex gap-3 flex-wrap justify-center items-center pt-10 border-t border-border/10 w-full`}>
+              {isWithdrawalEnabled && (
+                <button 
+                  onClick={() => setWithdrawalAccount(account)} 
+                  className={`flex items-center gap-3 px-8 py-4 bg-primary text-bkg rounded-2xl hover:bg-primary-focus transition-all shadow-2xl shadow-primary/20 group hover:-translate-y-1 active:translate-y-0`}
+                >
+                  <BanknoteIcon className={`w-5 h-5 group-hover:scale-110 transition-transform`} />
+                  <span className={`font-black text-xs uppercase tracking-widest`}>{t('withdraw')}</span>
+                </button>
+              )}
+              <button 
+                onClick={() => setEditingAccount(account)} 
+                className={`p-5 bg-bkg border border-border rounded-2xl hover:bg-muted hover:text-primary hover:scale-105 transition-all shadow-sm`} 
+                title={t('edit')}
+              >
+                <EditIcon className={`w-5 h-5`} />
+              </button>
+              <button 
+                onClick={() => setShowDeleteConfirm(true)} 
+                className={`p-5 bg-danger/10 text-danger border border-danger/20 rounded-2xl hover:bg-danger hover:text-white hover:scale-105 transition-all shadow-sm`} 
+                title={t('delete')}
+              >
+                <TrashIcon className={`w-5 h-5`} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className={`grid grid-cols-2 ${isWithdrawalEnabled ? 'md:grid-cols-3 lg:grid-cols-5' : 'md:grid-cols-2 lg:grid-cols-4'} gap-4 sm:gap-6`}>
         <div className={`bg-bkg border border-border rounded-[2rem] p-5 sm:p-6 shadow-sm overflow-hidden`}>
           <p className={`text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 truncate`}>{t('currentCapital')}</p>
@@ -321,9 +368,8 @@ const WithdrawalListItem: React.FC<{ withdrawal: Withdrawal; currencySymbol: str
 };
 
 const AccountsPage: React.FC = () => {
-  const { accounts, t } = useApp();
+  const { accounts, t, selectedAccountId, setSelectedAccount } = useApp();
   const [isFormOpen, setFormOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>(``);
   const [filterType, setFilterType] = useState<string>(``);
   const [showFilters, setShowFilters] = useState(false);
@@ -332,7 +378,7 @@ const AccountsPage: React.FC = () => {
     if (filterType && acc.accountType !== filterType) return false;
     return true;
   }), [accounts, filterStatus, filterType]);
-  const currentSelectedAccount = useMemo(() => selectedAccount ? accounts.find(a => a.id === selectedAccount.id) || null : null, [accounts, selectedAccount]);
+  const currentSelectedAccount = useMemo(() => selectedAccountId ? accounts.find(a => a.id === selectedAccountId) || null : null, [accounts, selectedAccountId]);
   if (currentSelectedAccount) { return <AccountDetailView account={currentSelectedAccount} onBack={() => setSelectedAccount(null)} />; }
   return (
     <div className={`animate-fade-in flex flex-col gap-10`}><div className={`flex flex-col md:flex-row justify-between items-start md:items-end gap-6`}><div><h1 className={`text-4xl sm:text-5xl font-black tracking-tighter uppercase`}>{t('accounts')}</h1></div><div className={`flex gap-3`}><button onClick={() => setShowFilters(!showFilters)} className={`p-4 rounded-2xl transition-all duration-300 ${showFilters ? 'bg-primary text-bkg shadow-lg shadow-primary/20' : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-primary'}`}><FilterIcon className={`w-5 h-5`} /></button><button onClick={() => setFormOpen(true)} className={`flex items-center gap-3 px-8 py-4 bg-primary text-bkg rounded-2xl hover:bg-primary-focus shadow-lg shadow-primary/20 transition-all hover:-translate-y-1 active:translate-y-0 group`}><PlusIcon className={`w-5 h-5 group-hover:rotate-90 transition-transform duration-300`} /><span className={`font-black text-xs uppercase tracking-[0.2em]`}>{t('newAccount')}</span></button></div></div>
@@ -360,7 +406,7 @@ const AccountsPage: React.FC = () => {
           </div>
         </div>
       )}
-      {filteredAccounts.length > 0 ? (<div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8`}>{filteredAccounts.map(acc => <AccountCard key={acc.id} account={acc} onSelect={() => setSelectedAccount(acc)} />)}</div>) : (<div className={`flex flex-col items-center justify-center py-32 bg-muted/10 border-2 border-dashed border-border rounded-[3rem] group hover:border-primary/30 transition-colors cursor-pointer`} onClick={() => setFormOpen(true)}><div className={`p-6 bg-bkg rounded-full border border-border shadow-sm mb-6 group-hover:scale-110 transition-transform duration-500`}><TargetIcon className={`w-12 h-12 text-muted-foreground opacity-20`} /></div><h3 className={`text-2xl font-black tracking-tight`}>{accounts.length === 0 ? t('noAccountsYet') : t('noAccountsFound')}</h3>{accounts.length === 0 ? (<p className={`text-muted-foreground font-black mt-2 uppercase text-[10px] tracking-widest`}>{t('createYourFirstAccount')}</p>) : (<button onClick={() => { setFilterStatus(''); setFilterType(''); }} className={`mt-8 px-8 py-3 bg-muted hover:bg-border rounded-2xl transition-all text-[10px] font-black uppercase tracking-widest`}>{t('clearFilters')}</button>)}</div>)}
+      {filteredAccounts.length > 0 ? (<div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8`}>{filteredAccounts.map(acc => <AccountCard key={acc.id} account={acc} onSelect={() => setSelectedAccount(acc.id)} />)}</div>) : (<div className={`flex flex-col items-center justify-center py-32 bg-muted/10 border-2 border-dashed border-border rounded-[3rem] group hover:border-primary/30 transition-colors cursor-pointer`} onClick={() => setFormOpen(true)}><div className={`p-6 bg-bkg rounded-full border border-border shadow-sm mb-6 group-hover:scale-110 transition-transform duration-500`}><TargetIcon className={`w-12 h-12 text-muted-foreground opacity-20`} /></div><h3 className={`text-2xl font-black tracking-tight`}>{accounts.length === 0 ? t('noAccountsYet') : t('noAccountsFound')}</h3>{accounts.length === 0 ? (<p className={`text-muted-foreground font-black mt-2 uppercase text-[10px] tracking-widest`}>{t('createYourFirstAccount')}</p>) : (<button onClick={() => { setFilterStatus(''); setFilterType(''); }} className={`mt-8 px-8 py-3 bg-muted hover:bg-border rounded-2xl transition-all text-[10px] font-black uppercase tracking-widest`}>{t('clearFilters')}</button>)}</div>)}
       <AccountForm isOpen={isFormOpen} onClose={() => setFormOpen(false)} />
     </div>
   );

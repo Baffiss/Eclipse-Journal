@@ -405,29 +405,38 @@ const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> =
         <div className="relative z-10">
           <button 
             onClick={onBack} 
-            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors mb-8 group"
+            className="p-3 bg-muted/60 border border-border rounded-2xl text-muted-foreground hover:text-primary transition-all mb-8 shadow-sm group"
+            title={t('backToStrategies')}
           >
-            <ChevronLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> {t('backToStrategies')}
+            <ChevronLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           </button>
           
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-            <div className="max-w-4xl">
-              <div className="flex items-center gap-5 mb-4">
-                 <div className="p-4 bg-primary/10 text-primary rounded-3xl border border-primary/20 shadow-sm">
-                    <StrategyIconComponent className="w-8 h-8" />
+          <div className="flex flex-col items-center text-center gap-10">
+            <div className="max-w-5xl flex flex-col items-center w-full">
+              <div className="flex flex-col items-center gap-6 mb-6">
+                 <div className="p-6 bg-primary/10 text-primary rounded-[2rem] border border-primary/20 shadow-xl shadow-primary/5">
+                    <StrategyIconComponent className="w-12 h-12" />
                  </div>
-                 <h2 className="text-5xl md:text-6xl font-black tracking-tighter uppercase leading-none">{strategy.name}</h2>
+                 <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-none">{strategy.name}</h2>
               </div>
-              <p className="text-base md:text-lg text-content/70 font-medium leading-relaxed max-w-3xl whitespace-pre-wrap">
+              <p className="text-base md:text-lg text-content/70 font-medium leading-relaxed max-w-2xl whitespace-pre-wrap">
                 {strategy.description || 'No detailed logic defined yet for this strategy.'}
               </p>
             </div>
             
-            <div className="flex gap-3">
-              <button onClick={() => setEditingStrategy(strategy)} className="p-4 bg-bkg border border-border rounded-2xl hover:bg-muted hover:scale-105 transition-all shadow-sm" title={t('edit')}>
+            <div className="flex gap-4 pt-10 border-t border-border/10 w-full justify-center">
+              <button 
+                onClick={() => setEditingStrategy(strategy)} 
+                className="p-5 bg-bkg border border-border rounded-2xl hover:bg-muted hover:text-primary hover:scale-105 transition-all shadow-sm" 
+                title={t('edit')}
+              >
                 <EditIcon className="w-5 h-5" />
               </button>
-              <button onClick={() => setShowDeleteConfirm(true)} className="p-4 bg-danger/10 text-danger border border-danger/20 rounded-2xl hover:bg-danger hover:text-white hover:scale-105 transition-all shadow-sm" title={t('delete')}>
+              <button 
+                onClick={() => setShowDeleteConfirm(true)} 
+                className="p-5 bg-danger/10 text-danger border border-danger/20 rounded-2xl hover:bg-danger hover:text-white hover:scale-105 transition-all shadow-sm" 
+                title={t('delete')}
+              >
                 <TrashIcon className="w-5 h-5" />
               </button>
             </div>
@@ -547,9 +556,8 @@ const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> =
 };
 
 const StrategiesPage: React.FC = () => {
-  const { strategies, t } = useApp();
+  const { strategies, t, selectedStrategyId, setSelectedStrategy } = useApp();
   const [isFormOpen, setFormOpen] = useState(false);
-  const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
   
   // Find the strategy in context so it's always up-to-date
   const selectedStrategy = useMemo(() => 
@@ -557,7 +565,7 @@ const StrategiesPage: React.FC = () => {
   , [strategies, selectedStrategyId]);
 
   if (selectedStrategy) { 
-    return <StrategyDetailView strategy={selectedStrategy} onBack={() => setSelectedStrategyId(null)} />; 
+    return <StrategyDetailView strategy={selectedStrategy} onBack={() => setSelectedStrategy(null)} />; 
   }
   
   return (
@@ -578,7 +586,7 @@ const StrategiesPage: React.FC = () => {
       
       {strategies.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-          {strategies.map(s => <StrategyCard key={s.id} strategy={s} onSelect={() => setSelectedStrategyId(s.id)} />)}
+          {strategies.map(s => <StrategyCard key={s.id} strategy={s} onSelect={() => setSelectedStrategy(s.id)} />)}
         </div>
       ) : (
         <div 

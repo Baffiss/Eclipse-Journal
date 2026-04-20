@@ -14,7 +14,7 @@ import {
   ChevronDownIcon
 } from '../components/Icons';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
-import { TradeDirection, Account } from '../types';
+import { TradeDirection, Account, AccountStatus } from '../types';
 import { calculateAccountStats } from '../services/analytics';
 
 interface WidgetProps {
@@ -176,7 +176,13 @@ const DashboardPage: React.FC = () => {
         </div>
         
         <div className={`lg:col-span-1 space-y-8 min-w-0`}>
-          {selectedAccount && <RiskMonitorWidget account={selectedAccount} />}
+          <div className="space-y-6">
+            {accounts
+              .filter(a => a.status === AccountStatus.ACTIVE)
+              .map(account => (
+                <RiskMonitorWidget key={account.id} account={account} />
+              ))}
+          </div>
           <div className={`bg-muted/30 border border-border rounded-[2rem] p-6 h-[400px] flex flex-col min-w-0`}><h3 className={`text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2`}><CalendarIcon className={`w-4 h-4 text-primary`} /> {t('economicEvents')}</h3><div className={`flex-grow overflow-hidden rounded-2xl min-h-0 w-full`}><SimpleTradingViewWidget src={`https://s3.tradingview.com/external-embedding/embed-widget-events.js`} config={{ "width": "100%", "height": "100%", "colorTheme": widgetTheme, "isTransparent": true, "locale": language }} /></div></div>
         </div>
       </div>
