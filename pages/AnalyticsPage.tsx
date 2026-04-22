@@ -90,14 +90,29 @@ const DataTile: React.FC<{
   );
 };
 
-const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string; defaultStrategyId?: string }> = ({
+const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string; defaultStrategyId?: string; defaultSetupId?: string }> = ({
   isComponent = false,
   defaultAccountId = '',
-  defaultStrategyId = ''
+  defaultStrategyId = '',
+  defaultSetupId = ''
 }) => {
   const { trades, accounts, strategies, withdrawals, t, getCurrencySymbol, theme } = useApp();
   const [filterAccountId, setFilterAccountId] = useState(defaultAccountId);
   const [filterStrategyId, setFilterStrategyId] = useState(defaultStrategyId);
+  const [filterSetupId, setFilterSetupId] = useState(defaultSetupId);
+
+  // Sync state with props when they change externally (e.g. from StrategyDetailView)
+  React.useEffect(() => {
+    setFilterAccountId(defaultAccountId);
+  }, [defaultAccountId]);
+
+  React.useEffect(() => {
+    setFilterStrategyId(defaultStrategyId);
+  }, [defaultStrategyId]);
+
+  React.useEffect(() => {
+    setFilterSetupId(defaultSetupId);
+  }, [defaultSetupId]);
 
   const axisColor = theme === 'dark' ? '#52525B' : '#3F3F46';
   const activeAccount = accounts.find(a => a.id === filterAccountId);
@@ -107,9 +122,10 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
   const filteredTrades = useMemo(() => {
     return trades.filter(t =>
       (filterAccountId ? t.accountId === filterAccountId : true) &&
-      (filterStrategyId ? t.strategyId === filterStrategyId : true)
+      (filterStrategyId ? t.strategyId === filterStrategyId : true) &&
+      (filterSetupId ? t.setupId === filterSetupId : true)
     ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [trades, filterAccountId, filterStrategyId]);
+  }, [trades, filterAccountId, filterStrategyId, filterSetupId]);
 
   const stats = useMemo(() => calculateAnalytics(filteredTrades, initialCapital), [filteredTrades, initialCapital]);
 
@@ -190,6 +206,20 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
               </select>
               <ChevronDownIcon className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10`} />
             </div>
+            {filterStrategyId && strategies.find(s => s.id === filterStrategyId)?.setups?.length && (
+              <div className={`relative group flex-1 lg:w-56 animate-fade-in`}>
+                <ZapIcon className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none z-10`} />
+                <select
+                  value={filterSetupId}
+                  onChange={e => setFilterSetupId(e.target.value)}
+                  className={`w-full pl-11 pr-10 py-3 bg-bkg border border-border rounded-2xl outline-none font-black text-xs appearance-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-sm relative z-0`}
+                >
+                  <option value="">{t('all')} {t('setups')}</option>
+                  {strategies.find(s => s.id === filterStrategyId)?.setups?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <ChevronDownIcon className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10`} />
+              </div>
+            )}
           </div>
         </div>
       )}

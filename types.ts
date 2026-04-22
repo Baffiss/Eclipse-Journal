@@ -60,6 +60,7 @@ export interface Trade {
     id: string;
     accountId: string;
     strategyId?: string;
+    setupId?: string;
     date: string; // ISO string
     asset: string;
     direction: TradeDirection;
@@ -78,18 +79,27 @@ export interface StrategyImage {
     notes?: string;
 }
 
+export interface StrategySetup {
+    id: string;
+    name: string;
+    description: string;
+    imageUrl?: string;
+}
+
 export interface Strategy {
     id: string;
     name: string;
     description: string;
     images?: StrategyImage[];
     iconId?: string;
+    setups?: StrategySetup[];
 }
 
 export interface TradePreset {
     id: string;
     name: string;
     strategyId?: string;
+    setupId?: string;
     asset: string;
     lotSize: number;
     takeProfitPips: number;

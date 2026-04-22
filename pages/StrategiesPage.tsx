@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Strategy, StrategyImage } from '../types';
+import { Strategy, StrategyImage, StrategySetup } from '../types';
 import Modal from '../components/Modal';
 import {
   PlusIcon,
@@ -20,6 +20,7 @@ import {
   EyeIcon,
   NewspaperIcon,
   SaveIcon,
+  ChevronDownIcon,
   StrategyIcons
 } from '../components/Icons';
 import { calculateAnalytics } from '../services/analytics';
@@ -135,14 +136,27 @@ const StrategyForm: React.FC<{ isOpen: boolean; onClose: () => void; strategy?: 
     name: strategy?.name || '', 
     description: strategy?.description || '', 
     images: strategy?.images || [], 
-    iconId: strategy?.iconId || 'zap'
+    iconId: strategy?.iconId || 'zap',
+    setups: strategy?.setups || []
   });
   const [formData, setFormData] = useState(getInitialState());
+  const [setupInput, setSetupInput] = useState('');
   
-  React.useEffect(() => { if (isOpen) { setFormData(getInitialState()); } }, [isOpen, strategy]);
+  React.useEffect(() => { if (isOpen) { setFormData(getInitialState()); setSetupInput(''); } }, [isOpen, strategy]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { 
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value })); 
+  };
+
+  const handleAddSetup = () => {
+    if (!setupInput.trim()) return;
+    const newSetup: StrategySetup = { id: crypto.randomUUID(), name: setupInput.trim(), description: '' };
+    setFormData(prev => ({ ...prev, setups: [...(prev.setups || []), newSetup] }));
+    setSetupInput('');
+  };
+
+  const handleRemoveSetup = (id: string) => {
+    setFormData(prev => ({ ...prev, setups: prev.setups?.filter(s => s.id !== id) || [] }));
   };
 
   const handleImageNoteChange = (id: string, notes: string) => {
@@ -220,7 +234,33 @@ const StrategyForm: React.FC<{ isOpen: boolean; onClose: () => void; strategy?: 
 
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 block">{t('description')}</label>
-                  <textarea name="description" value={formData.description} onChange={handleChange} placeholder={t('strategyLogic')} className="w-full p-4 bg-muted border border-border rounded-2xl h-[280px] text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"></textarea>
+                  <textarea name="description" value={formData.description} onChange={handleChange} placeholder={t('strategyLogicPlaceholder')} className="w-full p-4 bg-muted border border-border rounded-2xl h-[180px] text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"></textarea>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 block">{t('setups')}</label>
+                  <div className="flex gap-2 mb-3">
+                    <input 
+                      value={setupInput} 
+                      onChange={(e) => setSetupInput(e.target.value)} 
+                      placeholder={t('addSetup')} 
+                      className="flex-1 p-3 bg-muted border border-border rounded-xl text-xs font-black uppercase outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase"
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSetup())}
+                    />
+                    <button type="button" onClick={handleAddSetup} className="p-3 bg-primary text-bkg rounded-xl hover:bg-primary-focus transition-all shadow-sm">
+                      <PlusIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.setups?.map(setup => (
+                      <div key={setup.id} className="flex items-center gap-2 px-3 py-1.5 bg-muted/60 border border-border rounded-lg group/setup hover:border-primary/30 transition-all">
+                        <span className="text-[10px] font-black uppercase tracking-widest">{setup.name}</span>
+                        <button type="button" onClick={() => handleRemoveSetup(setup.id)} className="text-muted-foreground hover:text-danger p-0.5 rounded-md transition-colors">
+                          <XIcon className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
             </div>
 
@@ -361,11 +401,119 @@ const StrategyCard: React.FC<{ strategy: Strategy; onSelect: () => void }> = ({ 
   );
 };
 
+const SetupForm: React.FC<{ 
+  isOpen: boolean; 
+  onClose: () => void; 
+  strategy: Strategy; 
+  setup?: StrategySetup | null;
+}> = ({ isOpen, onClose, strategy, setup }) => {
+  const { updateStrategy, t } = useApp();
+  const getInitialState = () => ({
+    name: setup?.name || '',
+    description: setup?.description || '',
+    imageUrl: setup?.imageUrl || ''
+  });
+  const [formData, setFormData] = useState(getInitialState());
+
+  useEffect(() => {
+    if (isOpen) setFormData(getInitialState());
+  }, [isOpen, setup]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const base64 = await fileToBase64(e.target.files[0]);
+      setFormData(prev => ({ ...prev, imageUrl: base64 }));
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newSetup: StrategySetup = {
+      id: setup?.id || crypto.randomUUID(),
+      ...formData
+    };
+
+    const currentSetups = strategy.setups || [];
+    let updatedSetups;
+    if (setup) {
+      updatedSetups = currentSetups.map(s => s.id === setup.id ? newSetup : s);
+    } else {
+      updatedSetups = [...currentSetups, newSetup];
+    }
+
+    updateStrategy({ ...strategy, setups: updatedSetups });
+    onClose();
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={setup ? t('edit') + ' ' + t('setup') : t('addSetup')}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 block">{t('strategyName')}</label>
+          <input 
+            value={formData.name} 
+            onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} 
+            className="w-full p-4 bg-muted border border-border rounded-2xl font-black outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase" 
+            required 
+          />
+        </div>
+        <div>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 block">{t('setupDescription')}</label>
+          <textarea 
+            value={formData.description} 
+            onChange={e => setFormData(p => ({ ...p, description: e.target.value }))} 
+            className="w-full p-4 bg-muted border border-border rounded-2xl h-32 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            required
+          />
+        </div>
+        <div>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 block">{t('setupImage')}</label>
+          {formData.imageUrl ? (
+            <div className="relative group rounded-2xl overflow-hidden border border-border">
+              <img src={formData.imageUrl} alt="Setup Example" className="w-full h-48 object-cover" />
+              <button 
+                type="button" 
+                onClick={() => setFormData(p => ({ ...p, imageUrl: '' }))}
+                className="absolute top-2 right-2 p-2 bg-danger text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center justify-center w-full h-48 bg-muted/20 border-2 border-dashed border-border rounded-2xl cursor-pointer hover:border-primary hover:bg-primary/5 transition-all">
+              <UploadCloudIcon className="w-8 h-8 text-muted-foreground mb-2" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('uploadScreenshot')}</span>
+              <input type="file" className="sr-only" onChange={handleImageUpload} accept="image/*" />
+            </label>
+          )}
+        </div>
+        <div className="flex justify-end gap-3 pt-4">
+          <button type="button" onClick={onClose} className="px-6 py-3 bg-muted rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-border transition-colors">{t('cancel')}</button>
+          <button type="submit" className="px-8 py-3 bg-primary text-bkg rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary-focus transition-all shadow-lg shadow-primary/20">{setup ? t('update') : t('create')}</button>
+        </div>
+      </form>
+    </Modal>
+  );
+};
+
 const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> = ({ strategy, onBack }) => {
   const { deleteStrategy, updateStrategy, t } = useApp();
   const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedImage, setSelectedImage] = useState<StrategyImage | null>(null);
+  const [selectedSetupId, setSelectedSetupId] = useState('');
+  const [isSetupFormOpen, setIsSetupFormOpen] = useState(false);
+  const [editingSetup, setEditingSetup] = useState<StrategySetup | null>(null);
+
+  const handleEditSetup = (setup: StrategySetup) => {
+    setEditingSetup(setup);
+    setIsSetupFormOpen(true);
+  };
+
+  const handleRemoveSetup = (id: string) => {
+    const updatedSetups = strategy.setups?.filter(s => s.id !== id) || [];
+    updateStrategy({ ...strategy, setups: updatedSetups });
+  };
   
   const handleQuickImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -447,13 +595,83 @@ const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> =
       <div className="grid grid-cols-1 gap-8">
         <div className="space-y-8">
            <div className="bg-muted/30 border border-border rounded-[2.5rem] p-8 lg:p-10">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="p-3 bg-primary/10 text-primary rounded-2xl">
-                <ActivityIcon className="w-5 h-5" />
+            <div className="flex items-center gap-4 mb-8 justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                  <ActivityIcon className="w-5 h-5" />
+                </div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em]">{t('performanceAnalytics')}</h3>
               </div>
-              <h3 className="text-[10px] font-black uppercase tracking-[0.3em]">{t('performanceAnalytics')}</h3>
+              
+              {strategy.setups && strategy.setups.length > 0 && (
+                <div className="relative group min-w-[200px]">
+                  <ZapIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none z-10" />
+                  <select
+                    value={selectedSetupId}
+                    onChange={(e) => setSelectedSetupId(e.target.value)}
+                    className="w-full pl-9 pr-8 py-2.5 bg-bkg border border-border rounded-xl outline-none font-black text-[10px] uppercase appearance-none cursor-pointer focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
+                  >
+                    <option value="">{t('all')} {t('setups')}</option>
+                    {strategy.setups.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none z-10" />
+                </div>
+              )}
             </div>
-            <AnalyticsPage isComponent={true} defaultStrategyId={strategy.id} />
+            <AnalyticsPage isComponent={true} defaultStrategyId={strategy.id} defaultSetupId={selectedSetupId} />
+          </div>
+
+          <div className="bg-muted/10 border border-border rounded-[2.5rem] p-8 lg:p-10 shadow-sm transition-all hover:bg-muted/15">
+            <div className="flex justify-between items-center mb-10">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                  <LayoutGridIcon className="w-5 h-5" />
+                </div>
+                <div>
+                   <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">{t('setups')}</h3>
+                   <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mt-1">{t('strategyLogic')}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => { setEditingSetup(null); setIsSetupFormOpen(true); }}
+                className="flex items-center gap-2 px-6 py-3 bg-primary text-bkg rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary-focus transition-all shadow-lg shadow-primary/20"
+              >
+                <PlusIcon className="w-4 h-4" />
+                {t('addSetup')}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {strategy.setups && strategy.setups.length > 0 ? strategy.setups.map(setup => (
+                <div key={setup.id} className="group relative bg-bkg/50 border border-border rounded-3xl overflow-hidden hover:border-primary/40 transition-all flex flex-col">
+                  {setup.imageUrl && (
+                    <div className="w-full h-48 overflow-hidden relative cursor-zoom-in" onClick={() => setSelectedImage({ id: setup.id, url: setup.imageUrl!, notes: setup.name })}>
+                      <img src={setup.imageUrl} alt={setup.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                        <EyeIcon className="w-5 h-5 text-white" />
+                      </div>
+                    </div>
+                  )}
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="flex justify-between items-start mb-3">
+                      <h4 className="text-base font-black uppercase tracking-tight text-content">{setup.name}</h4>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => handleEditSetup(setup)} className="p-2 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-colors"><EditIcon className="w-4 h-4" /></button>
+                        <button onClick={() => handleRemoveSetup(setup.id)} className="p-2 hover:bg-danger/10 text-muted-foreground hover:text-danger rounded-lg transition-colors"><TrashIcon className="w-4 h-4" /></button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium leading-relaxed mb-4 line-clamp-3">
+                      {setup.description}
+                    </p>
+                  </div>
+                </div>
+              )) : (
+                <div className="md:col-span-2 flex flex-col items-center justify-center py-20 bg-muted/5 rounded-[2rem] border-2 border-dashed border-border">
+                  <ActivityIcon className="w-12 h-12 text-muted-foreground/20 mb-4" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">{t('noSetupsDefined')}</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="bg-muted/10 border border-border rounded-[2.5rem] p-8 lg:p-10 shadow-sm">
@@ -551,6 +769,13 @@ const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> =
           </div>
         </div>
       </Modal>
+
+      <SetupForm 
+        isOpen={isSetupFormOpen} 
+        onClose={() => { setIsSetupFormOpen(false); setEditingSetup(null); }} 
+        strategy={strategy} 
+        setup={editingSetup} 
+      />
     </div>
   );
 };
@@ -565,7 +790,13 @@ const StrategiesPage: React.FC = () => {
   , [strategies, selectedStrategyId]);
 
   if (selectedStrategy) { 
-    return <StrategyDetailView strategy={selectedStrategy} onBack={() => setSelectedStrategy(null)} />; 
+    return (
+      <StrategyDetailView 
+        key={selectedStrategy.id} 
+        strategy={selectedStrategy} 
+        onBack={() => setSelectedStrategy(null)} 
+      />
+    ); 
   }
   
   return (

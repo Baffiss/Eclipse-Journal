@@ -231,6 +231,7 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
     return {
       accountIds: trade ? [trade.accountId] : (activeAccounts[0] ? [activeAccounts[0].id] : []),
       strategyId: trade?.strategyId || '',
+      setupId: trade?.setupId || '',
       date: getLocalDateString(tradeDate),
       time: trade ? new Date(trade.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : getCurrentTime(),
       asset: trade?.asset || '',
@@ -263,7 +264,8 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
         lotSize: preset.lotSize || prev.lotSize,
         takeProfitPips: preset.takeProfitPips || prev.takeProfitPips,
         stopLossPips: preset.stopLossPips || prev.stopLossPips,
-        strategyId: preset.strategyId || prev.strategyId
+        strategyId: preset.strategyId || prev.strategyId,
+        setupId: preset.setupId || prev.setupId
       }));
     }
   };
@@ -275,6 +277,7 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
       id: crypto.randomUUID(), 
       name: newPresetName.trim(), 
       strategyId: formData.strategyId, 
+      setupId: formData.setupId,
       asset: formData.asset.toUpperCase(), 
       lotSize: Number(formData.lotSize), 
       takeProfitPips: Number(formData.takeProfitPips), 
@@ -402,6 +405,18 @@ const TradeForm: React.FC<{ isOpen: boolean; onClose: () => void; trade?: Trade 
                 <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
             </div>
+            {formData.strategyId && strategies.find(s => s.id === formData.strategyId)?.setups?.length && (
+              <div className="relative animate-fade-in">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1 block">{t('setups')}</label>
+                <div className="relative mt-1">
+                  <select name="setupId" value={formData.setupId} onChange={handleChange} className="w-full p-2.5 bg-muted border border-border rounded-xl font-black uppercase text-xs appearance-none cursor-pointer outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+                    <option value="">{t('selectSetup')}...</option>
+                    {strategies.find(s => s.id === formData.strategyId)?.setups?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                </div>
+              </div>
+            )}
             <div>
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1 block">{t('date')}</label>
               <div className="w-full p-2.5 bg-muted border border-border rounded-xl mt-1 h-[38px] flex items-center text-xs font-black uppercase">{new Date(`${formData.date}T00:00:00`).toLocaleDateString(language, { year: 'numeric', month: 'short', day: 'numeric' })}</div>
@@ -749,6 +764,11 @@ const TradesPage: React.FC = () => {
                             <span className={`text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-lg uppercase tracking-widest flex-shrink-0 ${trade.direction === 'Buy' ? 'bg-primary/10 text-primary' : 'bg-danger/10 text-danger'}`}>
                               {trade.direction === 'Buy' ? t('buy').charAt(0) : t('sell').charAt(0)}
                             </span>
+                            {trade.setupId && trade.strategyId && (
+                              <span className="text-[8px] font-black py-0.5 px-2 bg-muted rounded-md text-muted-foreground uppercase tracking-widest">
+                                {strategies.find(s => s.id === trade.strategyId)?.setups?.find(su => su.id === trade.setupId)?.name}
+                              </span>
+                            )}
                           </p>
                           <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-70 truncate">
                             {account?.name || 'Account'} • {new Date(trade.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
