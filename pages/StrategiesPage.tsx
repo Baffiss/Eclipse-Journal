@@ -25,6 +25,7 @@ import {
 } from '../components/Icons';
 import { calculateAnalytics } from '../services/analytics';
 import AnalyticsPage from './AnalyticsPage';
+import { SetupComparisonAnalytics } from '../components/SetupComparisonAnalytics';
 
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -497,7 +498,7 @@ const SetupForm: React.FC<{
 };
 
 const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> = ({ strategy, onBack }) => {
-  const { deleteStrategy, updateStrategy, t } = useApp();
+  const { deleteStrategy, updateStrategy, t, trades } = useApp();
   const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedImage, setSelectedImage] = useState<StrategyImage | null>(null);
@@ -619,6 +620,9 @@ const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> =
               )}
             </div>
             <AnalyticsPage isComponent={true} defaultStrategyId={strategy.id} defaultSetupId={selectedSetupId} />
+            {strategy.setups && strategy.setups.length > 0 && selectedSetupId === '' && (
+              <SetupComparisonAnalytics strategy={strategy} trades={trades} />
+            )}
           </div>
 
           <div className="bg-muted/10 border border-border rounded-[2.5rem] p-8 lg:p-10 shadow-sm transition-all hover:bg-muted/15">

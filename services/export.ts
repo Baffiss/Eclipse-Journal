@@ -40,6 +40,7 @@ export const EXCEL_HEADERS = [
     'Account',
     'Account equity',
     'Strategy',
+    'Setup',
     'Date',
     'Hour',
     'Asset',
@@ -62,6 +63,7 @@ export const exportToExcel = (state: AppState) => {
         const data = trades.map(trade => {
             const account = accounts.find(a => a.id === trade.accountId);
             const strategy = strategies.find(s => s.id === trade.strategyId);
+            const setup = strategy?.setups?.find(setup => setup.id === trade.setupId);
             
             const tradeDate = new Date(trade.date);
             
@@ -69,15 +71,16 @@ export const exportToExcel = (state: AppState) => {
                 [EXCEL_HEADERS[0]]: account?.name || 'Unknown',
                 [EXCEL_HEADERS[1]]: account?.currentCapital || 0,
                 [EXCEL_HEADERS[2]]: strategy?.name || 'None',
-                [EXCEL_HEADERS[3]]: tradeDate.toLocaleDateString(),
-                [EXCEL_HEADERS[4]]: trade.hour !== undefined ? `${trade.hour}:00` : '',
-                [EXCEL_HEADERS[5]]: trade.asset,
-                [EXCEL_HEADERS[6]]: trade.direction,
-                [EXCEL_HEADERS[7]]: trade.lotSize,
-                [EXCEL_HEADERS[8]]: trade.takeProfitPips,
-                [EXCEL_HEADERS[9]]: trade.stopLossPips,
-                [EXCEL_HEADERS[10]]: trade.result,
-                [EXCEL_HEADERS[11]]: trade.notes || ''
+                [EXCEL_HEADERS[3]]: setup?.name || 'None',
+                [EXCEL_HEADERS[4]]: tradeDate.toLocaleDateString(),
+                [EXCEL_HEADERS[5]]: trade.hour !== undefined ? `${trade.hour}:00` : '',
+                [EXCEL_HEADERS[6]]: trade.asset,
+                [EXCEL_HEADERS[7]]: trade.direction,
+                [EXCEL_HEADERS[8]]: trade.lotSize,
+                [EXCEL_HEADERS[9]]: trade.takeProfitPips,
+                [EXCEL_HEADERS[10]]: trade.stopLossPips,
+                [EXCEL_HEADERS[11]]: trade.result,
+                [EXCEL_HEADERS[12]]: trade.notes || ''
             };
         });
 
