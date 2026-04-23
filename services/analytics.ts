@@ -17,6 +17,7 @@ export const calculateAnalytics = (trades: Trade[], initialCapital: number, with
         maxLoss: null,
         dailyDistribution: [],
         hourlyDistribution: [],
+        monthlySeasonality: [],
         assetPerformance: [],
         winLossDistribution: [],
         totalWins: 0,
@@ -82,6 +83,14 @@ export const calculateAnalytics = (trades: Trade[], initialCapital: number, with
     });
     const assetPerformance = Array.from(assetPerformanceMap.entries()).map(([asset, data]) => ({ asset, ...data })).sort((a,b) => b.profit - a.profit);
     
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlySeasonality = months.map(month => ({ month, profit: 0 }));
+    trades.forEach(t => {
+        const localDate = new Date(t.date);
+        const monthIndex = localDate.getMonth();
+        monthlySeasonality[monthIndex].profit += t.result;
+    });
+
     const winLossDistribution = trades.map(t => t.result).sort((a,b) => a - b);
 
     return {
@@ -99,6 +108,7 @@ export const calculateAnalytics = (trades: Trade[], initialCapital: number, with
         maxLoss,
         dailyDistribution,
         hourlyDistribution,
+        monthlySeasonality,
         assetPerformance,
         winLossDistribution,
         totalWins,

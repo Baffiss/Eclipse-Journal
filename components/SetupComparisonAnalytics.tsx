@@ -1,8 +1,19 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Strategy, Trade, StrategySetup } from '../types';
 import { useApp } from '../context/AppContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, Cell } from 'recharts';
-import { ActivityIcon, ZapIcon, TargetIcon, TrendingDownIcon, BanknoteIcon, BarChart3Icon } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, Cell, PieChart, Pie } from 'recharts';
+import { 
+  ActivityIcon, 
+  ZapIcon, 
+  TargetIcon, 
+  TrendingDownIcon, 
+  BanknoteIcon, 
+  BarChart3Icon, 
+  EyeIcon, 
+  EyeOffIcon,
+  PieChartIcon,
+  NewspaperIcon
+} from '../components/Icons';
 
 interface SetupComparisonAnalyticsProps {
   strategy: Strategy;
@@ -16,6 +27,7 @@ const COLORS = [
 
 export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> = ({ strategy, trades }) => {
   const { t, getCurrencySymbol } = useApp();
+  const [hiddenSetups, setHiddenSetups] = useState<Set<string>>(new Set());
   const currencySymbol = getCurrencySymbol(undefined); // Depending on how active currency is handled, fallback to $
 
   const strategyTrades = useMemo(() => 
@@ -23,6 +35,29 @@ export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> =
   , [trades, strategy.id]);
 
   const setups = strategy.setups || [];
+
+  const handleLegendClick = (data: any) => {
+    const { value } = data;
+    setHiddenSetups(prev => {
+      const next = new Set(prev);
+      if (next.has(value)) {
+        next.delete(value);
+      } else {
+        next.add(value);
+      }
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (hiddenSetups.size === setups.length) {
+      setHiddenSetups(new Set());
+    } else {
+      setHiddenSetups(new Set(setups.map(s => s.name)));
+    }
+  };
+
+  const allHidden = hiddenSetups.size === setups.length;
 
   const { profitCurveData, metricsData } = useMemo(() => {
     // Profit Curve Data
@@ -57,6 +92,7 @@ export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> =
       const sTrades = strategyTrades.filter(t => t.setupId === setup.id);
       const totalPL = sTrades.reduce((sum, t) => sum + (parseFloat(String(t.result)) || 0), 0);
       const wins = sTrades.filter(t => (parseFloat(String(t.result)) || 0) > 0).length;
+      const losses = sTrades.filter(t => (parseFloat(String(t.result)) || 0) < 0).length;
       const winRate = sTrades.length > 0 ? (wins / sTrades.length) * 100 : 0;
       const expectancy = sTrades.length > 0 ? totalPL / sTrades.length : 0;
       
@@ -74,6 +110,8 @@ export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> =
         color: COLORS[index % COLORS.length],
         totalPL,
         winRate,
+        wins,
+        losses,
         expectancy,
         maxDrawdownAmount: maxDd,
         tradeCount: sTrades.length
@@ -145,7 +183,17 @@ export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> =
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">Cumulative Equity Curves</h3>
                 <p className="text-muted-foreground font-black text-[10px] uppercase tracking-widest">Compare cumulative performance of each setup over time</p>
              </div>
-             <div className="p-3 bg-muted/20 rounded-2xl border border-border"><ActivityIcon className="w-5 h-5 text-primary" /></div>
+             <div className="flex items-center gap-3">
+               <button 
+                 onClick={toggleAll}
+                 className="flex items-center gap-2 px-4 py-2 bg-muted/20 border border-border rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-muted/40 transition-all"
+                 title={allHidden ? "Show All" : "Hide All"}
+               >
+                 {allHidden ? <EyeIcon className="w-3.5 h-3.5" /> : <EyeOffIcon className="w-3.5 h-3.5" />}
+                 {allHidden ? "Show All" : "Hide All"}
+               </button>
+               <div className="p-3 bg-muted/20 rounded-2xl border border-border"><ActivityIcon className="w-5 h-5 text-primary" /></div>
+             </div>
           </div>
           <div className="flex-1 min-h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -154,7 +202,11 @@ export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> =
                 <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} tickMargin={15} />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} tickMargin={15} tickFormatter={(value) => `${currencySymbol}${value}`} />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 900, paddingTop: '20px' }} />
+                <Legend 
+                  iconType="circle" 
+                  onClick={handleLegendClick}
+                  wrapperStyle={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 900, paddingTop: '20px', cursor: 'pointer' }} 
+                />
                 {setups.map((setup, index) => (
                   <Line 
                     key={setup.id} 
@@ -162,9 +214,12 @@ export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> =
                     dataKey={setup.name} 
                     name={setup.name}
                     stroke={COLORS[index % COLORS.length]} 
+                    hide={hiddenSetups.has(setup.name)}
                     strokeWidth={3} 
                     dot={false}
                     activeDot={{ r: 6, fill: COLORS[index % COLORS.length], stroke: 'var(--color-bkg)', strokeWidth: 3 }}
+                    animationDuration={1500}
+                    animationEasing="ease-in-out"
                   />
                 ))}
               </LineChart>
@@ -172,34 +227,8 @@ export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> =
           </div>
         </div>
 
-        {/* P&L Histogram */}
-        <div className="bg-muted/10 border border-border rounded-[3rem] p-8 lg:p-10 min-h-[400px] flex flex-col relative">
-          <div className="flex justify-between items-center mb-8">
-             <div>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">P&L by Setup</h3>
-                <p className="text-muted-foreground font-black text-[10px] uppercase tracking-widest">Total Net Profit/Loss</p>
-             </div>
-             <div className="p-3 bg-muted/20 rounded-2xl border border-border"><BanknoteIcon className="w-5 h-5 text-primary" /></div>
-          </div>
-          <div className="flex-1 min-h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={metricsData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} tickMargin={15} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} tickMargin={15} tickFormatter={(value) => `${currencySymbol}${value}`} />
-                <Tooltip content={<BarTooltip />} cursor={{ fill: 'hsl(var(--muted)/0.2)' }} />
-                <Bar dataKey="totalPL" radius={[6, 6, 6, 6]}>
-                  {metricsData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.totalPL >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
         {/* Setup Metrics */}
-        <div className="bg-muted/10 border border-border rounded-[3rem] p-8 lg:p-10 flex flex-col relative">
+        <div className="bg-muted/10 border border-border rounded-[3rem] p-8 lg:p-10 flex flex-col relative xl:col-span-2">
           <div className="flex justify-between items-center mb-8">
              <div>
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">Comparative Metrics</h3>
@@ -208,7 +237,7 @@ export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> =
              <div className="p-3 bg-muted/20 rounded-2xl border border-border"><TargetIcon className="w-5 h-5 text-primary" /></div>
           </div>
           
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {metricsData.map((metric, index) => (
               <div key={metric.id} className="bg-bkg/50 border border-border rounded-2xl p-5 flex flex-col gap-4">
                 <div className="flex items-center gap-3 border-b border-border/50 pb-3">
@@ -216,8 +245,30 @@ export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> =
                   <h4 className="font-black uppercase tracking-tight text-sm flex-1">{metric.name}</h4>
                   <span className="text-[10px] font-black uppercase text-muted-foreground">{metric.tradeCount} Trades</span>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-1">
+                <div className="grid grid-cols-4 gap-4 items-center">
+                  <div className="flex flex-col gap-1 items-center">
+                    <div className="w-16 h-16 relative">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'Wins', value: metric.wins || (metric.tradeCount === 0 ? 1 : 0), color: 'hsl(var(--success))' },
+                              { name: 'Losses', value: metric.losses, color: 'hsl(var(--danger))' }
+                            ]}
+                            innerRadius={16}
+                            outerRadius={24}
+                            paddingAngle={2}
+                            dataKey="value"
+                            stroke="none"
+                            cx="50%"
+                            cy="50%"
+                          >
+                            <Cell fill="hsl(var(--success))" />
+                            <Cell fill="hsl(var(--danger))" />
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
                     <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-black">Win Rate</span>
                     <span className="text-sm font-black uppercase">{metric.winRate.toFixed(1)}%</span>
                   </div>
@@ -227,6 +278,12 @@ export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> =
                       {metric.expectancy >= 0 ? '+' : ''}{currencySymbol}{metric.expectancy.toFixed(2)}
                     </span>
                   </div>
+                  <div className="flex flex-col gap-1 text-center px-2">
+                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-black">P&L</span>
+                    <span className={`text-sm font-black uppercase ${metric.totalPL >= 0 ? 'text-success' : 'text-danger'}`}>
+                      {metric.totalPL >= 0 ? '+' : ''}{currencySymbol}{metric.totalPL.toFixed(2)}
+                    </span>
+                  </div>
                   <div className="flex flex-col gap-1 text-right">
                     <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-black">Max Drop</span>
                     <span className="text-sm font-black uppercase text-danger">-{currencySymbol}{metric.maxDrawdownAmount.toFixed(2)}</span>
@@ -234,6 +291,94 @@ export const SetupComparisonAnalytics: React.FC<SetupComparisonAnalyticsProps> =
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Trade Distribution Pie Chart */}
+        <div className="bg-muted/10 border border-border rounded-[3rem] p-8 lg:p-10 min-h-[400px] flex flex-col relative xl:col-span-2">
+          <div className="flex flex-col md:flex-row gap-8">
+            <div className="flex-1">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">Trade Distribution</h3>
+                  <p className="text-muted-foreground font-black text-[10px] uppercase tracking-widest">Setup activity volume comparison</p>
+                </div>
+                <div className="p-3 bg-muted/20 rounded-2xl border border-border"><PieChartIcon className="w-5 h-5 text-primary" /></div>
+              </div>
+              <div className="space-y-3">
+                {metricsData.sort((a, b) => b.tradeCount - a.tradeCount).map((metric, i) => (
+                  <div key={metric.id} className="flex items-center justify-between p-4 bg-bkg/50 border border-border rounded-2xl group hover:border-primary/40 transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: metric.color }} />
+                      <span className="text-[10px] font-black uppercase tracking-tight truncate max-w-[120px]">{metric.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-[10px] font-black text-muted-foreground uppercase">{((metric.tradeCount / (strategyTrades.length || 1)) * 100).toFixed(0)}%</span>
+                      <span className="text-xs font-black min-w-[50px] text-right">{metric.tradeCount} {t('trades')}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
+              <div className="w-full h-full relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={metricsData}
+                      dataKey="tradeCount"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={65}
+                      outerRadius={90}
+                      paddingAngle={4}
+                      stroke="none"
+                      animationDuration={1500}
+                    >
+                      {metricsData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderRadius: '16px', border: '1px solid hsl(var(--border))', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
+                      itemStyle={{ color: 'hsl(var(--content))' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-3xl font-black tracking-tighter">{strategyTrades.length}</span>
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground">Total Trades</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* P&L Histogram */}
+        <div className="bg-muted/10 border border-border rounded-[3rem] p-8 lg:p-10 min-h-[300px] flex flex-col relative xl:col-span-2">
+          <div className="flex justify-between items-center mb-8">
+             <div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">P&L by Setup</h3>
+                <p className="text-muted-foreground font-black text-[10px] uppercase tracking-widest">Total Net Profit/Loss</p>
+             </div>
+             <div className="p-3 bg-muted/20 rounded-2xl border border-border"><BanknoteIcon className="w-5 h-5 text-primary" /></div>
+          </div>
+          <div className="flex-1 min-h-[180px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart layout="vertical" data={metricsData} margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} opacity={0.5} />
+                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `${currencySymbol}${Math.abs(value) >= 1000 ? (value/1000).toFixed(1) + 'k' : value}`} />
+                <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} width={100} />
+                <Tooltip content={<BarTooltip />} cursor={{ fill: 'hsl(var(--muted)/0.2)' }} />
+                <Bar dataKey="totalPL" radius={[0, 4, 4, 0]} barSize={24}>
+                  {metricsData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.totalPL >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 

@@ -17,7 +17,8 @@ import {
   PieChartIcon,
   TrendingUpIcon,
   BanknoteIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  ExternalLinkIcon
 } from '../components/Icons';
 import {
   ResponsiveContainer,
@@ -31,11 +32,16 @@ import {
   PieChart,
   Pie,
   AreaChart,
-  Area
+  Area,
+  ComposedChart,
+  Line,
+  LineChart,
+  Legend
 } from 'recharts';
 import { AccountStatus } from '../types';
 
 const PIE_CHART_COLORS = ['#34d399', '#60a5fa', '#f87171', '#fbbf24', '#a78bfa', '#f472b6'];
+const STRATEGY_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#71717a'];
 
 const InfoTooltip: React.FC<{ text: string }> = ({ text }) => (
   <div className={`relative group flex items-center z-50`}>
@@ -96,10 +102,11 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
   defaultStrategyId = '',
   defaultSetupId = ''
 }) => {
-  const { trades, accounts, strategies, withdrawals, t, getCurrencySymbol, theme } = useApp();
+  const { trades, accounts, strategies, withdrawals, t, getCurrencySymbol, theme, setPage, setSelectedStrategy } = useApp();
   const [filterAccountId, setFilterAccountId] = useState(defaultAccountId);
   const [filterStrategyId, setFilterStrategyId] = useState(defaultStrategyId);
   const [filterSetupId, setFilterSetupId] = useState(defaultSetupId);
+  const [showTrendLine, setShowTrendLine] = useState(true);
 
   // Sync state with props when they change externally (e.g. from StrategyDetailView)
   React.useEffect(() => {
@@ -163,6 +170,64 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
     { name: 'Wins', value: stats.totalWins || (stats.totalTrades === 0 ? 1 : 0), color: 'hsl(var(--success))' },
     { name: 'Losses', value: stats.totalLosses, color: 'hsl(var(--danger))' }
   ], [stats]);
+
+  const strategyComparisonData = useMemo(() => {
+    if (filteredTrades.length === 0) return { data: [], strategies: [], hasNoStrategyLine: false };
+
+    // Group trades by date to avoid O(n^2) performance issues
+    const tradesByDate: Record<string, any[]> = {};
+    filteredTrades.forEach(t => {
+      const d = t.date;
+      if (!tradesByDate[d]) tradesByDate[d] = [];
+      tradesByDate[d].push(t);
+    });
+
+    const sortedDates = Object.keys(tradesByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    const strategyProfitMap: Record<string, number> = {};
+    const result: any[] = [];
+    const noStrategyKey = t('noStrategy');
+    
+    const relevantStrategies = strategies.filter(s => 
+      filteredTrades.some(t => t.strategyId === s.id)
+    );
+    
+    const hasTradesWithoutStrategy = filteredTrades.some(t => !t.strategyId);
+
+    // Initial state
+    const initialPoint: any = { date: 'Initial' };
+    relevantStrategies.forEach(s => {
+      strategyProfitMap[s.id] = 0;
+      initialPoint[s.id] = 0;
+    });
+    if (hasTradesWithoutStrategy) {
+      strategyProfitMap['none'] = 0;
+      initialPoint['none'] = 0;
+    }
+    result.push(initialPoint);
+
+    sortedDates.forEach(d => {
+      const point: any = { date: d };
+      const tradesOnDate = tradesByDate[d];
+      
+      tradesOnDate.forEach(t => {
+        const sId = t.strategyId || 'none';
+        if (strategyProfitMap[sId] !== undefined) {
+          strategyProfitMap[sId] += (parseFloat(String(t.result)) || 0);
+        }
+      });
+      
+      relevantStrategies.forEach(s => {
+        point[s.id] = strategyProfitMap[s.id];
+      });
+      if (hasTradesWithoutStrategy) {
+        point['none'] = strategyProfitMap['none'];
+      }
+      
+      result.push(point);
+    });
+    
+    return { data: result, strategies: relevantStrategies, hasNoStrategyLine: hasTradesWithoutStrategy };
+  }, [filteredTrades, strategies, t]);
 
   if (filteredTrades.length === 0) {
     return (
@@ -266,13 +331,127 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
         </div>
       </div>
 
+      {!filterStrategyId && !filterSetupId && (
+        <div className={`bg-muted/15 border border-border rounded-[3rem] p-8 lg:p-10 min-h-[500px] flex flex-col relative animate-fade-in`}>
+          <div className={`flex justify-between items-center mb-10`}>
+            <div>
+              <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1`}>{t('strategyComparison')}</h3>
+              <p className={`text-muted-foreground font-black text-[10px] uppercase tracking-widest`}>{t('strategyComparison_desc')}</p>
+            </div>
+            <div className={`p-3 bg-muted/20 rounded-2xl border border-border`}><LayoutGridIcon className={`w-5 h-5 text-primary`} /></div>
+          </div>
+          <div className={`h-[400px] mt-4`}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={strategyComparisonData.data} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={`hsl(var(--border))`} vertical={false} opacity={0.5} />
+                <XAxis dataKey="date" tickFormatter={(str) => str === 'Initial' ? 'Start' : new Date(str).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} dy={10} />
+                <YAxis stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} tickFormatter={(v) => `${v < 0 ? '-' : ''}${currencySymbol}${Math.abs(v)}`} />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderRadius: '16px', border: '1px solid hsl(var(--border))', fontSize: '12px', fontWeight: 'bold' }} />
+                <Legend 
+                  iconType="circle" 
+                  wrapperStyle={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 900, paddingTop: '30px' }} 
+                  content={(props) => {
+                    const { payload } = props;
+                    return (
+                      <ul className="flex flex-wrap justify-center gap-6 mt-4">
+                        {payload?.map((entry: any, index: number) => {
+                          const strategy = strategies.find(s => s.id === entry.dataKey);
+                          return (
+                            <li 
+                              key={`item-${index}`} 
+                              className={`flex items-center gap-2 cursor-pointer group/legend transition-all ${entry.dataKey === 'none' ? 'cursor-default' : 'hover:scale-110'}`}
+                              onClick={() => {
+                                if (entry.dataKey !== 'none') {
+                                  // We must set the page first because the SET_PAGE action in AppContext resets the selected IDs
+                                  setPage('strategies');
+                                  // Then we select the strategy so it shows the detail view instead of the list
+                                  setSelectedStrategy(entry.dataKey);
+                                }
+                              }}
+                            >
+                              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover/legend:text-primary transition-colors">
+                                {entry.value}
+                              </span>
+                              {entry.dataKey !== 'none' && (
+                                <ExternalLinkIcon className="w-3 h-3 text-muted-foreground/30 group-hover/legend:text-primary transition-colors" />
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    );
+                  }}
+                />
+                {strategyComparisonData.strategies.map((s, index) => (
+                  <Line 
+                    key={s.id} 
+                    type="monotone" 
+                    dataKey={s.id} 
+                    name={s.name}
+                    stroke={STRATEGY_COLORS[index % STRATEGY_COLORS.length]} 
+                    strokeWidth={3} 
+                    dot={{ r: 2, fill: STRATEGY_COLORS[index % STRATEGY_COLORS.length], strokeWidth: 0 }}
+                    activeDot={{ r: 6, fill: STRATEGY_COLORS[index % STRATEGY_COLORS.length], stroke: 'hsl(var(--bkg))', strokeWidth: 2 }}
+                    connectNulls
+                    animationDuration={1500}
+                    animationEasing="ease-in-out"
+                  />
+                ))}
+                {strategyComparisonData.hasNoStrategyLine && (
+                  <Line 
+                    type="monotone" 
+                    dataKey="none" 
+                    name={t('noStrategy')}
+                    stroke="#a1a1aa" 
+                    strokeWidth={2} 
+                    strokeDasharray="5-5"
+                    dot={{ r: 2, fill: '#a1a1aa', strokeWidth: 0 }}
+                    activeDot={{ r: 6, fill: '#a1a1aa', stroke: 'hsl(var(--bkg))', strokeWidth: 2 }}
+                    connectNulls
+                    animationDuration={1500}
+                    animationEasing="ease-in-out"
+                  />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
       <div className={`grid grid-cols-1 xl:grid-cols-3 gap-8`}>
         <div className={`bg-muted/30 border border-border rounded-[3rem] p-8 lg:p-10 flex flex-col xl:col-span-1 min-h-[400px]`}>
-          <div className={`mb-10`}>
-            <h3 className={`text-[11px] font-black uppercase tracking-[0.3em] text-primary mb-2`}>{t('dailyFlux')}</h3>
-            <p className={`text-muted-foreground font-black text-[10px] uppercase tracking-widest`}>{t('profitLossDistribution')}</p>
+          <div className="flex justify-between items-start mb-10">
+            <div>
+              <h3 className={`text-[11px] font-black uppercase tracking-[0.3em] text-primary mb-2`}>{t('dailyFlux')}</h3>
+              <p className={`text-muted-foreground font-black text-[10px] uppercase tracking-widest`}>{t('profitLossDistribution')}</p>
+            </div>
+            <button 
+              onClick={() => setShowTrendLine(!showTrendLine)}
+              className={`p-2 rounded-lg border border-border transition-all hover:bg-muted/50 ${showTrendLine ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground'}`}
+              title="Toggle Trend Line"
+            >
+              <TrendingUpIcon className="w-4 h-4" />
+            </button>
           </div>
-          <div className={`flex-1`}><ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}><BarChart data={stats.dailyDistribution} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke={`hsl(var(--border))`} vertical={false} opacity={0.5} /><XAxis dataKey="day" stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} /><YAxis stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} tickFormatter={(v) => `${v < 0 ? '-' : ''}${currencySymbol}${Math.abs(v)}`} /><Tooltip cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '20px', padding: '12px' }} itemStyle={{ color: 'hsl(var(--content))', fontWeight: 'black', fontSize: '12px' }} labelStyle={{ display: 'none' }} formatter={(value: number) => [`${value >= 0 ? '+' : ''}${currencySymbol}${value.toLocaleString()}`, 'Net P/L']} /><Bar dataKey="profit" radius={[8, 8, 0, 0]}>{stats.dailyDistribution.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.profit >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />))}</Bar></BarChart></ResponsiveContainer></div>
+          <div className={`flex-1`}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              <ComposedChart data={stats.dailyDistribution} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={`hsl(var(--border))`} vertical={false} opacity={0.5} />
+                <XAxis dataKey="day" stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} />
+                <YAxis stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} tickFormatter={(v) => `${v < 0 ? '-' : ''}${currencySymbol}${Math.abs(v)}`} />
+                <Tooltip cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', borderColor: 'hsl(var(--border))', borderRadius: '20px', padding: '12px' }} itemStyle={{ color: 'hsl(var(--content))', fontWeight: 'black', fontSize: '12px' }} labelStyle={{ display: 'none' }} formatter={(value: number) => [`${value >= 0 ? '+' : ''}${currencySymbol}${value.toLocaleString()}`, 'Net P/L']} />
+                <Bar dataKey="profit" radius={[8, 8, 0, 0]}>
+                  {stats.dailyDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />
+                  ))}
+                </Bar>
+                {showTrendLine && (
+                  <Line type="monotone" dataKey="profit" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3, fill: 'hsl(var(--primary))', strokeWidth: 0 }} activeDot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 0 }} />
+                )}
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
         </div>
         <div className={`bg-muted/20 border border-border rounded-[3rem] p-8 lg:p-10 flex flex-col gap-8 xl:col-span-1 min-h-[400px]`}>
           <div className={`flex-1 min-w-0 w-full`}>
@@ -310,11 +489,74 @@ const AnalyticsPage: React.FC<{ isComponent?: boolean; defaultAccountId?: string
       </div>
 
       <div className={`bg-muted/20 border border-border rounded-[3rem] p-8 lg:p-10 min-h-[400px]`}>
-        <div className={`flex items-center gap-4 mb-10`}>
-          <div className={`p-3 bg-primary/10 text-primary rounded-2xl border border-primary/20`}><CalendarIcon className={`w-5 h-5`} /></div>
-          <div><h3 className={`text-lg font-black tracking-tight uppercase`}>{t('hourlyDistribution')}</h3></div>
+        <div className={`flex items-center justify-between mb-10`}>
+          <div className="flex items-center gap-4">
+            <div className={`p-3 bg-primary/10 text-primary rounded-2xl border border-primary/20`}><PieChartIcon className={`w-5 h-5`} /></div>
+            <div><h3 className={`text-lg font-black tracking-tight uppercase`}>{t('monthlySeasonality')}</h3></div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setShowTrendLine(!showTrendLine)}
+              className={`p-2 rounded-lg border border-border transition-all hover:bg-muted/50 ${showTrendLine ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground'}`}
+              title="Toggle Trend Line"
+            >
+              <TrendingUpIcon className="w-4 h-4" />
+            </button>
+            <InfoTooltip text={t('monthlySeasonality_desc')} />
+          </div>
         </div>
-        <div className={`h-64`}><ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}><BarChart data={stats.hourlyDistribution} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke={`hsl(var(--border))`} vertical={false} opacity={0.5} /><XAxis dataKey="hour" stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} /><YAxis stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} /><Tooltip cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', border: '1px solid hsl(var(--border))', borderRadius: '16px', fontWeight: 'bold' }} itemStyle={{ color: 'hsl(var(--content))', fontWeight: 'black' }} labelFormatter={(h) => `Time: ${h}:00`} /><Bar dataKey="profit" radius={[4, 4, 0, 0]}>{stats.hourlyDistribution.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.profit >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />))}</Bar></BarChart></ResponsiveContainer></div>
+        <div className={`h-64`}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+            <ComposedChart data={stats.monthlySeasonality} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={`hsl(var(--border))`} vertical={false} opacity={0.5} />
+              <XAxis dataKey="month" stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} />
+              <YAxis stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} tickFormatter={(v) => `${v < 0 ? '-' : ''}${currencySymbol}${Math.abs(v) >= 1000 ? (Math.abs(v)/1000).toFixed(1) + 'k' : Math.abs(v)}`} />
+              <Tooltip cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', border: '1px solid hsl(var(--border))', borderRadius: '16px', fontWeight: 'bold' }} itemStyle={{ color: 'hsl(var(--content))', fontWeight: 'black' }} formatter={(v: number) => [`${currencySymbol}${v.toLocaleString()}`, 'Net P/L']} />
+              <Bar dataKey="profit" radius={[6, 6, 0, 0]}>
+                {stats.monthlySeasonality.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />
+                ))}
+              </Bar>
+              {showTrendLine && (
+                <Line type="monotone" dataKey="profit" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3, fill: 'hsl(var(--primary))', strokeWidth: 0 }} activeDot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 0 }} />
+              )}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className={`bg-muted/20 border border-border rounded-[3rem] p-8 lg:p-10 min-h-[400px]`}>
+        <div className={`flex items-center justify-between mb-10`}>
+          <div className="flex items-center gap-4">
+            <div className={`p-3 bg-primary/10 text-primary rounded-2xl border border-primary/20`}><CalendarIcon className={`w-5 h-5`} /></div>
+            <div><h3 className={`text-lg font-black tracking-tight uppercase`}>{t('hourlyDistribution')}</h3></div>
+          </div>
+          <button 
+            onClick={() => setShowTrendLine(!showTrendLine)}
+            className={`p-2 rounded-lg border border-border transition-all hover:bg-muted/50 ${showTrendLine ? 'bg-primary/10 text-primary border-primary/20' : 'text-muted-foreground'}`}
+            title="Toggle Trend Line"
+          >
+            <TrendingUpIcon className="w-4 h-4" />
+          </button>
+        </div>
+        <div className={`h-64`}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+            <ComposedChart data={stats.hourlyDistribution} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={`hsl(var(--border))`} vertical={false} opacity={0.5} />
+              <XAxis dataKey="hour" stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} />
+              <YAxis stroke={axisColor} fontSize={10} fontWeight="black" tickLine={false} axisLine={false} />
+              <Tooltip cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }} contentStyle={{ backgroundColor: 'hsl(var(--bkg))', border: '1px solid hsl(var(--border))', borderRadius: '16px', fontWeight: 'bold' }} itemStyle={{ color: 'hsl(var(--content))', fontWeight: 'black' }} labelFormatter={(h) => `Time: ${h}:00`} />
+              <Bar dataKey="profit" radius={[4, 4, 0, 0]}>
+                {stats.hourlyDistribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? 'hsl(var(--success))' : 'hsl(var(--danger))'} />
+                ))}
+              </Bar>
+              {showTrendLine && (
+                <Line type="monotone" dataKey="profit" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3, fill: 'hsl(var(--primary))', strokeWidth: 0 }} activeDot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 0 }} />
+              )}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

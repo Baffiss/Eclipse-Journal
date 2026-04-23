@@ -548,45 +548,45 @@ const StrategyDetailView: React.FC<{ strategy: Strategy; onBack: () => void }> =
 
   return (
     <div className="animate-fade-in flex flex-col gap-8 pb-20">
-      <div className="relative bg-muted/10 border border-border/40 rounded-[3rem] p-8 lg:p-14 overflow-hidden shadow-2xl backdrop-blur-md">
+      <div className="relative bg-muted/10 border border-border/40 rounded-[2.5rem] p-6 lg:p-10 overflow-hidden shadow-2xl backdrop-blur-md">
         <div className="absolute top-0 right-0 w-96 h-96 blur-[150px] opacity-10 bg-primary rounded-full -mr-20 -mt-20" />
         
         <div className="relative z-10">
           <button 
             onClick={onBack} 
-            className="p-3 bg-muted/60 border border-border rounded-2xl text-muted-foreground hover:text-primary transition-all mb-8 shadow-sm group"
+            className="p-2.5 bg-muted/60 border border-border rounded-xl text-muted-foreground hover:text-primary transition-all mb-6 shadow-sm group"
             title={t('backToStrategies')}
           >
-            <ChevronLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <ChevronLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           </button>
           
-          <div className="flex flex-col items-center text-center gap-10">
-            <div className="max-w-5xl flex flex-col items-center w-full">
-              <div className="flex flex-col items-center gap-6 mb-6">
-                 <div className="p-6 bg-primary/10 text-primary rounded-[2rem] border border-primary/20 shadow-xl shadow-primary/5">
-                    <StrategyIconComponent className="w-12 h-12" />
+          <div className="flex flex-col items-center text-center gap-6">
+            <div className="max-w-4xl flex flex-col items-center w-full">
+              <div className="flex flex-col items-center gap-4 mb-4">
+                 <div className="p-4 bg-primary/10 text-primary rounded-[1.5rem] border border-primary/20 shadow-xl shadow-primary/5">
+                    <StrategyIconComponent className="w-10 h-10" />
                  </div>
-                 <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-none">{strategy.name}</h2>
+                 <h2 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none">{strategy.name}</h2>
               </div>
-              <p className="text-base md:text-lg text-content/70 font-medium leading-relaxed max-w-2xl whitespace-pre-wrap">
+              <p className="text-sm md:text-base text-content/70 font-medium leading-relaxed max-w-2xl whitespace-pre-wrap">
                 {strategy.description || 'No detailed logic defined yet for this strategy.'}
               </p>
             </div>
             
-            <div className="flex gap-4 pt-10 border-t border-border/10 w-full justify-center">
+            <div className="flex gap-3 pt-6 border-t border-border/10 w-full justify-center">
               <button 
                 onClick={() => setEditingStrategy(strategy)} 
-                className="p-5 bg-bkg border border-border rounded-2xl hover:bg-muted hover:text-primary hover:scale-105 transition-all shadow-sm" 
+                className="p-4 bg-bkg border border-border rounded-xl hover:bg-muted hover:text-primary hover:scale-105 transition-all shadow-sm" 
                 title={t('edit')}
               >
-                <EditIcon className="w-5 h-5" />
+                <EditIcon className="w-4 h-4" />
               </button>
               <button 
                 onClick={() => setShowDeleteConfirm(true)} 
-                className="p-5 bg-danger/10 text-danger border border-danger/20 rounded-2xl hover:bg-danger hover:text-white hover:scale-105 transition-all shadow-sm" 
+                className="p-4 bg-danger/10 text-danger border border-danger/20 rounded-xl hover:bg-danger hover:text-white hover:scale-105 transition-all shadow-sm" 
                 title={t('delete')}
               >
-                <TrashIcon className="w-5 h-5" />
+                <TrashIcon className="w-4 h-4" />
               </button>
             </div>
           </div>

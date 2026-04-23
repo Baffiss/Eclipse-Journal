@@ -294,6 +294,10 @@ const translations: Record<string, Record<string, string>> = {
     setupDescription: `Setup Description`,
     setupImage: `Setup Example Image`,
     noSetupsDefined: `No Setups defined for this strategy.`,
+    monthlySeasonality: `Monthly Seasonality`,
+    monthlySeasonality_desc: `Profit or loss distributed by month of the year to identify seasonal patterns.`,
+    strategyComparison: `Strategy Comparison`,
+    strategyComparison_desc: `Cumulative performance comparison between different strategies and unassigned trades.`,
   },
   es: {
     accounts: `Cuentas`,
@@ -587,6 +591,10 @@ const translations: Record<string, Record<string, string>> = {
     setupDescription: `Descripción del Setup`,
     setupImage: `Imagen de Ejemplo del Setup`,
     noSetupsDefined: `No hay Setups definidos para esta estrategia.`,
+    monthlySeasonality: `Estacionalidad Mensual`,
+    monthlySeasonality_desc: `Ganancia o pérdida distribuida por mes del año para identificar patrones estacionales.`,
+    strategyComparison: `Comparación de Estrategias`,
+    strategyComparison_desc: `Comparación del rendimiento acumulado entre diferentes estrategias y trades sin asignar.`,
   }
 };
 

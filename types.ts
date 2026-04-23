@@ -122,6 +122,7 @@ export interface AnalyticsStats {
     dailyDistribution: { day: string; profit: number }[];
     hourlyDistribution: { hour: string; profit: number }[];
     assetPerformance: { asset: string; profit: number; trades: number }[];
+    monthlySeasonality: { month: string; profit: number }[];
     winLossDistribution: number[];
     totalWins: number;
     totalLosses: number;
